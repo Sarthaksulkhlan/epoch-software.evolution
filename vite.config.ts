@@ -16,6 +16,8 @@ export default defineConfig({
     host: '127.0.0.1',
     port: 5173,
     strictPort: true,
+    // GitHub Codespaces forwards the port under *.app.github.dev.
+    allowedHosts: ['.app.github.dev'],
     // The console calls /api and /api/v1 on its own origin; Vite forwards them
     // (including the Server-Sent Events stream) to the EPOCH API.
     proxy: {

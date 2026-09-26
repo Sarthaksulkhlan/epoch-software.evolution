@@ -1,0 +1,11 @@
+{
+  "name": "EPOCH",
+  "image": "mcr.microsoft.com/devcontainers/javascript-node:1-22-bookworm",
+  "postCreateCommand": "npm install -g pnpm@12.4.2 && pnpm install && pnpm demo-reset",
+  "postAttachCommand": "echo 'EPOCH is seeded. Run: pnpm dev   (console on port 5173, API on port 3000)'",
+  "forwardPorts": [5173, 3000],
+  "portsAttributes": {
+    "5173": { "label": "EPOCH console", "onAutoForward": "openBrowser" },
+    "3000": { "label": "EPOCH API", "onAutoForward": "silent" }
+  }
+}
