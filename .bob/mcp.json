@@ -2,7 +2,9 @@
   "mcpServers": {
     "epoch": {
       "command": "node",
-      "args": ["--import", "tsx", "src/api/mcp/mcp-server.ts"],
+      "args": [
+        "${workspaceFolder}/scripts/epoch-mcp.mjs"
+      ],
       "env": {
         "EPOCH_API_URL": "http://127.0.0.1:3000",
         "EPOCH_MCP_AUTHOR": "IBM Bob"

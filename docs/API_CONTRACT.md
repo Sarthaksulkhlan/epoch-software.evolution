@@ -113,7 +113,7 @@ EPOCH reads these environment variables (it does not load `.env` files). All are
 
 ## EPOCH-MCP tools
 
-`src/api/mcp/mcp-server.ts`, stdio transport, registered in `.bob/mcp.json`. It calls the API at `EPOCH_API_URL` (default `http://127.0.0.1:3000`), so the API must be running.
+`src/api/mcp/mcp-server.ts`, stdio transport, registered in `.bob/mcp.json` as `node ${workspaceFolder}/scripts/epoch-mcp.mjs` (the launcher works from any working directory; `pnpm mcp` runs the same). It calls the API at `EPOCH_API_URL` (default `http://127.0.0.1:3000`), so the API must be running.
 
 | Tool | Kind | Purpose |
 | --- | --- | --- |
