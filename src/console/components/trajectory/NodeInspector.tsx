@@ -1,6 +1,6 @@
 import React from 'react';
-import { Mutation, Incident, Invariant } from '../../types';
-import { GraphNodeData } from '../../data/mock/trajectory';
+import type { Mutation, Incident, Invariant } from '../../types';
+import type { GraphNodeData } from '../../data/mock/trajectory';
 import { StatusBadge } from '../shared/StatusBadge';
 import { GitCommit, AlertOctagon, ShieldCheck, Clock, ArrowRight, GitBranch } from 'lucide-react';
 import { Link } from 'react-router-dom';

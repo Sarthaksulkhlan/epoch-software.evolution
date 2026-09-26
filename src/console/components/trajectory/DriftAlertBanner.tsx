@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { DriftFinding } from '../../types';
+import type { DriftFinding } from '../../types';
 import { AlertTriangle, ArrowRight, ShieldAlert, ChevronDown, ChevronUp, ExternalLink, GitBranch, FileSearch, CheckCircle2, Info } from 'lucide-react';
 
 interface DriftAlertBannerProps {

@@ -1,5 +1,5 @@
 import React from 'react';
-import { CounterfactualScenario } from '../../types';
+import type { CounterfactualScenario } from '../../types';
 import { ArrowRight, CheckCircle2, ShieldCheck, AlertTriangle } from 'lucide-react';
 
 interface BranchingTrajectoryDiagramProps {

@@ -1,5 +1,5 @@
 import React from 'react';
-import { CounterfactualScenario } from '../../types';
+import type { CounterfactualScenario } from '../../types';
 import { StatusBadge } from '../shared/StatusBadge';
 import { Check, X, ArrowRight, ShieldCheck, AlertTriangle, Layers, Cpu } from 'lucide-react';
 

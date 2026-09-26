@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { mockMutations, mockIncidents, mockInvariants } from '../data/mock/mutations';
-import { Mutation, Incident } from '../types';
+import type { Mutation, Incident } from '../types';
 
 export type HistoryFilterType = 'ALL' | 'MUTATION' | 'INCIDENT' | 'DRIFT_RISK';
 

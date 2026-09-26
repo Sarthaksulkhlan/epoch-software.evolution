@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ActivityEvent } from '../../types';
+import type { ActivityEvent } from '../../types';
 import { StatusBadge } from './StatusBadge';
 import { Play, Pause, Trash2, Terminal, ChevronDown, ChevronUp } from 'lucide-react';
 

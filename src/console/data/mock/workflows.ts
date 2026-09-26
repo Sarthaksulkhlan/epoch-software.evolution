@@ -1,4 +1,4 @@
-import { Workflow, EvidenceItem, SpecialistTask, DecisionGate } from '../../types';
+import type { Workflow, EvidenceItem, SpecialistTask, DecisionGate } from '../../types';
 
 export const mockEvidence: EvidenceItem[] = [
   {

@@ -1,4 +1,4 @@
-import { CounterfactualScenario } from '../../types';
+import type { CounterfactualScenario } from '../../types';
 
 export const mockScenarios: CounterfactualScenario[] = [
   {

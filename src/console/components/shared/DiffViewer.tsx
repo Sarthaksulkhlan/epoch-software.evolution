@@ -1,5 +1,5 @@
 import React from 'react';
-import { CodeDiff } from '../../types';
+import type { CodeDiff } from '../../types';
 
 interface DiffViewerProps {
   diff: CodeDiff;

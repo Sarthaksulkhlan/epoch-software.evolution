@@ -1,5 +1,5 @@
 import React from 'react';
-import { CounterfactualScenario } from '../../types';
+import type { CounterfactualScenario } from '../../types';
 import { ArrowRight, X, AlertTriangle, Cpu, ShieldCheck } from 'lucide-react';
 
 interface RemediationDecisionModalProps {

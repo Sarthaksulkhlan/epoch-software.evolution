@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Mutation, Incident } from '../../types';
+import type { Mutation, Incident } from '../../types';
 import { StatusBadge } from '../shared/StatusBadge';
 import {
   GitCommit,

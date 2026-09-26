@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { GraphNodeData, GraphEdgeData } from '../../data/mock/trajectory';
+import type { GraphNodeData, GraphEdgeData } from '../../data/mock/trajectory';
 import { GitCommit, AlertOctagon, ShieldCheck, Clock, ZoomIn, ZoomOut, Maximize2, Layers } from 'lucide-react';
 
 interface EvolutionGraphPreviewProps {

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { EvidenceItem } from '../../types';
+import type { EvidenceItem } from '../../types';
 import { StatusBadge } from '../shared/StatusBadge';
 import { DiffViewer } from '../shared/DiffViewer';
 import { FileCode, Activity, CheckSquare, Layers, Terminal, ChevronDown, ChevronUp, ExternalLink } from 'lucide-react';

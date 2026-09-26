@@ -1,5 +1,5 @@
 import React from 'react';
-import { LifecycleState, Workflow } from '../../types';
+import type { LifecycleState, Workflow } from '../../types';
 import { Check, ShieldAlert, X, ChevronRight, FileText, Cpu, AlertTriangle, ShieldCheck, GitCommit } from 'lucide-react';
 
 interface WorkflowTimelineProps {

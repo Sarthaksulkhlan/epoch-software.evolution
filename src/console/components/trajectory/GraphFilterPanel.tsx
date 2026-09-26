@@ -1,5 +1,5 @@
 import React from 'react';
-import { Invariant } from '../../types';
+import type { Invariant } from '../../types';
 import { StatusBadge } from '../shared/StatusBadge';
 import { Layers, ShieldCheck, Check, Radio } from 'lucide-react';
 

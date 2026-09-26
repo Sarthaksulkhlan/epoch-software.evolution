@@ -1,5 +1,5 @@
 import React from 'react';
-import { InvariantStatus, TaskStatus, IncidentSeverity, LifecycleState } from '../../types';
+import type { InvariantStatus, TaskStatus, IncidentSeverity, LifecycleState } from '../../types';
 
 interface StatusBadgeProps {
   status: InvariantStatus | TaskStatus | IncidentSeverity | LifecycleState | string;

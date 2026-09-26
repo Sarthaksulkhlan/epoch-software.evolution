@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import { mockActiveWorkflow } from '../data/mock/workflows';
-import { Workflow, DecisionGate } from '../types';
+import type { Workflow, DecisionGate } from '../types';
 
 /**
  * Hook for fetching and managing active workflow lifecycle state.

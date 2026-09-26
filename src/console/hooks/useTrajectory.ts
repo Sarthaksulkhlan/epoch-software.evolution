@@ -5,10 +5,10 @@ import {
   mockGraphNodes,
   mockGraphEdges,
   mockIntegrityTrendData,
-  GraphNodeData
+  type GraphNodeData
 } from '../data/mock/trajectory';
 import { mockInvariants, mockMutations, mockIncidents } from '../data/mock/mutations';
-import { DriftFinding, TrajectorySnapshot, Invariant } from '../types';
+import type { DriftFinding, TrajectorySnapshot, Invariant } from '../types';
 
 /**
  * Hook for Trajectory state management, epoch scrubbing, drift findings, and graph node inspection.

@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { mockInitialEvents, mockStreamingEventsQueue } from '../data/mock/events';
-import { ActivityEvent } from '../types';
+import type { ActivityEvent } from '../types';
 
 /**
  * Hook for live real-time activity stream in the control plane.

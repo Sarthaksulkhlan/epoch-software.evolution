@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { useMutationHistory, HistoryFilterType } from '../hooks/useMutationHistory';
+import { useMutationHistory, type HistoryFilterType } from '../hooks/useMutationHistory';
 import { MutationCard } from '../components/mutation/MutationCard';
 import { MutationDetail } from '../components/mutation/MutationDetail';
 import { History, Play, AlertTriangle, GitCommit, Layers } from 'lucide-react';

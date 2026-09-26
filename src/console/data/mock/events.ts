@@ -1,4 +1,4 @@
-import { ActivityEvent } from '../../types';
+import type { ActivityEvent } from '../../types';
 
 export const mockInitialEvents: ActivityEvent[] = [
   {

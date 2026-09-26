@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { SpecialistTask } from '../../types';
+import type { SpecialistTask } from '../../types';
 import { StatusBadge } from '../shared/StatusBadge';
 import { Cpu, Terminal, ShieldCheck, Activity, Bot, ChevronDown, ChevronUp, Clock } from 'lucide-react';
 

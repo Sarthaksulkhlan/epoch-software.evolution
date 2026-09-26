@@ -1,7 +1,7 @@
 import { useState, useMemo, useCallback } from 'react';
 import { mockScenarios } from '../data/mock/simulations';
 import { mockMutations } from '../data/mock/mutations';
-import { CounterfactualScenario } from '../types';
+import type { CounterfactualScenario } from '../types';
 
 /**
  * Hook for Counterfactual reasoning and scenario exploration.

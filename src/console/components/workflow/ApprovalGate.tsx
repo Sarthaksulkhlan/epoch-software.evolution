@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { DecisionGate, EvidenceItem } from '../../types';
+import type { DecisionGate, EvidenceItem } from '../../types';
 import { StatusBadge } from '../shared/StatusBadge';
 import { CheckCircle2, XCircle, AlertTriangle, ShieldCheck, RotateCcw, Info, Terminal, ShieldAlert, ChevronDown, ChevronUp, GitCommit } from 'lucide-react';
 

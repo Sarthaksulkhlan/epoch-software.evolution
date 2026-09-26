@@ -1,4 +1,4 @@
-import { DriftFinding, TrajectorySnapshot } from '../../types';
+import type { DriftFinding, TrajectorySnapshot } from '../../types';
 
 export const mockDriftFindings: DriftFinding[] = [
   {

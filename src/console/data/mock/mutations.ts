@@ -1,4 +1,4 @@
-import { Mutation, Incident, Invariant } from '../../types';
+import type { Mutation, Incident, Invariant } from '../../types';
 
 export const mockMutations: Mutation[] = [
   {
