@@ -23,7 +23,9 @@ export type PlatformEventType =
   | 'simulation.started'
   | 'simulation.updated'
   | 'simulation.completed'
-  | 'repo.file_changed';
+  | 'repo.file_changed'
+  | 'bob.activity'
+  | 'demo.reset';
 
 export interface PlatformEvent<P extends Record<string, unknown> = Record<string, unknown>> {
   /** Monotonic id; the SSE stream uses it as the event id for resumption. */
