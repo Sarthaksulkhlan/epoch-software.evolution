@@ -12,3 +12,4 @@ export * from './incident.schema.js';
 export * from './simulation.schema.js';
 export * from './context-bundle.schema.js';
 export * from './graph-edge.schema.js';
+export * from './drift-finding.schema.js';
