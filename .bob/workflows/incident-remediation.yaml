@@ -1,0 +1,181 @@
+# EPOCH Incident Remediation Workflow
+# Reusable Bob workflow for the incident → causal archaeology → patch → trajectory loop.
+# Demonstrates the closed loop: production failure re-enters the same lifecycle context.
+
+name: incident-remediation
+version: "1.0"
+description: >
+  EPOCH incident remediation workflow. Demonstrates the closed loop from
+  production incident back into the evolution context: incident intake →
+  causal archaeology → patch plan → parallel validation → approval gate →
+  mutation recording → trajectory recovery.
+
+trigger:
+  type: event
+  event_type: incident.detected
+  input_prompt: >
+    Describe the incident: what failed, which component, when detected,
+    any relevant log excerpts or error messages.
+
+context:
+  mcp_servers:
+    - epoch-evolution
+  read_files:
+    - packages/sample-app/src/**/*.ts
+
+steps:
+  - id: incident_intake
+    name: Incident Intake
+    mode: agent
+    description: >
+      Create an Incident record. Query EPOCH-MCP for recent mutations
+      in the affected component. Initiate causal archaeology.
+    tools:
+      - mcp:epoch-evolution:get_mutation_history
+      - mcp:epoch-evolution:get_causal_chain
+      - mcp:epoch-evolution:get_trajectory_snapshot
+    prompt: >
+      Create an incident record for the reported failure.
+      Query recent mutations for the affected component.
+      Run causal archaeology via mcp:epoch-evolution:get_causal_chain.
+      Post the incident to POST /api/events with type incident.detected.
+    output: incident_id
+
+  - id: parallel_investigation
+    name: Parallel Investigation
+    mode: agent
+    description: >
+      Historian, Incident Agent, and Evolution Analyst run concurrently.
+      Three parallel views of the same problem.
+    depends_on: [incident_intake]
+    subagents:
+      - id: historian_inc
+        name: Historian (Incident Context)
+        prompt: >
+          Surface the mutation history for the affected component.
+          Identify any prior incidents in the same component.
+          Flag any mutations that touched the same code paths.
+        tools:
+          - mcp:epoch-evolution:get_mutation_history
+        mode: agent
+
+      - id: incident_agent
+        name: Incident Agent
+        prompt: >
+          Attempt to reproduce the incident in the sandbox environment.
+          Identify the observable characteristics of the failure.
+          Return a reproduction script and candidate explanation.
+          Label causal claims as 'hypothesised', not asserted.
+        mode: agent
+
+      - id: evolution_agent_inc
+        name: Evolution Analyst (Incident)
+        prompt: >
+          Analyse the trajectory in the period leading up to the incident.
+          Use get_trajectory_snapshot and get_causal_chain to identify
+          whether the incident correlates with a trajectory divergence.
+        tools:
+          - mcp:epoch-evolution:get_trajectory_snapshot
+          - mcp:epoch-evolution:get_causal_chain
+          - mcp:epoch-evolution:check_invariants
+        mode: agent
+
+    parallel: true
+
+  - id: causal_trace
+    name: Causal Archaeology Display
+    mode: agent
+    description: >
+      Present the candidate causal chain to the user.
+      Show the earliest plausible mutation, the evidence chain, and confidence labels.
+    depends_on: [parallel_investigation]
+    prompt: >
+      Synthesise the investigation findings. Present the candidate causal chain:
+      - Earliest plausible mutation (labelled 'hypothesised')
+      - Evidence supporting the chain
+      - Any contradicting evidence
+      Ask the user to confirm the causal hypothesis before proceeding to patch.
+
+  - id: patch_implementation
+    name: Patch Implementation
+    mode: agent
+    description: >
+      Bob implements the remediation patch in a sandbox branch.
+      Guided by the causal chain and reproduction steps.
+    depends_on: [causal_trace]
+    branch: epoch/incident-${incident_id}
+    prompt: >
+      Implement a remediation patch for incident ${incident_id}.
+      Base the patch on the confirmed causal chain.
+      Reproduce the incident first, then verify the patch resolves it.
+      Work on branch epoch/incident-${incident_id}.
+
+  - id: patch_validation
+    name: Patch Validation
+    mode: agent
+    description: >
+      QA and Security validate the patch concurrently.
+    depends_on: [patch_implementation]
+    subagents:
+      - id: qa_patch
+        name: QA — Patch Validation
+        prompt: >
+          Verify the patch resolves the incident reproduction case.
+          Run full regression suite. Check for any new test failures.
+        mode: agent
+
+      - id: security_patch
+        name: Security — Patch Review
+        prompt: >
+          Review the patch for any security implications.
+          Confirm the fix does not introduce new vulnerabilities.
+        mode: agent
+
+    parallel: true
+
+  - id: remediation_gate
+    name: Remediation Approval Gate
+    mode: pause
+    description: >
+      Human reviews remediation package: causal chain, patch, test results.
+    depends_on: [patch_validation]
+    prompt: >
+      Present the complete remediation package:
+      - Incident description and reproduction
+      - Candidate causal chain (labelled as hypothesised)
+      - Patch implementation
+      - QA and Security validation results
+      Wait for APPROVE or REJECT.
+    gate:
+      type: human
+      endpoint: POST /api/workflows/${workflow_id}/approve
+
+  - id: remediation_commit
+    name: Commit Remediation
+    mode: agent
+    description: Commit approved remediation to main. Record mutation.
+    depends_on: [remediation_gate]
+    condition: approved
+    prompt: >
+      Commit the remediation patch to main.
+      Post a mutation.committed event to trigger evolution graph update.
+      The incident should be linked to the remediation mutation.
+    tools:
+      - mcp:epoch-evolution:get_trajectory_snapshot
+
+  - id: trajectory_recovery
+    name: Trajectory Recovery Analysis
+    mode: agent
+    description: >
+      Evolution Analyst checks whether the remediation has improved the trajectory.
+      Runs in background — results stream to TRAJECTORY lens.
+    depends_on: [remediation_commit]
+    background: true
+    prompt: >
+      Analyse the trajectory after the remediation mutation.
+      Check: has the drift that contributed to the incident improved?
+      Has the violated invariant returned to HOLDING?
+      If systemic drift remains, recommend a follow-up architecture repair workflow.
+    tools:
+      - mcp:epoch-evolution:get_trajectory_snapshot
+      - mcp:epoch-evolution:check_invariants

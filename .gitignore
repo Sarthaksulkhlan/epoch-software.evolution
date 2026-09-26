@@ -1,0 +1,45 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build output
+dist/
+.vite/
+
+# Database (seeded fresh for each demo)
+data/
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/settings.json
+.idea/
+*.swp
+*.swo
+
+# Test coverage
+coverage/
+
+# Bob session outputs (keep the directory, not the session data)
+.bob/sessions/*.json
+
+# Logs
+*.log
+logs/
+
+# Temporary sandbox branches cleanup flag
+.sandbox-lock
+
+# TypeScript build info
+*.tsbuildinfo

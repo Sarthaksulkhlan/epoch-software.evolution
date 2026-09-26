@@ -1,0 +1,6 @@
+# Bob session logs are stored here during development.
+# Individual session JSON files are gitignored (see .gitignore).
+# This file keeps the directory tracked in git.
+#
+# Session log format: S-NNN-[description].json
+# See docs/BOB_SESSIONS.md for the complete session index.

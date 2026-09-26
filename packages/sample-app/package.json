@@ -1,0 +1,13 @@
+{
+  "name": "@epoch/sample-app",
+  "version": "0.1.0",
+  "description": "Seeded payment application used as the EPOCH demo substrate",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "typescript": "5.5.4"
+  }
+}

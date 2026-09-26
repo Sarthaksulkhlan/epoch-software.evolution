@@ -1,0 +1,17 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "dist",
+    "rootDir": "src",
+    "paths": {
+      "@epoch/shared/*": ["./src/shared/*"],
+      "@epoch/core/*": ["./src/core/*"],
+      "@epoch/agents/*": ["./src/agents/*"],
+      "@epoch/graph/*": ["./src/graph/*"],
+      "@epoch/store/*": ["./src/store/*"],
+      "@epoch/sandbox/*": ["./src/sandbox/*"]
+    }
+  },
+  "include": ["src/**/*.ts", "scripts/**/*.ts"],
+  "exclude": ["node_modules", "dist", "src/console", "packages"]
+}

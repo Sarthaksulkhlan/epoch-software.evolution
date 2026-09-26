@@ -1,0 +1,30 @@
+{
+  "version": "v1",
+  "hooks": [
+    {
+      "name": "EPOCH Drift Check on Save",
+      "trigger": "PostFileSave",
+      "matcher": "packages/sample-app/src/.*\\.ts$",
+      "action": {
+        "type": "command",
+        "command": "node --input-type=module <<'EOF'\nimport { execSync } from 'child_process';\nconst stdin = JSON.parse(require('fs').readFileSync('/dev/stdin', 'utf8'));\nconst filePath = stdin.file?.path ?? '';\nconst component = filePath.split('/').pop()?.replace('.ts', '') ?? 'unknown';\ntry {\n  execSync(`curl -s -X POST http://localhost:3000/api/graph/check-drift -H 'Content-Type: application/json' -d '${JSON.stringify({component, triggeredBy: 'PostFileSave', filePath})}'`);\n} catch (e) { /* API may not be running */ }\nEOF"
+      }
+    },
+    {
+      "name": "EPOCH Mutation Record on Task Complete",
+      "trigger": "PostTaskExec",
+      "action": {
+        "type": "command",
+        "command": "node --input-type=module <<'EOF'\nconst stdin = JSON.parse(require('fs').readFileSync('/dev/stdin', 'utf8'));\nconst { taskId, workflowId, status } = stdin;\nif (status !== 'completed') process.exit(0);\ntry {\n  const { execSync } = require('child_process');\n  execSync(`curl -s -X POST http://localhost:3000/api/events -H 'Content-Type: application/json' -d '${JSON.stringify({type: 'task.completed', source: 'bob-hook', payload: {taskId, workflowId, status}})}'`);\n} catch (e) { /* API may not be running */ }\nEOF"
+      }
+    },
+    {
+      "name": "EPOCH Session Context Loader",
+      "trigger": "SessionStart",
+      "action": {
+        "type": "command",
+        "command": "node --input-type=module <<'EOF'\ntry {\n  const { execSync } = require('child_process');\n  const snapshot = execSync('curl -s http://localhost:3001/trajectory-snapshot').toString();\n  const parsed = JSON.parse(snapshot);\n  console.log(JSON.stringify({\n    epochContext: {\n      trajectorySnapshot: parsed,\n      message: `EPOCH context loaded: coupling=${parsed.couplingScore?.toFixed(2)}, boundary=${parsed.boundaryIntegrityScore?.toFixed(2)}, drift=${parsed.activeDriftFindings ?? 0} finding(s)`\n    }\n  }));\n} catch (e) {\n  console.log(JSON.stringify({ epochContext: { message: 'EPOCH API not running — start with pnpm dev' } }));\n}\nEOF"
+      }
+    }
+  ]
+}
