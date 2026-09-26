@@ -19,6 +19,8 @@ export interface TestRun {
   passed: number;
   failed: number;
   files: TestFileResult[];
+  /** When the run started; identifies results carried forward from an earlier scan. */
+  startedAt: number;
   durationMs: number;
 }
 
@@ -45,6 +47,7 @@ export async function runTests(repoPath: string): Promise<TestRun> {
     passed: files.reduce((sum, f) => sum + f.passed, 0),
     failed: files.reduce((sum, f) => sum + f.failed, 0),
     files,
+    startedAt: started,
     durationMs: Date.now() - started
   };
 }
