@@ -16,7 +16,7 @@
     "console:dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "typecheck": "tsc --noEmit && pnpm --filter @epoch/sample-app typecheck",
+    "typecheck": "tsc --noEmit && tsc -p tsconfig.console.json && pnpm --filter @epoch/sample-app typecheck",
     "test": "vitest --run",
     "test:unit": "vitest --run tests/unit",
     "test:integration": "vitest --run tests/integration",
