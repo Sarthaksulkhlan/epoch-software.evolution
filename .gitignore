@@ -43,3 +43,5 @@ logs/
 
 # TypeScript build info
 *.tsbuildinfo
+.oxcode/
+.oxcode-memory/
