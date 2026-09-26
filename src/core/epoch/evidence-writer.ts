@@ -11,17 +11,18 @@ export class EvidenceWriter {
   readonly taskId: string;
   readonly ids: string[] = [];
 
-  constructor(readonly workflowId: string, agentType: AgentType, private readonly at: number) {
+  constructor(readonly workflowId: string, agentType: AgentType, private readonly at: number, phase?: 'analysis' | 'verification') {
     this.taskId = generateTaskId();
-    tasks.insertTask({
+    const task = {
       task_id: this.taskId,
       workflow_id: workflowId,
       agent_type: agentType,
-      status: 'RUNNING',
+      status: 'RUNNING' as const,
       dependencies: [],
       started_at: at,
       retry_count: 0
-    });
+    };
+    tasks.insertTask(phase ? { ...task, input_ref: phase } : task);
   }
 
   record(claim: string, status: EvidenceStatus, sourceRef: string, severity?: FindingSeverity): string {

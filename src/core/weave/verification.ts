@@ -51,7 +51,7 @@ export async function verifyWorkingTree(workflowId: string): Promise<Verificatio
   };
 
   const at = Date.now();
-  const writer = new EvidenceWriter(workflowId, 'scanner', at);
+  const writer = new EvidenceWriter(workflowId, 'scanner', at, 'verification');
   const file = path.join(EPOCH_WORK_DIR, 'verifications', `${workflowId}.json`);
   fs.mkdirSync(path.dirname(file), { recursive: true });
   const content = JSON.stringify(verification, null, 2);

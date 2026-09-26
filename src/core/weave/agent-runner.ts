@@ -44,15 +44,20 @@ export class AgentRunner {
   /** Run one agent outside the plan (Bob's subagents call this through EPOCH-MCP). */
   async runSingle(workflowId: string, agentType: AgentType, phase: AgentPhase, verification?: Verification): Promise<TaskOutcome> {
     if (!getAgent(agentType)) throw new Error(`EPOCH has no deterministic ${agentType} agent`);
-    const task: Task = {
+    // A specialist Bob calls by name consumes its planned task, so the task graph stays complete.
+    const planned = phase === 'analysis'
+      ? tasks.listTasksByWorkflow(workflowId).find(t => t.agent_type === agentType && t.status === 'PENDING')
+      : undefined;
+    const task: Task = planned ?? {
       task_id: generateTaskId(),
       workflow_id: workflowId,
       agent_type: agentType,
       status: 'PENDING',
       dependencies: [],
+      input_ref: phase,
       retry_count: 0
     };
-    tasks.insertTask(task);
+    if (!planned) tasks.insertTask(task);
     return this.runTask(task, phase, this.sharedInputs(), verification);
   }
 
