@@ -20,7 +20,14 @@
 </p>
 
 <p align="center">
-  <a href="https://codespaces.new/vighriday/epoch-software-evolution?quickstart=1"><img alt="Open in GitHub Codespaces" src="https://github.com/codespaces/badge.svg" height="32"></a>
+  <a href="https://epoch-wj5b.onrender.com/"><img alt="Live demo: epoch-wj5b.onrender.com" src="https://img.shields.io/badge/%E2%96%B6%20Live%20demo-epoch--wj5b.onrender.com-0b6e80?style=for-the-badge"></a>
+</p>
+
+<p align="center">
+  <b>Live demo: <a href="https://epoch-wj5b.onrender.com/">epoch-wj5b.onrender.com</a></b><br>
+  The real engine, running this repository's container in a guarded public mode. It opens at the moment a reviewer chooses a future:<br>
+  INC-3312 open, drift findings raised, futures A and B measured (<a href="https://epoch-wj5b.onrender.com/api/v1/simulations">see them</a>).
+  Hosted on Render's free plan, so the first visit after a quiet spell takes about a minute.
 </p>
 
 ---
@@ -78,11 +85,11 @@ Adopt a future with `POST /api/v1/simulations/remediate`, run it to the gate, ap
 
 | Where | How |
 | --- | --- |
-| GitHub Codespaces | Use the button above. The container installs, seeds the demo and forwards the console (5173) and the API (3000); run `pnpm dev`. |
+| GitHub Codespaces | [![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/vighriday/epoch-software-evolution?quickstart=1) The dev container installs, seeds the demo and forwards the console (5173) and the API (3000); run `pnpm dev`. |
 | One container | `docker build -t epoch . && docker run --rm -p 8080:8080 epoch`, then open <http://localhost:8080>. The API serves the console on the same port in a guarded public mode. |
-| Your own hosted copy | [![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/vighriday/epoch-software-evolution) builds the same image from [`render.yaml`](render.yaml) on your Render account; every push to the repository redeploys it. |
+| Render | [`render.yaml`](render.yaml) is the blueprint behind the live demo; every push to `main` redeploys it. |
 
-The container opens on the moment a reviewer chooses a future. Visitors can adopt one, run it to the gate and approve it; every other write answers 403, and a changed demo restores itself after 20 idle minutes ([ADR-029](DECISIONS.md#adr-029-a-hosted-demo-runs-in-a-guarded-public-mode)). CI builds the image, boots it and finishes the story as a visitor on every push.
+The container opens at the moment a reviewer chooses a future. Visitors can adopt one, run it to the gate and approve it; every other write answers 403, and a changed demo restores itself after 20 idle minutes ([ADR-029](DECISIONS.md#adr-029-a-hosted-demo-runs-in-a-guarded-public-mode)). CI builds the image, boots it and finishes the story as a visitor on every push.
 
 </details>
 
