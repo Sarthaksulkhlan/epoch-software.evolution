@@ -10,72 +10,73 @@ export type PlatformEventType =
   | 'task.failed'
   | 'evidence.created'
   | 'decision.recorded'
+  | 'approval.requested'
   | 'mutation.committed'
+  | 'trajectory.updated'
   | 'drift.detected'
+  | 'drift.resolved'
   | 'invariant.changed'
-  | 'simulation.started'
-  | 'simulation.completed'
   | 'epoch.proposed'
+  | 'epoch.confirmed'
   | 'incident.detected'
-  | 'incident.resolved';
+  | 'incident.resolved'
+  | 'simulation.started'
+  | 'simulation.updated'
+  | 'simulation.completed'
+  | 'repo.file_changed';
 
-const ALL_EVENT_TYPES: PlatformEventType[] = [
-  'event.ingested',
-  'workflow.created',
-  'workflow.updated',
-  'workflow.completed',
-  'task.started',
-  'task.completed',
-  'task.failed',
-  'evidence.created',
-  'decision.recorded',
-  'mutation.committed',
-  'drift.detected',
-  'invariant.changed',
-  'simulation.started',
-  'simulation.completed',
-  'epoch.proposed',
-  'incident.detected',
-  'incident.resolved'
-];
-
-export interface PlatformEvent {
+export interface PlatformEvent<P extends Record<string, unknown> = Record<string, unknown>> {
+  /** Monotonic id; the SSE stream uses it as the event id for resumption. */
+  id: number;
   type: PlatformEventType;
   timestamp: number;
-  payload: Record<string, unknown>;
+  payload: P;
 }
 
+type Handler = (event: PlatformEvent) => void;
+
+const RECENT_LIMIT = 500;
+const ANY = '*';
+
+/**
+ * In-process event bus. Every emit is wrapped in a PlatformEvent envelope so
+ * subscribers (SSE, metrics, the macro loop) always know the event type.
+ */
 export class EventBus {
   private emitter = new EventEmitter();
-  
-  emit(event: string, payload: unknown): void {
-    this.emitter.emit(event, payload);
+  private nextId = 1;
+  private recentEvents: PlatformEvent[] = [];
+
+  emit<P extends Record<string, unknown>>(type: PlatformEventType, payload: P): PlatformEvent<P> {
+    const event: PlatformEvent<P> = { id: this.nextId++, type, timestamp: Date.now(), payload };
+    this.recentEvents.push(event);
+    if (this.recentEvents.length > RECENT_LIMIT) this.recentEvents.shift();
+    this.emitter.emit(type, event);
+    this.emitter.emit(ANY, event);
+    return event;
   }
-  
-  on(type: string, handler: (payload: unknown) => void): void {
+
+  on(type: PlatformEventType, handler: Handler): void {
     this.emitter.on(type, handler);
   }
-  
-  off(type: string, handler: (payload: unknown) => void): void {
+
+  off(type: PlatformEventType, handler: Handler): void {
     this.emitter.off(type, handler);
   }
-  
-  once(type: string, handler: (payload: unknown) => void): void {
-    this.emitter.once(type, handler);
+
+  onAny(handler: Handler): void {
+    this.emitter.on(ANY, handler);
   }
-  
-  onAny(handler: (event: PlatformEvent) => void): void {
-    for (const type of ALL_EVENT_TYPES) {
-      this.emitter.on(type, handler);
-    }
+
+  offAny(handler: Handler): void {
+    this.emitter.off(ANY, handler);
   }
-  
-  offAny(handler: (event: PlatformEvent) => void): void {
-    for (const type of ALL_EVENT_TYPES) {
-      this.emitter.off(type, handler);
-    }
+
+  /** Events emitted after `afterId` (all retained events when omitted), oldest first. */
+  recent(afterId = 0): PlatformEvent[] {
+    return this.recentEvents.filter(e => e.id > afterId);
   }
-  
+
   removeAllListeners(): void {
     this.emitter.removeAllListeners();
   }
