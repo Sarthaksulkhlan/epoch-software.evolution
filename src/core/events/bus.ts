@@ -1,4 +1,4 @@
-import EventEmitter from 'eventemitter3';
+import { EventEmitter } from 'node:events';
 
 export type PlatformEventType =
   | 'event.ingested'
@@ -43,7 +43,7 @@ const ANY = '*';
  * subscribers (SSE, metrics, the macro loop) always know the event type.
  */
 export class EventBus {
-  private emitter = new EventEmitter();
+  private emitter = new EventEmitter().setMaxListeners(0);
   private nextId = 1;
   private recentEvents: PlatformEvent[] = [];
 
