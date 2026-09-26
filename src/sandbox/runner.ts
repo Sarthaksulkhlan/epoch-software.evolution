@@ -1,12 +1,16 @@
 import { execFile } from 'node:child_process';
 import fs from 'node:fs';
+import { createRequire } from 'node:module';
 import path from 'node:path';
+import { pathToFileURL } from 'node:url';
 import { promisify } from 'node:util';
 
 const execFileAsync = promisify(execFile);
 
-/** tsx's ESM loader, resolved from the platform so it works for any repo location. */
-const TSX_LOADER = import.meta.resolve('tsx/esm');
+/** tsx's ESM loader, resolved from the platform so repos outside the project (tests, worktrees) can run TypeScript. */
+const TSX_LOADER = pathToFileURL(
+  path.join(path.dirname(createRequire(import.meta.url).resolve('tsx/package.json')), 'dist', 'esm', 'index.mjs')
+).href;
 
 export interface TestFileResult {
   file: string;
