@@ -11,6 +11,7 @@
   "scripts": {
     "dev": "concurrently --names API,UI --prefix-colors blue,green \"pnpm api:dev\" \"pnpm console:dev\"",
     "api": "tsx src/api/server.ts",
+    "start": "node --import tsx src/api/server.ts",
     "api:dev": "tsx watch src/api/server.ts",
     "mcp": "node --import tsx src/api/mcp/mcp-server.ts",
     "console:dev": "vite",
@@ -26,6 +27,7 @@
     "demo-reset": "tsx scripts/demo-reset.ts",
     "demo:replay": "tsx scripts/demo-replay.ts",
     "demo:futures": "tsx scripts/demo-futures.ts",
+    "showcase:snapshot": "tsx scripts/showcase-snapshot.ts",
     "format": "prettier --write src docs scripts"
   },
   "dependencies": {
