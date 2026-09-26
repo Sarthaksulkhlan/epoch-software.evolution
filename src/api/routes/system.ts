@@ -12,6 +12,7 @@ import { changedFiles, currentBranch, diffStat, discardChanges, headSha, sampleR
 import { resetDemo } from '../../demo/seed.js';
 import { prepareFutures, replayDrift } from '../../demo/replay.js';
 import { ActorSchema, HttpError, parseBody } from '../http.js';
+import { publicDemo, ShowcaseBusyError } from '../public-demo.js';
 
 export const systemRoutes = new Hono();
 
@@ -24,7 +25,8 @@ systemRoutes.get('/health', c => {
     database: getDbPath(),
     sampleRepo: ready ? { path: repo, head: headSha(repo), branch: currentBranch(repo) } : null,
     mutations: mutations.countMutations(),
-    seeded: mutations.countMutations() > 0
+    seeded: mutations.countMutations() > 0,
+    demo: publicDemo.status()
   });
 });
 
@@ -59,6 +61,18 @@ systemRoutes.post('/demo/replay', async c => {
 systemRoutes.post('/demo/futures', async c => {
   const simulation = await prepareFutures();
   return c.json({ simulation }, 201);
+});
+
+/** Reset and replay up to the moment a reviewer chooses a future: drift, INC-3312 and futures A and B measured. */
+systemRoutes.post('/demo/showcase', async c => {
+  try {
+    const showcase = await publicDemo.buildShowcase();
+    if (showcase === 'failed') throw new HttpError(500, 'Preparing the showcase failed; see the server log');
+    return c.json({ showcase, mutations: mutations.countMutations() });
+  } catch (error) {
+    if (error instanceof ShowcaseBusyError) throw new HttpError(409, error.message);
+    throw error;
+  }
 });
 
 /**

@@ -19,6 +19,7 @@ import { registerSimulationRoutes } from './routes/simulations.js';
 import { registerSystemRoutes } from './routes/system.js';
 import { registerSSERoutes } from './routes/sse.js';
 import { registerConsoleRoutes } from './console/routes.js';
+import { publicDemo } from './public-demo.js';
 
 const DEFAULT_ORIGINS = ['http://localhost:5173', 'http://127.0.0.1:5173', 'http://localhost:4173'];
 
@@ -29,6 +30,7 @@ export function createApp(options: { log?: boolean } = {}): Hono {
   if (options.log !== false) app.use('*', logger());
   app.onError(handleError);
   app.notFound(c => c.json({ error: `No route for ${c.req.method} ${c.req.path}` }, 404));
+  if (publicDemo.enabled) app.use('/api/*', publicDemo.guard());
 
   registerSystemRoutes(app);
   registerEventRoutes(app);
@@ -79,6 +81,10 @@ export function startServer(): void {
   const hostname = process.env.HOST ?? '127.0.0.1';
   serve({ fetch: createApp().fetch, port, hostname }, info => {
     console.log(`EPOCH API listening on http://${hostname}:${info.port}`);
+    if (publicDemo.enabled) {
+      console.log('Public demo mode: reads are open, writes are limited; preparing the showcase');
+      publicDemo.start();
+    }
   });
 }
 
