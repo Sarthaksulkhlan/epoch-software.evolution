@@ -11,7 +11,7 @@
   "scripts": {
     "dev": "concurrently --names \"API,MCP,UI\" --prefix-colors \"blue,cyan,green\" \"pnpm api:dev\" \"pnpm mcp:dev\" \"pnpm console:dev\"",
     "api:dev": "tsx watch src/api/server.ts",
-    "mcp:dev": "tsx watch src/api/mcp-server.ts",
+    "mcp:dev": "tsx watch src/api/mcp/mcp-server.ts",
     "console:dev": "vite src/console",
     "build": "tsc -p tsconfig.json && vite build src/console",
     "typecheck": "tsc --noEmit",
