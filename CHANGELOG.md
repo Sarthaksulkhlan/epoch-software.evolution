@@ -2,6 +2,26 @@
 
 All notable changes to EPOCH. Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Added
+
+- The four-lens console (React 19, Vite, Tailwind CSS 4), merged from the console branch; `pnpm dev` runs it next to the API and proxies `/api` to it.
+- Public demo mode (`EPOCH_PUBLIC_DEMO=1`): open reads, a short list of allowed writes run one at a time, 403 for everything else (ADR-029).
+- The showcase: the demo replayed to the moment a reviewer chooses a future, restorable from a snapshot in about a second (`POST /api/demo/showcase`, `pnpm showcase:snapshot`).
+- The API serves the built console when `EPOCH_CONSOLE_DIR` is set; `pnpm start` runs it without watch mode.
+- A `Dockerfile` that runs everything as one service, a Render blueprint, and CI that typechecks, tests and builds the console and the image.
+- 6 tests for public demo mode (38 in total).
+
+### Changed
+
+- `pnpm typecheck` also checks the console, with its own strict tsconfig.
+- Test and probe processes share a concurrency limit (`EPOCH_TEST_CONCURRENCY`).
+
+### Removed
+
+- AI Studio scaffolding from the console template (Gemini SDK, express, `metadata.json`), unused dependencies and `bun.lock`.
+
 ## [0.4.0] — 2026-09-27
 
 The platform runs end to end on a real watched service.
