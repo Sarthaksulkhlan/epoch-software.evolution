@@ -132,7 +132,7 @@ Every change passed every test. Only the trajectory shows the damage.
 Causal archaeology ranks the candidate chain behind INC-3312, drawn here from cause to incident:
 
 ```mermaid
-flowchart LR
+flowchart TB
     M1041(["M-1041 · baseline<br/>integrity 1.00"]) --> M1042["M-1042 · 30-day window<br/>INV-TIME-02 weakened · 0.875"]
     M1042 --> M1051["M-1051 · AI latency hotfix<br/>INV-BOUND-04 weakened · 0.75"]
     M1051 --> M1077["M-1077 · AI reconciler speed-up<br/>both violated · 0.50"]
@@ -151,7 +151,7 @@ flowchart LR
 Two futures are forked from M-1084 into git worktrees and measured like real changes. The reviewer adopts one through the same gate:
 
 ```mermaid
-flowchart LR
+flowchart TB
     M1084["M-1084<br/>integrity 0.50"] -. fork .-> A["Future A · retention 30 days<br/>11/11 tests · probe passes · 0.75"]
     M1084 -. fork .-> B["Future B · restore the boundary<br/>11/11 tests · probe passes · 1.00"]
     B == "adopted at the gate" ==> M1085(["M-1085<br/>integrity 1.00"])
@@ -247,7 +247,7 @@ flowchart TB
     BOB -- "stdio MCP · 20 tools" --> MCP["EPOCH-MCP"]
     MCP -- "HTTP" --> API
     subgraph API["EPOCH API · Hono"]
-        direction LR
+        direction TB
         W["WEAVE<br/>state machine · context · plans<br/>specialists · verification · gate"]
         EV["EPOCH<br/>mutations · scanner · invariants<br/>trajectory · drift · epochs · incidents"]
         F["Futures<br/>git worktrees measured<br/>like real changes"]
