@@ -1,0 +1,15 @@
+.git
+.github
+.internal
+.epoch
+.showcase
+.playwright-mcp
+**/node_modules
+dist
+data
+coverage
+bob_sessions
+*.log
+.env
+.env.*
+!.env.example
