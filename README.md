@@ -107,11 +107,11 @@ The container opens on the moment a reviewer chooses a future. Visitors can adop
 
 ## The story in numbers
 
-The repository ships a small payments service ([`packages/sample-app`](packages/sample-app)) with a seeded history. Every number below comes from EPOCH's scanner, the service's 11 tests or its runtime probe. Nothing is typed in by hand; `pnpm test` checks this story end to end.
+The repository ships a small payments service ([`packages/sample-app`](packages/sample-app)) with a seeded history. Every number below comes from EPOCH's scanner, the service's 11 tests or its runtime probe. Nothing is typed in by hand; `pnpm test` checks this story end to end. The line marks the envelope floor at 0.80.
 
 ```mermaid
 xychart-beta
-    title "Boundary integrity after each mutation (bars) and the 0.80 envelope floor (line)"
+    title "Boundary integrity per mutation"
     x-axis ["M-1041", "M-1042", "M-1051", "M-1077", "M-1084", "M-1085"]
     y-axis "Boundary integrity" 0 --> 1
     bar [1.0, 0.875, 0.75, 0.5, 0.5, 1.0]
@@ -129,32 +129,40 @@ xychart-beta
 
 Every change passed every test. Only the trajectory shows the damage.
 
+Causal archaeology ranks the candidate chain behind INC-3312, drawn here from cause to incident:
+
 ```mermaid
 flowchart LR
-    M1041(["M-1041 · baseline<br/>integrity 1.00"])
-    M1042["M-1042 · 30-day window<br/>INV-TIME-02 weakened · 0.875"]
-    M1051["M-1051 · AI latency hotfix<br/>INV-BOUND-04 weakened · 0.75"]
-    M1077["M-1077 · AI reconciler speed-up<br/>both violated · 0.50"]
-    M1084["M-1084 · AI webhooks<br/>coupling 0.24 · 0.50"]
-    INC{{"INC-3312<br/>dispute on day 20 finds no settlement"}}
-    A["Future A · retention 30 days<br/>integrity 0.75"]
-    B["Future B · restore the boundary<br/>integrity 1.00"]
-    M1085(["M-1085 · adopted future B<br/>integrity 1.00"])
-
-    M1041 --> M1042 --> M1051 --> M1077 --> M1084
-    INC -. "CAUSED_BY · most proximate (inferred)" .-> M1077
-    INC -. "CAUSED_BY · earliest plausible (hypothesised)" .-> M1042
-    M1084 -. fork .-> A
-    M1084 -. fork .-> B
-    B ==> M1085
-    M1085 -. REMEDIATES .-> INC
+    M1041(["M-1041 · baseline<br/>integrity 1.00"]) --> M1042["M-1042 · 30-day window<br/>INV-TIME-02 weakened · 0.875"]
+    M1042 --> M1051["M-1051 · AI latency hotfix<br/>INV-BOUND-04 weakened · 0.75"]
+    M1051 --> M1077["M-1077 · AI reconciler speed-up<br/>both violated · 0.50"]
+    M1077 --> M1084["M-1084 · AI webhooks<br/>coupling 0.24 · 0.50"]
+    M1077 -. "most proximate (inferred)" .-> INC{{"INC-3312<br/>dispute on day 20 finds no settlement"}}
+    M1042 -. "earliest plausible (hypothesised)" .-> INC
 
     classDef good fill:#e3f3ea,stroke:#1d7a4a,color:#10301d
     classDef warn fill:#fbf0de,stroke:#9a5a06,color:#3b2606
     classDef bad fill:#fde8e6,stroke:#b3261e,color:#4a0f0b
-    class M1041,M1085,B good
-    class M1042,M1051,A warn
+    class M1041 good
+    class M1042,M1051 warn
     class M1077,M1084,INC bad
+```
+
+Two futures are forked from M-1084 into git worktrees and measured like real changes. The reviewer adopts one through the same gate:
+
+```mermaid
+flowchart LR
+    M1084["M-1084<br/>integrity 0.50"] -. fork .-> A["Future A · retention 30 days<br/>11/11 tests · probe passes · 0.75"]
+    M1084 -. fork .-> B["Future B · restore the boundary<br/>11/11 tests · probe passes · 1.00"]
+    B == "adopted at the gate" ==> M1085(["M-1085<br/>integrity 1.00"])
+    M1085 -. REMEDIATES .-> INC{{"INC-3312 resolved"}}
+
+    classDef good fill:#e3f3ea,stroke:#1d7a4a,color:#10301d
+    classDef warn fill:#fbf0de,stroke:#9a5a06,color:#3b2606
+    classDef bad fill:#fde8e6,stroke:#b3261e,color:#4a0f0b
+    class B,M1085,INC good
+    class A warn
+    class M1084 bad
 ```
 
 Both futures pass all 11 tests and the probe. They differ in what they leave behind:
