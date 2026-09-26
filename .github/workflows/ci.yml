@@ -33,4 +33,23 @@ jobs:
         with:
           context: .
           push: false
+          load: true
           tags: epoch:ci
+      - name: Run the container and finish the story as a visitor
+        run: |
+          docker run -d --name epoch -p 8080:8080 epoch:ci
+          for i in $(seq 1 60); do
+            curl -sf http://127.0.0.1:8080/api/health | grep -q '"showcase":"ready"' && break
+            sleep 2
+          done
+          curl -sf http://127.0.0.1:8080/api/health | jq -e '.demo.showcase == "ready" and .mutations == 26'
+          curl -sf http://127.0.0.1:8080/futures | grep -q '<div id="root">'
+          code=$(curl -s -o /dev/null -w '%{http_code}' -X POST http://127.0.0.1:8080/api/workflows -H 'Content-Type: application/json' -d '{"requirement":"x"}')
+          test "$code" = 403
+          b=$(curl -sf http://127.0.0.1:8080/api/v1/simulations | jq -r '.[] | select(.scenarioId == "B") | .id')
+          wf=$(curl -sf -X POST http://127.0.0.1:8080/api/v1/simulations/remediate -H 'Content-Type: application/json' -d "{\"scenarioId\":\"$b\"}" | jq -r '.workflowId')
+          curl -sf -X POST "http://127.0.0.1:8080/api/workflows/$wf/run-to-approval" -H 'Content-Type: application/json' -d '{}' | jq -e '.package.trajectoryPreview.withinEnvelope'
+          curl -sf -X POST "http://127.0.0.1:8080/api/v1/workflows/$wf/decision" -H 'Content-Type: application/json' -d '{"decision":"APPROVED"}' | jq -e '.mutation.id == "M-1085"'
+      - name: Container log
+        if: always()
+        run: docker logs epoch || true
