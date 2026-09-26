@@ -1,0 +1,28 @@
+{
+  "description": "Seeded history of the payments service before the demo starts (epoch E-0). These records describe how the baseline code in src/ came to be; they are demo fixtures, not real commits.",
+  "epoch": { "id": "E-0", "name": "Baseline v3.3.0", "properties": ["ledger and order tables behind their services", "15-day chargeback window matches 15-day retention", "card data only in the vault"] },
+  "mutations": [
+    { "id": "M-1020", "at": "2026-09-01T09:10:00Z", "author": "seed history · human PR #801", "components": ["ledger"], "intent": "Introduce LedgerService as the only writer to the settlement tables" },
+    { "id": "M-1021", "at": "2026-09-02T11:25:00Z", "author": "seed history · human PR #806", "components": ["orders", "vault"], "intent": "Add OrderService checkout with card tokenisation" },
+    { "id": "M-1022", "at": "2026-09-03T14:05:00Z", "author": "seed history · human PR #809", "components": ["vault"], "intent": "Move raw card numbers behind the card vault" },
+    { "id": "M-1023", "at": "2026-09-04T10:40:00Z", "author": "seed history · human PR #812", "components": ["api", "orders", "ledger"], "intent": "Add the dispute API with a 15-day chargeback window" },
+    { "id": "M-1024", "at": "2026-09-05T16:20:00Z", "author": "seed history · human PR #815", "components": ["archival", "ledger"], "intent": "Nightly archival of settled ledger rows after 15 days" },
+    { "id": "M-1025", "at": "2026-09-06T09:55:00Z", "author": "seed history · AI coding agent PR #818", "components": ["notifications", "api"], "intent": "Send merchant webhooks when a dispute opens" },
+    { "id": "M-1026", "at": "2026-09-07T13:30:00Z", "author": "seed history · human PR #821", "components": ["disputes", "ledger", "api"], "intent": "Reconcile disputed settlements through LedgerService" },
+    { "id": "M-1027", "at": "2026-09-08T10:15:00Z", "author": "seed history · human PR #824", "components": ["ledger"], "intent": "Add a double-entry trial balance check" },
+    { "id": "M-1028", "at": "2026-09-09T15:45:00Z", "author": "seed history · AI coding agent PR #827", "components": ["orders"], "intent": "Show the dispute window on the checkout receipt" },
+    { "id": "M-1029", "at": "2026-09-10T11:05:00Z", "author": "seed history · human PR #830", "components": ["notifications"], "intent": "Record webhook deliveries instead of sending them in test environments" },
+    { "id": "M-1030", "at": "2026-09-11T09:35:00Z", "author": "seed history · human PR #833", "components": ["ledger", "archival"], "intent": "Make settlement lookups archive-aware in LedgerService" },
+    { "id": "M-1031", "at": "2026-09-12T14:50:00Z", "author": "seed history · AI coding agent PR #836", "components": ["orders"], "intent": "Keep the order table private to the orders module" },
+    { "id": "M-1032", "at": "2026-09-13T10:25:00Z", "author": "seed history · human PR #839", "components": ["vault", "orders"], "intent": "Print only the last four card digits on receipts" },
+    { "id": "M-1033", "at": "2026-09-14T16:10:00Z", "author": "seed history · human PR #842", "components": ["api"], "intent": "Return reason codes when a dispute is rejected" },
+    { "id": "M-1034", "at": "2026-09-15T12:40:00Z", "author": "seed history · AI coding agent PR #845", "components": ["ledger", "archival"], "intent": "Cover archival moves with ledger unit tests" },
+    { "id": "M-1035", "at": "2026-09-16T09:20:00Z", "author": "seed history · human PR #848", "components": ["disputes"], "intent": "Rename reconciliation statuses" },
+    { "id": "M-1036", "at": "2026-09-17T15:05:00Z", "author": "seed history · human PR #851", "components": ["notifications"], "intent": "Version webhook payloads" },
+    { "id": "M-1037", "at": "2026-09-18T11:45:00Z", "author": "seed history · AI coding agent PR #854", "components": ["orders"], "intent": "Validate order amounts at checkout" },
+    { "id": "M-1038", "at": "2026-09-19T14:30:00Z", "author": "seed history · human PR #857", "components": ["archival"], "intent": "Report how many settlements each archival run moves" },
+    { "id": "M-1039", "at": "2026-09-21T10:00:00Z", "author": "seed history · human PR #860", "components": ["vault"], "intent": "Switch to sequence-based vault tokens" },
+    { "id": "M-1040", "at": "2026-09-22T13:15:00Z", "author": "seed history · AI coding agent PR #863", "components": ["api"], "intent": "Reject disputes for orders that have not settled" },
+    { "id": "M-1041", "at": "2026-09-24T09:40:00Z", "author": "seed history · human PR #866", "components": ["ledger"], "intent": "Move settlement types into the ledger module" }
+  ]
+}
