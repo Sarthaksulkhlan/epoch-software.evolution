@@ -5,7 +5,7 @@ The system EPOCH watches during the demo. It is small on purpose: seven modules,
 ## Modules
 
 | Component | File | Owns |
-|---|---|---|
+| --- | --- | --- |
 | api | `src/api/disputes.ts` | Customer dispute endpoint and `CHARGEBACK_WINDOW_DAYS` |
 | orders | `src/orders/order-service.ts`, `order-store.ts` | Checkout, receipts (`DISPUTE_WINDOW_NOTICE_DAYS`), the order table |
 | ledger | `src/ledger/ledger-service.ts`, `db.ts` | Settlements, archive-aware lookups, trial balance |
@@ -19,7 +19,7 @@ The system EPOCH watches during the demo. It is small on purpose: seven modules,
 Declared in `invariants.json` as machine-checkable rules. EPOCH evaluates them against the code at every mutation.
 
 | Id | Rule |
-|---|---|
+| --- | --- |
 | INV-BOUND-04 | `src/orders/order-store.ts` and `src/ledger/db.ts` are imported only from inside their own module (1 violation = WEAKENED, 2 = VIOLATED) |
 | INV-TIME-02 | `CHARGEBACK_WINDOW_DAYS` ≤ `LEDGER_RETENTION_DAYS`; VIOLATED when it fails and the ledger table is also read outside `src/ledger/` |
 | INV-DATA-01 | `test/ledger.test.ts` passes (double-entry balance) |
@@ -35,7 +35,7 @@ The runtime probe `scenarios/late-dispute-after-archival.ts` settles an order on
 - `history/futures/A-extend-retention.patch`, `B-restore-boundary.patch`: the two counterfactual futures, used by tests and as a fallback when Bob does not write them live.
 
 | State | Tests | Probe | INV-BOUND-04 | INV-TIME-02 |
-|---|---|---|---|---|
+| --- | --- | --- | --- | --- |
 | Baseline | 11/11 | pass (dispute rejected by the 15-day policy) | HOLDING | HOLDING |
 | + M-1042 | 11/11 | pass | HOLDING | WEAKENED |
 | + M-1051 | 11/11 | pass | WEAKENED | WEAKENED |
