@@ -22,7 +22,7 @@ export interface ScenarioInput {
 }
 
 /**
- * Counterfactual futures (dossier §19): fork the system at a mutation into
+ * Counterfactual futures: fork the system at a mutation into
  * isolated worktrees, let Bob (or a patch) change each one, then measure every
  * future with the same tests, probes and scanner as real mutations. Results
  * are scenarios for comparison, not predictions of production.

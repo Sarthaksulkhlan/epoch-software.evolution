@@ -18,7 +18,7 @@ import { trajectoryEngine } from '../epoch/trajectory.js';
 /**
  * Checks the working tree before approval: tests, runtime probes, a structural
  * scan of the system as it would be, and the drift findings approving would
- * raise. This is the "likely trajectory impact" of dossier §23 step 4.
+ * raise. This is the "likely trajectory impact" shown at the approval gate.
  */
 export async function verifyWorkingTree(workflowId: string): Promise<Verification> {
   const repo = sampleRepoPath();

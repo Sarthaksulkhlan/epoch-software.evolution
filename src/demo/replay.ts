@@ -61,7 +61,7 @@ async function landChange(step: Step, kind: 'feature' | 'replay', approver: stri
 }
 
 /**
- * Dossier §23 step 6: replay the safe-looking AI changes after the chargeback
+ * Replay the safe-looking AI changes after the chargeback
  * feature. `withFeature` lands the scripted M-1042 first when Bob has not made it live.
  */
 export async function replayDrift(options: { withFeature?: boolean } = {}): Promise<ReplayedStep[]> {

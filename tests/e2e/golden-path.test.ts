@@ -6,7 +6,7 @@ import { applyPatch, sampleRepoPath } from '../../src/sandbox/sample-repo.js';
 import { eventBus, type PlatformEvent } from '../../src/core/events/bus.js';
 
 /**
- * Dossier §23, end to end over the HTTP API: a locally-correct feature,
+ * The demo story, end to end over the HTTP API: a locally-correct feature,
  * safe-looking AI changes, drift and an incident, the candidate causal chain,
  * two measured futures, and the remediation that returns the trajectory to
  * its envelope. The scripted patches stand in for the changes Bob makes live.

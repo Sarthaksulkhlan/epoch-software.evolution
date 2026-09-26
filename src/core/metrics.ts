@@ -31,7 +31,7 @@ export interface PlatformMetrics {
 }
 
 /**
- * Dossier §27: measure the prototype instead of claiming percentages. Every
+ * Measure the prototype instead of claiming percentages. Every
  * number here is computed from the persisted event log and records.
  */
 export function computeMetrics(): PlatformMetrics {

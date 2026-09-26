@@ -3,7 +3,7 @@ import { apiIsUp, API_URL, fail, post } from './cli.js';
 import type { ReplayedStep } from '../src/demo/replay.js';
 
 /**
- * Dossier §23 step 6: replay the safe-looking AI changes (M-1051, M-1077,
+ * Replay the safe-looking AI changes (M-1051, M-1077,
  * M-1084). Pass --with-feature to land the scripted M-1042 first when Bob has
  * not implemented the chargeback change live.
  */

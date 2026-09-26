@@ -6,7 +6,7 @@ import { createPlan, type TaskPlan } from './task-graph.js';
 import { workflowEngine } from './workflow-engine.js';
 
 /**
- * The micro loop (dossier §10): event → context → plan → agent work →
+ * The micro loop (ADR-021): event → context → plan → agent work →
  * evidence → decision. When Bob drives a workflow these steps are called one
  * by one through EPOCH-MCP; `runToApproval` runs them all for replays and for
  * workflows started from the console without Bob.

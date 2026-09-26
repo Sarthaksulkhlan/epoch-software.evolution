@@ -25,7 +25,7 @@ incidentRoutes.post('/:id/status', async c => {
   return c.json({ incident: incidents.getIncident(incident.incident_id) });
 });
 
-/** Start the incident workflow (dossier §21): reproduce, trace, propose a patch, validate, approve. */
+/** Start the incident workflow: reproduce, trace, propose a patch, validate, approve. */
 incidentRoutes.post('/:id/workflow', async c => {
   const body = await parseBody(c, z.object({ actor: ActorSchema.default('console user') }));
   const incident = incidents.getIncident(c.req.param('id'));

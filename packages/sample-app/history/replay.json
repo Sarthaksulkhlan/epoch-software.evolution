@@ -1,5 +1,5 @@
 {
-  "description": "Safe-looking AI changes replayed after the live chargeback feature (dossier §23 step 6). Each one passes the service's own tests.",
+  "description": "Safe-looking AI changes replayed after the live chargeback feature. Each one passes the service's own tests.",
   "feature": {
     "id": "M-1042",
     "title": "Extend chargeback eligibility from 15 to 30 days",

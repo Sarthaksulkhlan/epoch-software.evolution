@@ -22,7 +22,7 @@ export interface DebtSummary {
 const AI_AUTHOR = /\b(ai|agent|bob)\b/i;
 
 /**
- * Evolution debt (dossier §20): accumulated divergence between the system
+ * Evolution debt: accumulated divergence between the system
  * being built and the intended one, reported per dimension with the mutations
  * behind it. Scores interpret measurements, so they are labelled inferred.
  */
