@@ -1,0 +1,42 @@
+name: Keep the live demo awake
+
+# Render's free plan puts a service to sleep after 15 minutes without traffic.
+# GitHub starts scheduled runs on a best-effort basis and some start late, so
+# every run pings four times over nine minutes and runs are scheduled every ten
+# minutes, away from the busy top of the hour. A late run still overlaps the
+# previous one's pings. The job never fails: an unreachable demo is reported as
+# a warning in the run summary instead.
+on:
+  schedule:
+    - cron: '3,13,23,33,43,53 * * * *'
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: keep-warm
+  cancel-in-progress: false
+
+jobs:
+  ping:
+    name: Ping the live demo
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Ping every three minutes
+        env:
+          URL: https://epoch-wj5b.onrender.com/api/health
+        run: |
+          for i in 1 2 3 4; do
+            code=$(curl -s -o health.json -w '%{http_code}' --max-time 90 --retry 3 --retry-delay 15 --retry-all-errors "$URL") || code=000
+            now=$(date -u +%H:%M:%S)
+            if [ "$code" = "200" ]; then
+              echo "$now UTC awake: $(head -c 160 health.json)"
+              echo "- $now UTC: awake" >> "$GITHUB_STEP_SUMMARY"
+            else
+              echo "::warning::$now UTC the live demo answered $code"
+              echo "- $now UTC: answered $code" >> "$GITHUB_STEP_SUMMARY"
+            fi
+            if [ "$i" -lt 4 ]; then sleep 180; fi
+          done
+          exit 0
