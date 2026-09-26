@@ -1,9 +1,16 @@
 {
-  "extends": "./tsconfig.base.json",
   "compilerOptions": {
-    "outDir": "dist",
-    "rootDir": "src",
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "types": ["vite/client", "node"],
+    "jsx": "react-jsx",
+    "skipLibCheck": true,
+    "isolatedModules": true,
+    "noEmit": true,
     "paths": {
+      "@/*": ["./*"],
       "@epoch/shared/*": ["./src/shared/*"],
       "@epoch/core/*": ["./src/core/*"],
       "@epoch/agents/*": ["./src/agents/*"],
@@ -12,6 +19,5 @@
       "@epoch/sandbox/*": ["./src/sandbox/*"]
     }
   },
-  "include": ["src/**/*.ts", "scripts/**/*.ts"],
-  "exclude": ["node_modules", "dist", "src/console", "packages"]
+  "include": ["src/**/*.ts", "src/**/*.tsx", "scripts/**/*.ts"]
 }
