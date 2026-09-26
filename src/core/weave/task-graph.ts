@@ -1,183 +1,107 @@
-import { nanoid } from 'nanoid';
-import { createTask } from '../../store/index.js';
+import fs from 'node:fs';
+import path from 'node:path';
+import { tasks, workflows } from '../../store/index.js';
+import type { AgentType, Task } from '../../shared/schema/task.schema.js';
+import type { WorkflowKind } from '../../shared/schema/workflow.schema.js';
+import { generateTaskId } from '../../shared/utils/id.js';
+import { EPOCH_WORK_DIR } from '../../sandbox/sample-repo.js';
 
-// Temporary inline types
-// @ts-ignore
-import type { Task as SchemaTask } from '../../shared/schema/task.schema.js';
+export interface PlanStep {
+  agent: AgentType;
+  dependsOn: AgentType[];
+}
 
-export interface Task {
-  id: string;
+/** Which specialists run for each kind of workflow, and in what order (docs/AGENTS.md parallelism map). */
+export const PLANS: Record<Exclude<WorkflowKind, 'seed'>, PlanStep[]> = {
+  feature: [
+    { agent: 'context', dependsOn: [] },
+    { agent: 'historian', dependsOn: [] },
+    { agent: 'security', dependsOn: [] },
+    { agent: 'qa', dependsOn: [] },
+    { agent: 'evolution', dependsOn: ['context', 'historian'] },
+    { agent: 'synthesis', dependsOn: ['context', 'historian', 'security', 'qa', 'evolution'] }
+  ],
+  incident: [
+    { agent: 'historian', dependsOn: [] },
+    { agent: 'incident', dependsOn: [] },
+    { agent: 'evolution', dependsOn: [] },
+    { agent: 'security', dependsOn: ['evolution'] },
+    { agent: 'qa', dependsOn: ['evolution'] },
+    { agent: 'synthesis', dependsOn: ['historian', 'incident', 'evolution', 'security', 'qa'] }
+  ],
+  remediation: [
+    { agent: 'historian', dependsOn: [] },
+    { agent: 'security', dependsOn: [] },
+    { agent: 'qa', dependsOn: [] },
+    { agent: 'evolution', dependsOn: [] },
+    { agent: 'synthesis', dependsOn: ['historian', 'security', 'qa', 'evolution'] }
+  ],
+  replay: [
+    { agent: 'security', dependsOn: [] },
+    { agent: 'qa', dependsOn: [] },
+    { agent: 'evolution', dependsOn: ['security', 'qa'] },
+    { agent: 'synthesis', dependsOn: ['security', 'qa', 'evolution'] }
+  ]
+};
+
+export interface TaskPlan {
   workflowId: string;
-  type: string;
-  status: 'PENDING' | 'RUNNING' | 'COMPLETED' | 'FAILED';
-  retryCount: number;
-  created_at: number;
+  tasks: Task[];
+  /** Tasks grouped into layers that can run in parallel, in execution order. */
+  layers: Task[][];
+  planRef: string;
 }
 
-export interface TaskNode {
-  task: Task;
-  dependsOn: string[];  // task IDs
-  dependedBy: string[]; // task IDs
+/** Persist the task DAG for a workflow and write the plan document. */
+export function createPlan(workflowId: string, kind: WorkflowKind, planText?: string): TaskPlan {
+  if (kind === 'seed') throw new Error('Seed workflows have no plan');
+  const steps = PLANS[kind];
+  const idByAgent = new Map<AgentType, string>(steps.map(s => [s.agent, generateTaskId()]));
+  const created: Task[] = steps.map(step => ({
+    task_id: idByAgent.get(step.agent)!,
+    workflow_id: workflowId,
+    agent_type: step.agent,
+    status: 'PENDING',
+    dependencies: step.dependsOn.map(a => idByAgent.get(a)!),
+    retry_count: 0
+  }));
+  for (const task of created) tasks.insertTask(task);
+
+  const layers = toLayers(created);
+  const document = [
+    `# Plan for ${workflowId} (${kind})`,
+    '',
+    planText ? `## Plan from Bob\n\n${planText}\n` : '',
+    '## Specialist task graph',
+    ...layers.map((layer, i) => `${i + 1}. ${layer.map(t => t.agent_type).join(' ∥ ')}`),
+    ''
+  ].join('\n');
+  const file = path.join(EPOCH_WORK_DIR, 'plans', `${workflowId}.md`);
+  fs.mkdirSync(path.dirname(file), { recursive: true });
+  fs.writeFileSync(file, document, 'utf8');
+  const planRef = path.relative(process.cwd(), file).split(path.sep).join('/');
+  workflows.setWorkflowRefs(workflowId, { plan_ref: planRef });
+  return { workflowId, tasks: created, layers, planRef };
 }
 
-export class TaskGraph {
-  private nodes: Map<string, TaskNode> = new Map();
-  
-  addTask(task: Task): void {
-    if (!this.nodes.has(task.id)) {
-      this.nodes.set(task.id, {
-        task,
-        dependsOn: [],
-        dependedBy: []
-      });
-      createTask(task);
+/** Group tasks into dependency layers (Kahn's algorithm). Throws on cycles. */
+export function toLayers(all: Task[]): Task[][] {
+  const remaining = new Map(all.map(t => [t.task_id, t]));
+  const done = new Set<string>();
+  const layers: Task[][] = [];
+  while (remaining.size > 0) {
+    const ready = [...remaining.values()].filter(t => t.dependencies.every(d => done.has(d)));
+    if (ready.length === 0) throw new Error('Task graph has a cycle');
+    layers.push(ready);
+    for (const t of ready) {
+      remaining.delete(t.task_id);
+      done.add(t.task_id);
     }
   }
-  
-  addDependency(taskId: string, dependsOnTaskId: string): void {
-    const node = this.nodes.get(taskId);
-    const dependsOnNode = this.nodes.get(dependsOnTaskId);
-    
-    if (node && dependsOnNode) {
-      if (!node.dependsOn.includes(dependsOnTaskId)) {
-        node.dependsOn.push(dependsOnTaskId);
-      }
-      if (!dependsOnNode.dependedBy.includes(taskId)) {
-        dependsOnNode.dependedBy.push(taskId);
-      }
-    }
-  }
-  
-  getReadyTasks(): Task[] {
-    const ready: Task[] = [];
-    for (const node of this.nodes.values()) {
-      if (node.task.status === 'PENDING') {
-        const allDepsMet = node.dependsOn.every(depId => {
-          const depNode = this.nodes.get(depId);
-          return depNode && depNode.task.status === 'COMPLETED';
-        });
-        if (allDepsMet) {
-          ready.push(node.task);
-        }
-      }
-    }
-    return ready;
-  }
-  
-  completeTask(taskId: string): Task[] {
-    const node = this.nodes.get(taskId);
-    if (node) {
-      node.task.status = 'COMPLETED';
-    }
-    return this.getReadyTasks();
-  }
-  
-  failTask(taskId: string): void {
-    const node = this.nodes.get(taskId);
-    if (node) {
-      node.task.status = 'FAILED';
-    }
-  }
-  
-  isComplete(): boolean {
-    for (const node of this.nodes.values()) {
-      if (node.task.status !== 'COMPLETED') {
-        return false;
-      }
-    }
-    return true;
-  }
-  
-  hasFailed(): boolean {
-    for (const node of this.nodes.values()) {
-      if (node.task.status === 'FAILED') {
-        return true;
-      }
-    }
-    return false;
-  }
-  
-  getAllTasks(): Task[] {
-    return Array.from(this.nodes.values()).map(n => n.task);
-  }
-  
-  getExecutionOrder(): Task[] {
-    const order: Task[] = [];
-    const visited = new Set<string>();
-    const visiting = new Set<string>();
+  return layers;
+}
 
-    const visit = (taskId: string) => {
-      if (visited.has(taskId)) return;
-      if (visiting.has(taskId)) throw new Error(`Cycle detected at task ${taskId}`);
-      
-      visiting.add(taskId);
-      const node = this.nodes.get(taskId);
-      if (node) {
-        for (const dep of node.dependsOn) {
-          visit(dep);
-        }
-        visited.add(taskId);
-        visiting.delete(taskId);
-        order.push(node.task);
-      }
-    };
-
-    for (const taskId of this.nodes.keys()) {
-      visit(taskId);
-    }
-
-    return order;
-  }
-  
-  static buildFeatureWorkflowGraph(workflowId: string): TaskGraph {
-    const graph = new TaskGraph();
-    const now = Date.now();
-    
-    const historian: Task = { id: nanoid(), workflowId, type: 'HISTORIAN', status: 'PENDING', retryCount: 0, created_at: now };
-    const security: Task = { id: nanoid(), workflowId, type: 'SECURITY', status: 'PENDING', retryCount: 0, created_at: now };
-    const qa: Task = { id: nanoid(), workflowId, type: 'QA', status: 'PENDING', retryCount: 0, created_at: now };
-    const context: Task = { id: nanoid(), workflowId, type: 'CONTEXT', status: 'PENDING', retryCount: 0, created_at: now };
-    const synthesis: Task = { id: nanoid(), workflowId, type: 'SYNTHESIS', status: 'PENDING', retryCount: 0, created_at: now };
-
-    [historian, security, qa, context, synthesis].forEach(t => graph.addTask(t));
-
-    // Synthesis sequentially follows all parallel tasks
-    graph.addDependency(synthesis.id, historian.id);
-    graph.addDependency(synthesis.id, security.id);
-    graph.addDependency(synthesis.id, qa.id);
-    graph.addDependency(synthesis.id, context.id);
-
-    return graph;
-  }
-  
-  static buildIncidentGraph(workflowId: string): TaskGraph {
-    const graph = new TaskGraph();
-    const now = Date.now();
-    
-    // Group 1
-    const historian: Task = { id: nanoid(), workflowId, type: 'HISTORIAN', status: 'PENDING', retryCount: 0, created_at: now };
-    const incident: Task = { id: nanoid(), workflowId, type: 'INCIDENT', status: 'PENDING', retryCount: 0, created_at: now };
-    const evolution: Task = { id: nanoid(), workflowId, type: 'EVOLUTION', status: 'PENDING', retryCount: 0, created_at: now };
-    
-    // Group 2
-    const security: Task = { id: nanoid(), workflowId, type: 'SECURITY', status: 'PENDING', retryCount: 0, created_at: now };
-    const qa: Task = { id: nanoid(), workflowId, type: 'QA', status: 'PENDING', retryCount: 0, created_at: now };
-    
-    // Synthesis
-    const synthesis: Task = { id: nanoid(), workflowId, type: 'SYNTHESIS', status: 'PENDING', retryCount: 0, created_at: now };
-
-    [historian, incident, evolution, security, qa, synthesis].forEach(t => graph.addTask(t));
-
-    // Group 2 depends on Evolution from Group 1
-    graph.addDependency(security.id, evolution.id);
-    graph.addDependency(qa.id, evolution.id);
-    
-    // Synthesis depends on all tasks being done
-    graph.addDependency(synthesis.id, historian.id);
-    graph.addDependency(synthesis.id, incident.id);
-    graph.addDependency(synthesis.id, security.id);
-    graph.addDependency(synthesis.id, qa.id);
-
-    return graph;
-  }
+export function readPlan(workflowId: string): string | undefined {
+  const ref = workflows.getWorkflow(workflowId)?.plan_ref;
+  return ref && fs.existsSync(ref) ? fs.readFileSync(ref, 'utf8') : undefined;
 }
