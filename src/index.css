@@ -1,0 +1,316 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  }
+
+  body {
+    font-family: var(--font-sans);
+    background-color: #050608;
+    color: #e2e8f0;
+    overflow-x: hidden;
+    letter-spacing: -0.01em;
+  }
+}
+
+/* Custom technical dark scrollbars */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+::-webkit-scrollbar-track {
+  background: #08090d;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #1e222d;
+  border-radius: 2px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #2a3242;
+}
+
+/* =========================================================================
+   GPU-ACCELERATED LIVE BACKGROUND (Lag-Free, Zero Reflow, Pure Compositor)
+   ========================================================================= */
+
+/* Moving Technical Precision Grid (Isolated on GPU composite layer) */
+@keyframes grid-travel {
+  0% {
+    background-position: 0 0, 0 0;
+  }
+  100% {
+    background-position: 48px 48px, 48px 48px;
+  }
+}
+
+.live-moving-grid {
+  background-size: 32px 32px, 128px 128px;
+  background-image: 
+    linear-gradient(to right, rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+    linear-gradient(to right, rgba(255, 255, 255, 0.06) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.06) 1px, transparent 1px);
+  animation: grid-travel 28s linear infinite;
+  transform: translateZ(0);
+  will-change: background-position;
+}
+
+/* Horizontal Technical Laser Scanner: 100% GPU translate3d (No Layout Reflow) */
+@keyframes scanline-sweep {
+  0% {
+    transform: translate3d(0, -20px, 0);
+    opacity: 0;
+  }
+  15% {
+    opacity: 0.45;
+  }
+  85% {
+    opacity: 0.45;
+  }
+  100% {
+    transform: translate3d(0, 100vh, 0);
+    opacity: 0;
+  }
+}
+
+.live-scan-bar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1.5px;
+  background: linear-gradient(90deg, transparent 5%, rgba(56, 189, 248, 0.35) 50%, transparent 95%);
+  box-shadow: 0 0 8px rgba(56, 189, 248, 0.3);
+  animation: scanline-sweep 12s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 5;
+  will-change: transform, opacity;
+}
+
+/* Data Flow Particles traveling on technical tracks */
+@keyframes particle-run-x {
+  0% {
+    transform: translate3d(-100%, 0, 0);
+    opacity: 0;
+  }
+  20% {
+    opacity: 0.7;
+  }
+  80% {
+    opacity: 0.7;
+  }
+  100% {
+    transform: translate3d(1200%, 0, 0);
+    opacity: 0;
+  }
+}
+
+@keyframes particle-run-y {
+  0% {
+    transform: translate3d(0, -100%, 0);
+    opacity: 0;
+  }
+  20% {
+    opacity: 0.7;
+  }
+  80% {
+    opacity: 0.7;
+  }
+  100% {
+    transform: translate3d(0, 1200%, 0);
+    opacity: 0;
+  }
+}
+
+.particle-runner-x {
+  animation: particle-run-x 9s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  will-change: transform;
+}
+
+.particle-runner-x-delayed {
+  animation: particle-run-x 13s cubic-bezier(0.4, 0, 0.2, 1) infinite 4s;
+  will-change: transform;
+}
+
+.particle-runner-y {
+  animation: particle-run-y 11s cubic-bezier(0.4, 0, 0.2, 1) infinite 2s;
+  will-change: transform;
+}
+
+/* =========================================================================
+   SILK-SMOOTH GPU LENS SHIFT (Lag-Free, Snappy 340ms, Zero Font Scaling Re-raster)
+   Pure translate3d + opacity running on the GPU compositor at solid 60fps
+   ========================================================================= */
+
+@keyframes lens-shift-forward {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 6px, 0);
+  }
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes lens-shift-reverse {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, -6px, 0);
+  }
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+.lens-shift-forward {
+  animation: lens-shift-forward 200ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  will-change: opacity, transform;
+  backface-visibility: hidden;
+}
+
+.lens-shift-reverse {
+  animation: lens-shift-reverse 200ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  will-change: opacity, transform;
+  backface-visibility: hidden;
+}
+
+/* =========================================================================
+   APPROVAL REQUIRED & TRAJECTORY DRIFT — SLOW, CALM PULSE (LONG 6s INTERVAL)
+   subtle → noticeable → stable rather than pop → disappear → pop
+   ========================================================================= */
+
+@keyframes status-breathe-warn-slow {
+  0%, 84%, 100% {
+    transform: scale(1);
+    opacity: 0.92;
+    box-shadow: 0 0 0 0 rgba(245, 158, 11, 0);
+  }
+  92% {
+    transform: scale(1.06);
+    opacity: 1;
+    box-shadow: 0 0 8px 1.5px rgba(245, 158, 11, 0.35);
+  }
+}
+
+.animate-pulse-warn-slow {
+  animation: status-breathe-warn-slow 6s ease-in-out infinite;
+}
+
+/* Active Stage Subtle Progress */
+@keyframes active-stage-glow {
+  0%, 100% {
+    border-color: rgba(56, 189, 248, 0.5);
+    box-shadow: 0 0 10px rgba(56, 189, 248, 0.12);
+  }
+  50% {
+    border-color: rgba(56, 189, 248, 0.85);
+    box-shadow: 0 0 16px rgba(56, 189, 248, 0.22);
+  }
+}
+
+.animate-active-stage {
+  animation: active-stage-glow 3s ease-in-out infinite;
+}
+
+/* Live Events indicator breathing */
+@keyframes status-breathe-live {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.9;
+  }
+  50% {
+    transform: scale(1.18);
+    opacity: 1;
+    box-shadow: 0 0 6px rgba(16, 185, 129, 0.6);
+  }
+}
+
+.animate-pulse-live {
+  animation: status-breathe-live 2.4s ease-in-out infinite;
+}
+
+/* Causal Edge Flowing Dashes */
+@keyframes edge-dash-motion {
+  0% {
+    stroke-dashoffset: 32;
+  }
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+
+.animate-edge-flow {
+  stroke-dasharray: 6 6;
+  animation: edge-dash-motion 1.4s linear infinite;
+}
+
+/* Event Entrance */
+@keyframes new-event-slide {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, -6px, 0);
+  }
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+.animate-event-in {
+  animation: new-event-slide 240ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Branch Draw Sequence (Futures) */
+@keyframes branch-draw-down {
+  0% {
+    stroke-dashoffset: 120;
+    opacity: 0;
+  }
+  100% {
+    stroke-dashoffset: 0;
+    opacity: 1;
+  }
+}
+
+.animate-branch-draw {
+  stroke-dasharray: 120;
+  animation: branch-draw-down 450ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Button Micro-Interactions */
+.btn-control {
+  transition: transform 160ms cubic-bezier(0.16, 1, 0.3, 1), background-color 160ms ease, border-color 160ms ease, color 160ms ease;
+}
+.btn-control:hover {
+  transform: translateY(-1px);
+}
+.btn-control:active {
+  transform: translateY(0.5px) scale(0.99);
+}
+
+/* Reduced Motion Safety */
+@media (prefers-reduced-motion: reduce) {
+  .live-moving-grid,
+  .live-scan-bar,
+  .particle-runner-x,
+  .particle-runner-x-delayed,
+  .particle-runner-y,
+  .lens-shift-forward,
+  .lens-shift-reverse,
+  .animate-pulse-warn-slow,
+  .animate-pulse-live,
+  .animate-active-stage,
+  .animate-edge-flow,
+  .animate-event-in,
+  .animate-branch-draw {
+    animation: none !important;
+    transform: none !important;
+  }
+}
