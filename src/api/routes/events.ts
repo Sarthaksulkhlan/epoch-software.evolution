@@ -1,49 +1,46 @@
 import { Hono } from 'hono';
-import { nanoid } from 'nanoid';
+import { z } from 'zod';
 import { events } from '../../store/index.js';
-import type { Event } from '../../store/queries/events.js';
+import { EventType } from '../../shared/schema/event.schema.js';
+import { generateEventId } from '../../shared/utils/id.js';
+import { eventBus } from '../../core/events/bus.js';
+import { notFound, parseBody, queryInt } from '../http.js';
 
 export const eventRoutes = new Hono();
 
-function parseEventPayload(body: Record<string, unknown>): Record<string, unknown> {
-  return (body.payload ?? {}) as Record<string, unknown>;
-}
+const EventBody = z.object({
+  type: EventType,
+  source: z.string().trim().min(1).max(120),
+  payload: z.record(z.string(), z.unknown()).default({}),
+  repo: z.string().optional(),
+  branch: z.string().optional(),
+  timestamp: z.number().int().positive().optional()
+});
 
-eventRoutes.post('/', async (c) => {
-  const body = await c.req.json<Record<string, unknown>>();
-  const now = Date.now();
-
-  const event: Event = {
-    event_id: body.event_id ? String(body.event_id) : nanoid(),
-    type: String(body.type ?? 'requirement.created'),
-    source: String(body.source ?? 'api'),
-    timestamp: typeof body.timestamp === 'number' ? body.timestamp : now,
-    repo: body.repo ? String(body.repo) : null,
-    branch: body.branch ? String(body.branch) : null,
-    payload: parseEventPayload(body)
+/** Record an external event (webhook, alert). Starting a workflow is a separate, explicit call. */
+eventRoutes.post('/', async c => {
+  const body = await parseBody(c, EventBody);
+  const event = {
+    event_id: generateEventId(),
+    type: body.type,
+    source: body.source,
+    timestamp: body.timestamp ?? Date.now(),
+    payload: body.payload,
+    ...(body.repo ? { repo: body.repo } : {}),
+    ...(body.branch ? { branch: body.branch } : {})
   };
-
   events.insertEvent(event);
-  return c.json({ status: 'created', event }, 201);
+  eventBus.emit('event.ingested', { eventId: event.event_id, type: event.type, source: event.source });
+  return c.json({ event }, 201);
 });
 
-eventRoutes.get('/', (c) => {
-  const type = c.req.query('type');
-  const limit = parseInt(c.req.query('limit') || '50', 10);
-  const offset = c.req.query('offset') ? parseInt(c.req.query('offset')!, 10) : undefined;
+eventRoutes.get('/', c => c.json({
+  events: events.listEvents({ type: c.req.query('type'), limit: queryInt(c, 'limit', 50), offset: queryInt(c, 'offset', 0) })
+}));
 
-  const result = events.listEvents({ type, limit, offset });
-  return c.json({ events: result });
-});
-
-eventRoutes.get('/:id', (c) => {
-  const id = c.req.param('id');
-  const event = events.getEvent(id);
-
-  if (!event) {
-    return c.json({ error: 'Event not found' }, 404);
-  }
-
+eventRoutes.get('/:id', c => {
+  const event = events.getEvent(c.req.param('id'));
+  if (!event) throw notFound(`Event ${c.req.param('id')}`);
   return c.json({ event });
 });
 
