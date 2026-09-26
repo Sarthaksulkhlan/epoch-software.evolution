@@ -1,71 +1,60 @@
-import type { Agent, AgentContext, AgentResult } from '../contracts.js';
-import { createEvidence } from '../contracts.js';
+import { observed, riskFromClaims, type Agent, type AgentClaim, type AgentContext, type AgentResult } from '../contracts.js';
+import { addedLines, changedFilesOf } from '../code-search.js';
 
+const SECRET = /(api[_-]?key|secret|password|token)\s*[:=]\s*['"][^'"]{8,}['"]/i;
+const CARD_NUMBER = /\b(?:\d[ -]?){13,19}\b/;
+
+/**
+ * Security agent: scans the diff. It always reports, including when it finds
+ * nothing, so an empty result is never mistaken for an approval.
+ */
 export class SecurityAgent implements Agent {
-  readonly name = 'security';
+  readonly type = 'security' as const;
+  readonly role = 'Scans the diff for secrets, card data and boundary-crossing imports';
 
   async run(ctx: AgentContext): Promise<AgentResult> {
-    const evidence = [];
-    const ref = `agent-analysis:security:${ctx.taskId}`;
-    let findings = 0;
+    const claims: AgentClaim[] = [];
+    const lines = addedLines(ctx.diff);
+    const files = changedFilesOf(ctx.diff);
+    const source = `diff:${ctx.workflowId}`;
 
-    const affectedComponents = ctx.affectedComponents ?? ctx.contextBundle.repository.relevant_files;
-    const authComponents = affectedComponents.filter(c =>
-      c.toLowerCase().includes('auth') || c.toLowerCase().includes('login')
-    );
-    if (authComponents.length > 0) {
-      findings++;
-      evidence.push(createEvidence(ctx,
-        `Modifications to authentication boundaries detected in: ${authComponents.join(', ')}.`,
-        'observed',
-        ref,
-        'high'
-      ));
+    if (lines.length === 0) {
+      claims.push(observed('No code changes in the working tree yet; nothing to scan.', source));
+      return { agent: this.type, claims, summary: 'Nothing to scan.', riskLevel: 'low' };
     }
 
-    const diff = ctx.diff ?? '';
-    const dependencyManifest = ctx.dependencyManifest ?? '';
-    const scanSurface = `${diff}\n${dependencyManifest}`;
-
-    if (scanSurface.includes('API_KEY') || scanSurface.includes('SECRET') || scanSurface.includes('PASSWORD')) {
-      findings++;
-      evidence.push(createEvidence(ctx,
-        'Possible hardcoded secrets (API_KEY, SECRET or PASSWORD) detected in static scan.',
-        'observed',
-        ref,
-        'critical'
-      ));
-    } else {
-      evidence.push(createEvidence(ctx,
-        'No hardcoded secrets detected in static scan.',
-        'observed',
-        ref
-      ));
+    for (const line of lines) {
+      if (SECRET.test(line.text)) {
+        claims.push(observed(`Possible hard-coded secret added in ${line.file}: "${line.text.trim().slice(0, 80)}"`, `code:${line.file}`, 'critical'));
+      }
+      if (CARD_NUMBER.test(line.text) && !line.file.startsWith('test/') && !line.file.startsWith('scenarios/')) {
+        claims.push(observed(`Card-number-like literal added in ${line.file} outside tests.`, `code:${line.file}`, 'high'));
+      }
     }
 
-    if (dependencyManifest.includes('CVE') || dependencyManifest.includes('vulnerability')) {
-      findings++;
-      evidence.push(createEvidence(ctx,
-        'Dependency manifest references known vulnerabilities; review required.',
-        'observed',
-        ref,
-        'high'
-      ));
+    for (const invariant of ctx.spec.invariants) {
+      if (invariant.rule.type !== 'import-boundary') continue;
+      for (const guarded of invariant.rule.modules) {
+        const stem = guarded.module.replace(/^src\//, '').replace(/\.ts$/, '');
+        for (const line of lines) {
+          const importsGuarded = /\bimport\b/.test(line.text) && line.text.includes(stem.split('/').pop() ?? stem) && line.text.includes(stem.split('/')[0] ?? stem);
+          const allowed = guarded.allowedImporters.some(prefix => line.file === prefix || line.file.startsWith(prefix));
+          if (importsGuarded && !allowed) {
+            claims.push(observed(`${line.file} adds an import of ${guarded.module}, which ${invariant.id} (${invariant.name}) reserves for ${guarded.allowedImporters.join(', ')}.`, `code:${line.file}`, 'high'));
+          }
+        }
+      }
     }
 
-    evidence.push(createEvidence(ctx,
-      findings === 0
-        ? 'Security scan completed with no specific findings.'
-        : `Security scan completed with ${findings} potential issue(s) flagged.`,
-      'observed',
-      ref
-    ));
+    if (claims.length === 0) {
+      claims.push(observed(`No secrets, card numbers or boundary-crossing imports in ${lines.length} added line(s) across ${files.length} file(s).`, source));
+    }
 
     return {
-      agentName: this.name,
-      evidence,
-      summary: `Security scan produced ${findings} finding(s).`,
-      riskLevel: findings > 0 ? 'high' : 'low'
+      agent: this.type,
+      claims,
+      summary: `Scanned ${lines.length} added line(s) in ${files.length} file(s).`,
+      riskLevel: riskFromClaims(claims)
     };
   }
 }
