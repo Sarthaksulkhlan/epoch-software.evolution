@@ -20,6 +20,8 @@ RUN apt-get update \
  && apt-get install -y --no-install-recommends git ca-certificates \
  && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
+# The showcase restore replaces /app/.epoch and /app/data, so the app user owns /app itself.
+RUN chown node:node /app
 COPY --from=build --chown=node:node /app /app
 USER node
 ENV NODE_ENV=production \
