@@ -61,10 +61,29 @@ export function hasUncommittedChanges(repoPath = sampleRepoPath()): boolean {
   return changedFiles(repoPath).length > 0;
 }
 
-/** Unified diff of the working tree (including untracked files) against HEAD. */
+/**
+ * Unified diff of the working tree against HEAD, including untracked files.
+ * Read-only: it never touches the index, so it is safe to call concurrently.
+ */
 export function workingTreeDiff(repoPath = sampleRepoPath()): string {
-  git(repoPath, ['add', '-A', '--intent-to-add']);
-  return git(repoPath, ['diff', '--no-color', 'HEAD']);
+  const tracked = git(repoPath, ['diff', '--no-color', 'HEAD']);
+  const untracked = git(repoPath, ['ls-files', '--others', '--exclude-standard'])
+    .split('\n')
+    .map(f => f.trim())
+    .filter(f => f.length > 0);
+  const added = untracked.map(file => {
+    const lines = fs.readFileSync(path.join(repoPath, file), 'utf8').split('\n');
+    if (lines.at(-1) === '') lines.pop();
+    return [
+      `diff --git a/${file} b/${file}`,
+      'new file mode 100644',
+      '--- /dev/null',
+      `+++ b/${file}`,
+      `@@ -0,0 +1,${lines.length} @@`,
+      ...lines.map(line => `+${line}`)
+    ].join('\n');
+  });
+  return `${[tracked.trimEnd(), ...added].filter(part => part.length > 0).join('\n')}\n`;
 }
 
 /** Diff between two commits of the sample repository. */

@@ -40,6 +40,8 @@ export async function gitAsync(cwd: string, args: readonly string[], identity: G
 
 function gitArgs(args: readonly string[], identity: GitIdentity): string[] {
   return [
+    // Read-only commands must not take the index lock while agents run in parallel.
+    '--no-optional-locks',
     '-c', 'core.autocrlf=false',
     '-c', `user.name=${identity.name}`,
     '-c', `user.email=${identity.email}`,
