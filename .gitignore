@@ -48,3 +48,6 @@ logs/
 
 # Demo working state: sample repo copy, futures worktrees, context bundles
 .epoch/
+
+# Internal material (presenter script, team notes, concept dossier); never published
+.internal/
