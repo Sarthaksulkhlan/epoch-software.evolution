@@ -2,7 +2,7 @@
   "extends": "./tsconfig.base.json",
   "compilerOptions": {
     "outDir": "dist",
-    "rootDir": "src",
+    "rootDir": ".",
     "paths": {
       "@epoch/shared/*": ["./src/shared/*"],
       "@epoch/core/*": ["./src/core/*"],
