@@ -41,6 +41,7 @@
 | [ADR-026](#adr-026-bob-drives-epoch-through-mcp) | Bob drives EPOCH through MCP | Accepted | 2026-09-27 |
 | [ADR-027](#adr-027-observations-come-from-a-structural-scanner-over-a-separate-sample-repository) | Observations come from a structural scanner over a separate sample repository | Accepted | 2026-09-27 |
 | [ADR-028](#adr-028-console-stack-as-built) | Console stack as built | Accepted | 2026-09-27 |
+| [ADR-029](#adr-029-a-hosted-demo-runs-in-a-guarded-public-mode) | A hosted demo runs in a guarded public mode | Accepted | 2026-09-27 |
 
 ---
 
@@ -1064,6 +1065,41 @@ The console uses React 19, Vite, Tailwind CSS 4, React Router 7, Recharts and a 
 ### Rationale
 
 The four-lens design of ADR-017 holds. A custom SVG graph gave the time-and-lane layout the Trajectory view needed without a graph library, and an adapter on the API side let the console keep its types unchanged.
+
+---
+
+## ADR-029: A hosted demo runs in a guarded public mode
+
+**Status:** Accepted
+**Date:** 2026-09-27
+**Deciders:** Platform team
+**Relates to:** ADR-019, ADR-025, ADR-027
+
+### Context
+
+Reviewers need a link they can open without installing anything. EPOCH is not a static site: it keeps SQLite state, drives git in a sample repository and runs that repository's tests and probes in child processes. Several routes accept a patch or evidence text, and a patch applied to a worktree becomes code the moment its tests run. Exposing the full API publicly would let anyone run code on the host.
+
+### Decision
+
+Host EPOCH as one container in which the API also serves the built console. With `EPOCH_PUBLIC_DEMO=1`:
+
+- Reads are open. Writes are limited to adopting a measured future, running its remediation to the approval gate, deciding, and restoring the showcase. Everything else answers 403.
+- Allowed writes run one at a time (429 otherwise), and a restore is allowed at most once a minute.
+- The instance opens on the showcase: the demo replayed to the moment a reviewer chooses a future. It is built once when the image is built, saved as a snapshot of the database and working directory, and restored in about a second at boot, on request, and after 20 idle minutes.
+
+### Alternatives considered
+
+| Alternative | Why rejected |
+| --- | --- |
+| Static console with recorded data | Nothing a visitor does would reach the engine. |
+| Full API behind accounts | Accounts and quotas are out of scope for the prototype; the 403 list is simpler to audit. |
+| Serverless functions | SQLite files, git worktrees and child processes need a long-lived process with a filesystem. |
+
+### Consequences
+
+- The approval gate stays a person's decision (ADR-019); in the hosted demo that person is the visitor.
+- Hosting needs Node and git only; `render.yaml` describes the service and CI builds the image on every push.
+- Anything that would let a visitor submit code stays local, where Bob drives the full lifecycle through EPOCH-MCP.
 
 ---
 

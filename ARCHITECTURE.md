@@ -211,6 +211,8 @@ See [docs/DATA_MODEL.md](docs/DATA_MODEL.md).
 
 A Hono server bound to 127.0.0.1 with a CORS allowlist. `/api` exposes the platform; `/api/v1` returns the console's view models; `/api/stream` and `/api/v1/stream` are Server-Sent Events with `Last-Event-ID` resume from a 500-event buffer. Errors: 400 validation, 404 missing, 409 state conflicts. Full list: [docs/API_CONTRACT.md](docs/API_CONTRACT.md).
 
+With `EPOCH_CONSOLE_DIR` set, the API also serves the built console, so one process hosts everything; the `Dockerfile` builds that single service. `EPOCH_PUBLIC_DEMO=1` puts a guard in front of every write for a hosted instance (section 12) and prepares the showcase: the demo replayed to the moment a reviewer chooses a future, saved once as a snapshot of the database and working directory and restored in about a second.
+
 ## 11. Console
 
 Four lenses: **Current** (active workflow, specialist cards, evidence, approval gate), **History** (mutations, incidents), **Trajectory** (evolution graph, integrity trend, drift findings, invariants) and **Futures** (scenario comparison and remediation). React 19, Vite, Tailwind CSS 4, React Router 7, Recharts and a custom SVG evolution graph.
@@ -224,11 +226,12 @@ Four lenses: **Current** (active workflow, specialist cards, evidence, approval 
 | Consequential change | nothing reaches the graph without a recorded decision | approval gate |
 | Isolation | experiments in a separate repo and worktrees; git without a shell; validated ids | sandbox |
 | Retries | at most three per task, then a recorded failure | agent runner |
+| Public exposure | a hosted instance only lets visitors adopt a measured future, run it to the gate, decide and restore the showcase, one action at a time; routes that take patches, files or evidence answer 403 | public demo guard |
 | Audit | immutable events, transition log, immutable mutations | store, workflow engine |
 
 ## 13. Determinism and tests
 
-`pnpm demo-reset` produces identical mutations, timestamps and state hashes on every run (tested). `pnpm test` runs 32 tests: scanner and rules, drift patterns, the state machine, the API contract, deterministic reset, and the golden path end to end over HTTP.
+`pnpm demo-reset` produces identical mutations, timestamps and state hashes on every run (tested). `pnpm test` runs 38 tests: scanner and rules, drift patterns, the state machine, the API contract, deterministic reset, public demo mode, and the golden path end to end over HTTP. CI runs the typecheck, the tests, the console build and the container build on every push.
 
 ## 14. Limits
 
