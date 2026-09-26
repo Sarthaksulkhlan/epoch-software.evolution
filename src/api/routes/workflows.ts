@@ -1,161 +1,178 @@
 import { Hono } from 'hono';
-import { nanoid } from 'nanoid';
-import { workflows, evidence, tasks, mutations } from '../../store/index.js';
-import { workflowEngine } from '../../core/weave/workflow-engine.js';
-import { approvalGate } from '../../core/weave/approval-gate.js';
-import { contextBuilder } from '../../core/weave/context-builder.js';
-import { agentCoordinator } from '../../agents/coordinator.js';
+import { z } from 'zod';
+import { evidence, tasks, workflows } from '../../store/index.js';
+import { AgentType } from '../../shared/schema/task.schema.js';
+import { EvidenceStatus, FindingSeverity } from '../../shared/schema/evidence.schema.js';
+import { WorkflowKind, WorkflowStatus } from '../../shared/schema/workflow.schema.js';
+import { generateEvidenceId, generateTaskId } from '../../shared/utils/id.js';
+import { eventBus } from '../../core/events/bus.js';
 import {
-  historianAgent,
-  contextAgent,
-  securityAgent,
-  qaAgent,
-  evolutionAnalystAgent,
-  performanceAgent,
-  maintainabilityAgent,
-  dependencyAgent
-} from '../../agents/index.js';
-import type { WorkflowStatus } from '../../shared/schema/workflow.schema.js';
-import type { Agent, AgentContext, AgentResult } from '../../agents/contracts.js';
+  agentRunner,
+  approvalGate,
+  contextBuilder,
+  loadContext,
+  loadVerification,
+  recordPlan,
+  replayWorkflow,
+  runAnalysis,
+  runToApproval,
+  workflowEngine
+} from '../../core/weave/index.js';
+import { mutationEngine } from '../../core/epoch/mutation-engine.js';
+import { sampleRepoPath, workingTreeDiff } from '../../sandbox/sample-repo.js';
+import { ActorSchema, HttpError, notFound, parseBody, queryInt } from '../http.js';
 
 export const workflowRoutes = new Hono();
 
-const agentRegistry: Record<string, Agent> = {
-  historian: historianAgent,
-  context: contextAgent,
-  security: securityAgent,
-  qa: qaAgent,
-  evolution: evolutionAnalystAgent,
-  performance: performanceAgent,
-  maintainability: maintainabilityAgent,
-  dependency: dependencyAgent
-};
-
-workflowRoutes.get('/', (c) => {
-  const status = c.req.query('status') ?? undefined;
-  const limit = c.req.query('limit') ? parseInt(c.req.query('limit')!, 10) : undefined;
-  const offset = c.req.query('offset') ? parseInt(c.req.query('offset')!, 10) : undefined;
-
-  const result = workflows.listWorkflows({ status, limit, offset });
-  return c.json({ workflows: result });
+const StartSchema = z.object({
+  requirement: z.string().trim().min(3),
+  title: z.string().trim().min(1).optional(),
+  kind: WorkflowKind.exclude(['seed']).default('feature'),
+  author: z.string().trim().min(1).default('console user'),
+  source: z.string().trim().min(1).default('epoch-api'),
+  mutation_id: z.string().regex(/^M-\d+$/).optional(),
+  /** Run the specialists and verification up to the approval gate in the background. */
+  auto: z.boolean().default(false)
 });
 
-workflowRoutes.post('/', async (c) => {
-  const body = await c.req.json<{ trigger_event_id?: string }>();
-  const triggerEventId = body.trigger_event_id ?? nanoid();
-
-  const workflow = workflowEngine.createWorkflow(triggerEventId);
-  return c.json({ workflow }, 201);
+workflowRoutes.get('/', c => {
+  const list = workflows.listWorkflows({ status: c.req.query('status'), limit: queryInt(c, 'limit', 50), offset: queryInt(c, 'offset', 0) })
+    .filter(w => c.req.query('include_seed') === 'true' || w.kind !== 'seed');
+  return c.json({ workflows: list });
 });
 
-workflowRoutes.get('/:id', (c) => {
-  const id = c.req.param('id');
-  const workflow = workflows.getWorkflow(id);
+workflowRoutes.get('/active', c => c.json({ workflows: workflows.getActiveWorkflows() }));
 
-  if (!workflow) {
-    return c.json({ error: 'Workflow not found' }, 404);
-  }
-
-  const taskList = tasks.listTasksByWorkflow(id);
-  const evidenceList = evidence.listEvidenceByWorkflow(id);
-  const mutation = workflow.mutation_id ? mutations.getMutation(workflow.mutation_id) : null;
-
-  return c.json({ workflow, tasks: taskList, evidence: evidenceList, mutation });
-});
-
-workflowRoutes.post('/:id/transition', async (c) => {
-  const id = c.req.param('id');
-  const body = await c.req.json<{ status: WorkflowStatus; current_stage?: string }>();
-
-  try {
-    const workflow = workflowEngine.transition(id, body.status, body.current_stage);
-    return c.json({ workflow });
-  } catch (err) {
-    const message = err instanceof Error ? err.message : 'Transition failed';
-    return c.json({ error: message }, 409);
-  }
-});
-
-workflowRoutes.post('/:id/approve', async (c) => {
-  const id = c.req.param('id');
-  const body = await c.req.json<{ actor: string; rationale?: string; scope?: string }>();
-
-  if (!approvalGate.isAwaitingApproval(id)) {
-    return c.json({ error: 'Workflow is not awaiting approval' }, 409);
-  }
-
-  const decision = approvalGate.recordDecision(id, body.actor, 'APPROVED', body.rationale, body.scope);
-  return c.json({ status: 'approved', workflow_id: id, decision });
-});
-
-workflowRoutes.post('/:id/reject', async (c) => {
-  const id = c.req.param('id');
-  const body = await c.req.json<{ actor: string; rationale?: string; scope?: string }>();
-
-  if (!approvalGate.isAwaitingApproval(id)) {
-    return c.json({ error: 'Workflow is not awaiting approval' }, 409);
-  }
-
-  const decision = approvalGate.recordDecision(id, body.actor, 'REJECTED', body.rationale, body.scope);
-  return c.json({ status: 'rejected', workflow_id: id, decision });
-});
-
-workflowRoutes.post('/:id/request-approval', (c) => {
-  const id = c.req.param('id');
-  const summary = approvalGate.requestApproval(id);
-  return c.json(summary);
-});
-
-workflowRoutes.get('/:id/plan', (c) => {
-  const id = c.req.param('id');
-  const workflow = workflows.getWorkflow(id);
-
-  if (!workflow) {
-    return c.json({ error: 'Workflow not found' }, 404);
-  }
-
-  return c.json({
-    workflow_id: id,
-    plan_ref: workflow.plan_ref,
-    status: workflow.status,
-    valid_transitions: workflowEngine.getValidTransitions(workflow.status)
+workflowRoutes.post('/', async c => {
+  const body = await parseBody(c, StartSchema);
+  const { workflow, event } = workflowEngine.start({
+    requirement: body.requirement,
+    title: body.title,
+    kind: body.kind,
+    author: body.author,
+    source: body.source,
+    mutationId: body.mutation_id
   });
+  const context = loadContext(workflow.workflow_id, body.author);
+  if (body.auto) {
+    runToApproval(workflow.workflow_id, body.author).catch(error => {
+      console.error(`Workflow ${workflow.workflow_id} stopped before approval:`, error);
+    });
+  }
+  return c.json({ workflow: workflowEngine.require(workflow.workflow_id), event, context }, 201);
 });
 
-workflowRoutes.post('/:id/run-agents', async (c) => {
+workflowRoutes.get('/:id', c => {
+  const replay = replayWorkflow(c.req.param('id'));
+  if (!replay) throw notFound(`Workflow ${c.req.param('id')}`);
+  return c.json({ ...replay, validTransitions: workflowEngine.getValidTransitions(replay.workflow.status) });
+});
+
+workflowRoutes.get('/:id/context', c => {
+  workflowEngine.require(c.req.param('id'));
+  return c.json({ context: contextBuilder.load(c.req.param('id')) });
+});
+
+workflowRoutes.post('/:id/plan', async c => {
+  const body = await parseBody(c, z.object({ actor: ActorSchema.default('bob'), plan: z.string().max(20_000).optional() }));
+  const plan = recordPlan(c.req.param('id'), body.actor, body.plan);
+  return c.json({ workflow: workflowEngine.require(c.req.param('id')), plan: { ref: plan.planRef, layers: plan.layers.map(l => l.map(t => ({ task_id: t.task_id, agent: t.agent_type }))) } });
+});
+
+workflowRoutes.post('/:id/run', async c => {
+  const outcomes = await runAnalysis(c.req.param('id'));
+  return c.json({ tasks: outcomes.map(o => ({ task_id: o.task.task_id, agent: o.task.agent_type, status: o.task.status, summary: o.result?.summary ?? o.error ?? null, riskLevel: o.result?.riskLevel ?? null, evidence: o.evidence })) });
+});
+
+workflowRoutes.post('/:id/run-to-approval', async c => {
+  const body = await parseBody(c, z.object({ actor: ActorSchema.default('epoch') }));
+  return c.json({ package: await runToApproval(c.req.param('id'), body.actor) });
+});
+
+workflowRoutes.post('/:id/specialists/:agent', async c => {
   const id = c.req.param('id');
-  const workflow = workflows.getWorkflow(id);
-
-  if (!workflow) {
-    return c.json({ error: 'Workflow not found' }, 404);
+  const agent = AgentType.parse(c.req.param('agent'));
+  const workflow = workflowEngine.require(id);
+  const phase = workflow.status === 'VERIFYING' || workflow.status === 'AWAITING_APPROVAL' ? 'verification' : 'analysis';
+  if (workflow.status !== 'EXECUTING' && phase === 'analysis') {
+    throw new HttpError(409, `Specialists run while EXECUTING; workflow ${id} is ${workflow.status}`);
   }
+  const outcome = await agentRunner.runSingle(id, agent, phase, phase === 'verification' ? loadVerification(id) : undefined);
+  return c.json({ task_id: outcome.task.task_id, agent, status: outcome.task.status, summary: outcome.result?.summary ?? outcome.error ?? null, riskLevel: outcome.result?.riskLevel ?? null, evidence: outcome.evidence });
+});
 
-  const body = await c.req.json<{ agentNames?: string[]; diff?: string; dependencyManifest?: string; acceptanceCriteria?: string[]; affectedComponents?: string[] }>();
-  const agentNames = body.agentNames ?? Object.keys(agentRegistry);
+const EvidenceBody = z.object({
+  claim: z.string().trim().min(3).max(4000),
+  status: EvidenceStatus,
+  source_ref: z.string().trim().min(1).max(500),
+  severity: FindingSeverity.optional(),
+  agent: z.string().trim().min(1).max(60).default('bob')
+});
 
-  const contextBundle = await contextBuilder.build(id, workflow.trigger_event_id ?? '');
+/** Bob and its subagents record their own claims here. They are stored under a "bob" task. */
+workflowRoutes.post('/:id/evidence', async c => {
+  const id = c.req.param('id');
+  const body = await parseBody(c, EvidenceBody);
+  const workflow = workflowEngine.require(id);
+  if (workflowEngine.isTerminal(workflow.status)) throw new HttpError(409, `Workflow ${id} is ${workflow.status}`);
 
-  const ctx: AgentContext = {
-    workflowId: id,
-    taskId: nanoid(),
-    contextBundle,
-    diff: body.diff,
-    dependencyManifest: body.dependencyManifest,
-    acceptanceCriteria: body.acceptanceCriteria,
-    affectedComponents: body.affectedComponents
+  const at = Date.now();
+  let task = tasks.listTasksByWorkflow(id).find(t => t.agent_type === 'bob' && t.input_ref === body.agent);
+  if (!task) {
+    task = { task_id: generateTaskId(), workflow_id: id, agent_type: 'bob', status: 'RUNNING', dependencies: [], started_at: at, input_ref: body.agent, retry_count: 0 };
+    tasks.insertTask(task);
+    eventBus.emit('task.started', { taskId: task.task_id, workflowId: id, agent: 'bob', role: body.agent, phase: 'bob' });
+  }
+  const record = {
+    evidence_id: generateEvidenceId(),
+    workflow_id: id,
+    task_id: task.task_id,
+    claim: body.claim,
+    status: body.status,
+    source_artifact_ref: body.source_ref,
+    created_at: at
   };
+  const saved = body.severity ? { ...record, finding_severity: body.severity } : record;
+  evidence.insertEvidence(saved);
+  eventBus.emit('evidence.created', { evidenceId: saved.evidence_id, workflowId: id, taskId: task.task_id, agent: `bob:${body.agent}`, status: saved.status, severity: body.severity ?? null, claim: saved.claim });
+  return c.json({ evidence: saved }, 201);
+});
 
-  const selectedAgents = agentNames
-    .map(name => agentRegistry[name])
-    .filter((agent): agent is Agent => agent !== undefined);
+workflowRoutes.post('/:id/transition', async c => {
+  const body = await parseBody(c, z.object({ status: WorkflowStatus, actor: ActorSchema, stage: z.string().max(200).optional() }));
+  if (body.status === 'COMPLETED') throw new HttpError(409, 'Use /approve to complete a workflow; approval records the decision and the mutation');
+  return c.json({ workflow: workflowEngine.transition(c.req.param('id'), body.status, { actor: body.actor, stage: body.stage }) });
+});
 
-  if (selectedAgents.length === 0) {
-    return c.json({ error: 'No valid agents selected' }, 400);
-  }
+workflowRoutes.post('/:id/request-approval', async c => {
+  const body = await parseBody(c, z.object({ actor: ActorSchema.default('bob') }));
+  return c.json({ package: await approvalGate.requestApproval(c.req.param('id'), body.actor) });
+});
 
-  const results: AgentResult[] = await agentCoordinator.runParallel(selectedAgents, ctx);
+workflowRoutes.get('/:id/decision-package', c => c.json({ package: approvalGate.buildPackage(c.req.param('id')) }));
 
-  return c.json({ workflow_id: id, agents_run: selectedAgents.map(a => a.name), results });
+const DecisionBody = z.object({ actor: ActorSchema, rationale: z.string().max(2000).optional(), scope: z.string().max(500).optional() });
+
+workflowRoutes.post('/:id/approve', async c => {
+  const body = await parseBody(c, DecisionBody);
+  return c.json(await approvalGate.recordDecision(c.req.param('id'), body.actor, 'APPROVED', body.rationale, body.scope));
+});
+
+workflowRoutes.post('/:id/reject', async c => {
+  const body = await parseBody(c, DecisionBody);
+  return c.json(await approvalGate.recordDecision(c.req.param('id'), body.actor, 'REJECTED', body.rationale, body.scope));
+});
+
+workflowRoutes.post('/:id/request-changes', async c => {
+  const body = await parseBody(c, z.object({ actor: ActorSchema, rationale: z.string().trim().min(3).max(2000) }));
+  approvalGate.requestChanges(c.req.param('id'), body.actor, body.rationale);
+  return c.json({ workflow: workflowEngine.require(c.req.param('id')) });
+});
+
+workflowRoutes.get('/:id/diff', c => {
+  const workflow = workflowEngine.require(c.req.param('id'));
+  if (workflow.mutation_id) return c.text(mutationEngine.mutationDiff(workflow.mutation_id) ?? '');
+  return c.text(workflowEngine.isTerminal(workflow.status) ? '' : workingTreeDiff(sampleRepoPath()));
 });
 
 export function registerWorkflowRoutes(app: Hono): void {
