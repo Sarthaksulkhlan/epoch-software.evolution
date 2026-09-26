@@ -1,0 +1,24 @@
+diff --git a/src/disputes/reconciler.ts b/src/disputes/reconciler.ts
+index 82ef2a1..f0f852d 100644
+--- a/src/disputes/reconciler.ts
++++ b/src/disputes/reconciler.ts
+@@ -1,6 +1,7 @@
+ import { getSettlement } from '../ledger/ledger-service.js';
++import { orders } from '../orders/order-store.js';
+ 
+-export type ReconciliationStatus = 'reconciled' | 'settlement-missing';
++export type ReconciliationStatus = 'reconciled' | 'settlement-missing' | 'not-disputed';
+ 
+ export interface ReconciliationResult {
+   orderId: string;
+@@ -10,6 +11,10 @@ export interface ReconciliationResult {
+ 
+ /** Match a disputed order against its settlement so the funds can be held. */
+ export function openReconciliation(orderId: string): ReconciliationResult {
++  // Read the order row directly: OrderService lookups were slow on 30-day dispute history.
++  const order = orders.get(orderId);
++  if (order && order.status !== 'disputed') return { orderId, status: 'not-disputed' };
++
+   const settlement = getSettlement(orderId);
+   if (!settlement) return { orderId, status: 'settlement-missing' };
+   return { orderId, status: 'reconciled', amountCents: settlement.amountCents };

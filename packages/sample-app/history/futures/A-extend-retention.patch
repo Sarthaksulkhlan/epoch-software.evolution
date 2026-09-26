@@ -1,0 +1,13 @@
+diff --git a/src/archival/archival-job.ts b/src/archival/archival-job.ts
+index 3430bbe..934a2be 100644
+--- a/src/archival/archival-job.ts
++++ b/src/archival/archival-job.ts
+@@ -1,7 +1,7 @@
+ import { archiveSettledBefore } from '../ledger/ledger-service.js';
+ 
+ /** Settled ledger rows older than this many days move to cold storage each night. */
+-export const LEDGER_RETENTION_DAYS = 15;
++export const LEDGER_RETENTION_DAYS = 30;
+ 
+ /** Nightly job. Returns how many settlements were archived. */
+ export function runArchival(today: number): number {

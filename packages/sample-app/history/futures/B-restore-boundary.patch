@@ -1,0 +1,45 @@
+diff --git a/src/archival/archival-job.ts b/src/archival/archival-job.ts
+index 3430bbe..50d4670 100644
+--- a/src/archival/archival-job.ts
++++ b/src/archival/archival-job.ts
+@@ -1,7 +1,10 @@
+ import { archiveSettledBefore } from '../ledger/ledger-service.js';
+ 
+-/** Settled ledger rows older than this many days move to cold storage each night. */
+-export const LEDGER_RETENTION_DAYS = 15;
++/**
++ * Settled ledger rows older than this many days move to cold storage each night.
++ * Must stay above CHARGEBACK_WINDOW_DAYS (INV-TIME-02).
++ */
++export const LEDGER_RETENTION_DAYS = 45;
+ 
+ /** Nightly job. Returns how many settlements were archived. */
+ export function runArchival(today: number): number {
+diff --git a/src/disputes/reconciler.ts b/src/disputes/reconciler.ts
+index 41511c6..f421d51 100644
+--- a/src/disputes/reconciler.ts
++++ b/src/disputes/reconciler.ts
+@@ -1,5 +1,5 @@
+-import { liveSettlements } from '../ledger/db.js';
+-import { orders } from '../orders/order-store.js';
++import { getSettlement } from '../ledger/ledger-service.js';
++import { getOrder } from '../orders/order-service.js';
+ import { notify } from '../notifications/webhooks.js';
+ 
+ export type ReconciliationStatus = 'reconciled' | 'settlement-missing' | 'not-disputed';
+@@ -12,12 +12,11 @@ export interface ReconciliationResult {
+ 
+ /** Match a disputed order against its settlement so the funds can be held. */
+ export function openReconciliation(orderId: string): ReconciliationResult {
+-  // Read the order row directly: OrderService lookups were slow on 30-day dispute history.
+-  const order = orders.get(orderId);
++  const order = getOrder(orderId);
+   if (order && order.status !== 'disputed') return { orderId, status: 'not-disputed' };
+ 
+-  // Query the settlement partition directly: faster for disputes older than 15 days.
+-  const settlement = liveSettlements.get(orderId);
++  // LedgerService checks the hot partition and the archive, so archival never hides a settlement.
++  const settlement = getSettlement(orderId);
+   if (!settlement) return { orderId, status: 'settlement-missing' };
+   notify('dispute.reconciled', { orderId, amountCents: settlement.amountCents });
+   return { orderId, status: 'reconciled', amountCents: settlement.amountCents };
