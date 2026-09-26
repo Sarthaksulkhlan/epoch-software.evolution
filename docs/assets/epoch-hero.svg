@@ -1,0 +1,139 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 440" width="1280" height="440" role="img" aria-labelledby="t d">
+  <title id="t">EPOCH: a change can be correct, a system can still be getting worse</title>
+  <desc id="d">Boundary integrity measured by EPOCH after each mutation of the sample payments service: 1.00 at M-1041, 0.875 at M-1042, 0.75 at M-1051, 0.50 at M-1077 where incident INC-3312 opens, 0.50 at M-1084, then 1.00 at M-1085 after adopting future B. Future A measured 0.75. The envelope floor is 0.80.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0b1016"/>
+      <stop offset="1" stop-color="#101b24"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.12" cy="0.1" r="0.6">
+      <stop offset="0" stop-color="#3cc4d8" stop-opacity="0.16"/>
+      <stop offset="1" stop-color="#3cc4d8" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="decline" gradientUnits="userSpaceOnUse" x1="612" y1="0" x2="1068" y2="0">
+      <stop offset="0" stop-color="#3cc4d8"/>
+      <stop offset="0.45" stop-color="#f0a54a"/>
+      <stop offset="1" stop-color="#ff6b6b"/>
+    </linearGradient>
+    <linearGradient id="area" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#3cc4d8" stop-opacity="0.20"/>
+      <stop offset="1" stop-color="#3cc4d8" stop-opacity="0"/>
+    </linearGradient>
+    <style>
+      .sans{font-family:"Segoe UI","Helvetica Neue",Helvetica,Arial,sans-serif}
+      .mono{font-family:ui-monospace,"SF Mono","Cascadia Mono",Menlo,Consolas,monospace}
+      .draw{stroke-dasharray:600;stroke-dashoffset:600;animation:draw 2.2s ease-out .3s forwards}
+      .draw-up{stroke-dasharray:260;stroke-dashoffset:260;animation:draw 1.1s ease-out 2.4s forwards}
+      .pulse{transform-origin:954px 304px;animation:pulse 2.4s ease-out 1.6s infinite}
+      @keyframes draw{to{stroke-dashoffset:0}}
+      @keyframes pulse{0%{transform:scale(.6);opacity:.8}100%{transform:scale(2.4);opacity:0}}
+      @media (prefers-reduced-motion:reduce){.draw,.draw-up{animation:none;stroke-dashoffset:0}.pulse{animation:none;opacity:0}}
+    </style>
+  </defs>
+
+  <rect width="1280" height="440" rx="22" fill="url(#bg)"/>
+  <rect width="1280" height="440" rx="22" fill="url(#glow)"/>
+
+  <!-- Identity -->
+  <text x="56" y="80" class="mono" font-size="14" letter-spacing="2" fill="#3cc4d8">SOFTWARE EVOLUTION CONTROL PLANE</text>
+  <text x="52" y="160" class="sans" font-size="86" font-weight="800" letter-spacing="10" fill="#e6edf3">EPOCH</text>
+  <text x="56" y="212" class="sans" font-size="22" font-weight="600" fill="#e6edf3">A change can be correct.</text>
+  <text x="56" y="244" class="sans" font-size="22" font-weight="600" fill="#3cc4d8">A system can still be getting worse.</text>
+  <text class="sans" font-size="16" fill="#8b98a8">
+    <tspan x="56" y="292">Every approved change becomes a mutation.</tspan>
+    <tspan x="56" y="316">EPOCH measures the system after each one,</tspan>
+    <tspan x="56" y="340">and IBM Bob drives the work through MCP.</tspan>
+  </text>
+  <g class="mono" font-size="12" font-weight="600" letter-spacing="1.5" text-anchor="middle">
+    <rect x="56" y="364" width="74" height="28" rx="14" fill="#13242d" stroke="#1f3a44"/>
+    <text x="93" y="382" fill="#3cc4d8">WEAVE</text>
+    <rect x="138" y="364" width="74" height="28" rx="14" fill="#13242d" stroke="#1f3a44"/>
+    <text x="175" y="382" fill="#3cc4d8">EPOCH</text>
+    <rect x="220" y="364" width="92" height="28" rx="14" fill="#13242d" stroke="#1f3a44"/>
+    <text x="266" y="382" fill="#3cc4d8">FUTURES</text>
+    <rect x="320" y="364" width="92" height="28" rx="14" fill="#1d1830" stroke="#352b57"/>
+    <text x="366" y="382" fill="#b5a2f5">IBM BOB</text>
+  </g>
+
+  <!-- Chart panel -->
+  <rect x="520" y="40" width="716" height="364" rx="14" fill="#0e161e" stroke="#1f2b37"/>
+  <text x="548" y="74" class="mono" font-size="13" fill="#8b98a8">Boundary integrity per mutation · measured</text>
+  <rect x="1062" y="64" width="12" height="12" rx="2" fill="#57c690" fill-opacity="0.35" stroke="#57c690"/>
+  <text x="1082" y="74" class="mono" font-size="13" fill="#8b98a8">envelope ≥ 0.80</text>
+
+  <!-- Envelope band and grid -->
+  <rect x="604" y="104" width="592" height="80" fill="#57c690" fill-opacity="0.07"/>
+  <g stroke="#1c2733" stroke-width="1">
+    <line x1="604" y1="104" x2="1196" y2="104"/>
+    <line x1="604" y1="204" x2="1196" y2="204"/>
+    <line x1="604" y1="304" x2="1196" y2="304"/>
+  </g>
+  <line x1="604" y1="184" x2="1196" y2="184" stroke="#57c690" stroke-opacity="0.7" stroke-dasharray="4 5"/>
+  <g class="mono" font-size="12" text-anchor="end" fill="#6e7b8b">
+    <text x="596" y="108">1.00</text>
+    <text x="596" y="188" fill="#57c690">0.80</text>
+    <text x="596" y="208">0.75</text>
+    <text x="596" y="308">0.50</text>
+  </g>
+
+  <!-- Epochs -->
+  <g stroke="#2a3644" stroke-dasharray="3 5">
+    <line x1="897" y1="98" x2="897" y2="350"/>
+    <line x1="1124" y1="98" x2="1124" y2="350"/>
+  </g>
+  <g class="mono" font-size="12" fill="#6e7b8b">
+    <text x="612" y="94">E-0 baseline</text>
+    <text x="905" y="94">E-1 proposed</text>
+    <text x="1132" y="94">E-2 proposed</text>
+  </g>
+
+  <!-- Trajectory: four locally-correct changes, then the adopted future -->
+  <path d="M612,104 L726,154 L840,204 L954,304 L1068,304 L1068,350 L612,350 Z" fill="url(#area)"/>
+  <path d="M612,104 L726,154 L840,204 L954,304 L1068,304" fill="none" stroke="#3a4756" stroke-width="3" stroke-linejoin="round"/>
+  <path d="M1068,304 L1180,104" fill="none" stroke="#3a4756" stroke-width="3"/>
+  <path class="draw" d="M612,104 L726,154 L840,204 L954,304 L1068,304" fill="none" stroke="url(#decline)" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M1068,304 L1180,204" fill="none" stroke="#8b98a8" stroke-width="2" stroke-dasharray="5 6"/>
+  <path class="draw-up" d="M1068,304 L1180,104" fill="none" stroke="#57c690" stroke-width="3.5" stroke-linecap="round"/>
+
+  <circle class="pulse" cx="954" cy="304" r="9" fill="none" stroke="#ff6b6b" stroke-width="2"/>
+  <g stroke-width="2.5" fill="#0e161e">
+    <circle cx="612" cy="104" r="5.5" stroke="#3cc4d8"/>
+    <circle cx="726" cy="154" r="5.5" stroke="#7fc4b8"/>
+    <circle cx="840" cy="204" r="5.5" stroke="#f0a54a"/>
+    <circle cx="954" cy="304" r="6.5" stroke="#ff6b6b" fill="#ff6b6b"/>
+    <circle cx="1068" cy="304" r="5.5" stroke="#ff6b6b"/>
+    <circle cx="1180" cy="204" r="5" stroke="#8b98a8"/>
+    <circle cx="1180" cy="104" r="6.5" stroke="#57c690" fill="#57c690"/>
+  </g>
+
+  <!-- Values -->
+  <g class="mono" font-size="12.5" text-anchor="middle" fill="#e6edf3">
+    <text x="612" y="128">1.00</text>
+    <text x="726" y="178">0.875</text>
+    <text x="840" y="228">0.75</text>
+    <text x="954" y="328">0.50 <tspan fill="#ff6b6b">· INC-3312</tspan></text>
+    <text x="1068" y="328">0.50</text>
+    <text x="1168" y="198" text-anchor="end" fill="#8b98a8">A · 0.75</text>
+    <text x="1190" y="100" text-anchor="start" fill="#57c690">1.00</text>
+  </g>
+
+  <!-- Mutations -->
+  <g class="mono" text-anchor="middle">
+    <g font-size="12.5" fill="#c9d3de">
+      <text x="612" y="372">M-1041</text>
+      <text x="726" y="372">M-1042</text>
+      <text x="840" y="372">M-1051</text>
+      <text x="954" y="372">M-1077</text>
+      <text x="1068" y="372">M-1084</text>
+      <text x="1180" y="372">M-1085</text>
+    </g>
+    <g font-size="11" fill="#6e7b8b">
+      <text x="612" y="390">baseline</text>
+      <text x="726" y="390">30-day window</text>
+      <text x="840" y="390">AI hotfix</text>
+      <text x="954" y="390">AI speed-up</text>
+      <text x="1068" y="390">AI webhooks</text>
+      <text x="1180" y="390" fill="#57c690">future B</text>
+    </g>
+  </g>
+</svg>
