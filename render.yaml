@@ -1,0 +1,15 @@
+# Render Blueprint: EPOCH as one web service built from the Dockerfile.
+# In Render: New → Blueprint → this repository. Pushes to main redeploy it.
+# The free plan sleeps after 15 idle minutes, so the first visit afterwards
+# takes about a minute; the Starter plan stays awake.
+services:
+  - type: web
+    name: epoch
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: EPOCH_DEMO_RESTORE_MINUTES
+        value: "20"
