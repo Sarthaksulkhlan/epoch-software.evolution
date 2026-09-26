@@ -7,7 +7,7 @@ import { diffScans } from '../../graph/scanner/diff.js';
 import { scanRepository } from '../../graph/scanner/scanner.js';
 import { runPatterns } from '../../graph/drift/patterns.js';
 import { subjectOf } from '../../graph/drift/detector.js';
-import { changedFiles, EPOCH_WORK_DIR, sampleRepoPath } from '../../sandbox/sample-repo.js';
+import { changedFiles, epochWorkDir, sampleRepoPath } from '../../sandbox/sample-repo.js';
 import { runProbes, runTests } from '../../sandbox/runner.js';
 import { generateArtifactId } from '../../shared/utils/id.js';
 import { EvidenceWriter } from '../epoch/evidence-writer.js';
@@ -52,7 +52,7 @@ export async function verifyWorkingTree(workflowId: string): Promise<Verificatio
 
   const at = Date.now();
   const writer = new EvidenceWriter(workflowId, 'scanner', at, 'verification');
-  const file = path.join(EPOCH_WORK_DIR, 'verifications', `${workflowId}.json`);
+  const file = path.join(epochWorkDir(), 'verifications', `${workflowId}.json`);
   fs.mkdirSync(path.dirname(file), { recursive: true });
   const content = JSON.stringify(verification, null, 2);
   fs.writeFileSync(file, content, 'utf8');
@@ -80,6 +80,6 @@ export async function verifyWorkingTree(workflowId: string): Promise<Verificatio
 
 /** The latest stored verification for a workflow, if one ran. */
 export function loadVerification(workflowId: string): Verification | undefined {
-  const file = path.join(EPOCH_WORK_DIR, 'verifications', `${workflowId}.json`);
+  const file = path.join(epochWorkDir(), 'verifications', `${workflowId}.json`);
   return fs.existsSync(file) ? (JSON.parse(fs.readFileSync(file, 'utf8')) as Verification) : undefined;
 }

@@ -4,7 +4,7 @@ import { tasks, workflows } from '../../store/index.js';
 import type { AgentType, Task } from '../../shared/schema/task.schema.js';
 import type { WorkflowKind } from '../../shared/schema/workflow.schema.js';
 import { generateTaskId } from '../../shared/utils/id.js';
-import { EPOCH_WORK_DIR } from '../../sandbox/sample-repo.js';
+import { epochWorkDir } from '../../sandbox/sample-repo.js';
 
 export interface PlanStep {
   agent: AgentType;
@@ -76,7 +76,7 @@ export function createPlan(workflowId: string, kind: WorkflowKind, planText?: st
     ...layers.map((layer, i) => `${i + 1}. ${layer.map(t => t.agent_type).join(' ∥ ')}`),
     ''
   ].join('\n');
-  const file = path.join(EPOCH_WORK_DIR, 'plans', `${workflowId}.md`);
+  const file = path.join(epochWorkDir(), 'plans', `${workflowId}.md`);
   fs.mkdirSync(path.dirname(file), { recursive: true });
   fs.writeFileSync(file, document, 'utf8');
   const planRef = path.relative(process.cwd(), file).split(path.sep).join('/');

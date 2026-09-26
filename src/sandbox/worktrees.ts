@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { assertSafeId, git } from './git.js';
-import { EPOCH_WORK_DIR, sampleRepoPath } from './sample-repo.js';
+import { epochWorkDir, sampleRepoPath } from './sample-repo.js';
 
 /**
  * Counterfactual futures run in git worktrees of the sample repository
@@ -12,7 +12,7 @@ import { EPOCH_WORK_DIR, sampleRepoPath } from './sample-repo.js';
 export const MAX_ACTIVE_FUTURES = 3;
 
 export function futuresRoot(): string {
-  return path.join(EPOCH_WORK_DIR, 'futures');
+  return path.join(epochWorkDir(), 'futures');
 }
 
 export function worktreePath(simulationId: string, scenarioId: string): string {

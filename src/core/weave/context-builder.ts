@@ -4,7 +4,7 @@ import { events, incidents, invariants, mutations, trajectory, workflows } from 
 import type { ContextBundle, MutationSummary } from '../../shared/schema/context-bundle.schema.js';
 import type { Invariant } from '../../shared/schema/invariant.schema.js';
 import { fileTreeDigest } from '../../shared/utils/hash.js';
-import { currentBranch, EPOCH_WORK_DIR, headSha, sampleRepoPath } from '../../sandbox/sample-repo.js';
+import { currentBranch, epochWorkDir, headSha, sampleRepoPath } from '../../sandbox/sample-repo.js';
 import type { ScanResult } from '../../graph/scanner/scanner.js';
 import { componentOfFile, keywords, listSource } from '../../agents/code-search.js';
 
@@ -104,7 +104,7 @@ export class ContextBuilder {
       };
     }
 
-    const file = path.join(EPOCH_WORK_DIR, 'context', `${workflowId}.json`);
+    const file = path.join(epochWorkDir(), 'context', `${workflowId}.json`);
     fs.mkdirSync(path.dirname(file), { recursive: true });
     fs.writeFileSync(file, JSON.stringify(bundle, null, 2), 'utf8');
     workflows.setWorkflowRefs(workflowId, { context_ref: path.relative(process.cwd(), file).split(path.sep).join('/') });

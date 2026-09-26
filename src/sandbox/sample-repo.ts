@@ -11,12 +11,15 @@ import { commitMessageArgs, git, type GitIdentity } from './git.js';
  */
 
 export const SAMPLE_APP_SOURCE = path.join(process.cwd(), 'packages', 'sample-app');
-export const EPOCH_WORK_DIR = path.join(process.cwd(), '.epoch');
+/** Working state for the demo (sample repo copy, futures, context bundles). EPOCH_WORK_DIR overrides it. */
+export function epochWorkDir(): string {
+  return process.env.EPOCH_WORK_DIR ?? path.join(process.cwd(), '.epoch');
+}
 
 const COPIED_ENTRIES = ['src', 'test', 'scenarios', 'invariants.json', 'package.json', 'tsconfig.json'] as const;
 
 export function sampleRepoPath(): string {
-  return process.env.EPOCH_SAMPLE_REPO ?? path.join(EPOCH_WORK_DIR, 'sample-repo');
+  return process.env.EPOCH_SAMPLE_REPO ?? path.join(epochWorkDir(), 'sample-repo');
 }
 
 export function sampleRepoExists(repoPath = sampleRepoPath()): boolean {

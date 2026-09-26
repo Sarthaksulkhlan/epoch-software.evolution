@@ -4,7 +4,7 @@ import { z } from 'zod';
 import { closeDb, deleteDbFile, events, getDb, initializeSchema, workflows } from '../store/index.js';
 import { generateEventId, generateWorkflowId } from '../shared/utils/id.js';
 import { scanRepository } from '../graph/scanner/scanner.js';
-import { EPOCH_WORK_DIR, initSampleRepo, SAMPLE_APP_SOURCE, sampleRepoPath } from '../sandbox/sample-repo.js';
+import { epochWorkDir, initSampleRepo, SAMPLE_APP_SOURCE, sampleRepoPath } from '../sandbox/sample-repo.js';
 import { runProbes, runTests } from '../sandbox/runner.js';
 import { clearRepoSpecCache, getRepoSpec } from '../core/epoch/spec-registry.js';
 import { invariantManager } from '../core/epoch/invariant-store.js';
@@ -42,10 +42,10 @@ export interface SeedSummary {
 export async function resetDemo(): Promise<SeedSummary> {
   const started = Date.now();
   deleteDbFile();
-  fs.rmSync(path.join(EPOCH_WORK_DIR, 'context'), { recursive: true, force: true });
-  fs.rmSync(path.join(EPOCH_WORK_DIR, 'plans'), { recursive: true, force: true });
-  fs.rmSync(path.join(EPOCH_WORK_DIR, 'verifications'), { recursive: true, force: true });
-  fs.rmSync(path.join(EPOCH_WORK_DIR, 'futures'), { recursive: true, force: true });
+  fs.rmSync(path.join(epochWorkDir(), 'context'), { recursive: true, force: true });
+  fs.rmSync(path.join(epochWorkDir(), 'plans'), { recursive: true, force: true });
+  fs.rmSync(path.join(epochWorkDir(), 'verifications'), { recursive: true, force: true });
+  fs.rmSync(path.join(epochWorkDir(), 'futures'), { recursive: true, force: true });
   initializeSchema(getDb());
 
   const baselineSha = initSampleRepo('M-1041 baseline: payments service at the end of epoch E-0');
