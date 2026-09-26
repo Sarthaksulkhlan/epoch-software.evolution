@@ -21,9 +21,9 @@ Frontier coding agents do much worse on long-horizon evolution than on isolated 
 
 | Benchmark | Isolated | Long-horizon |
 | --- | --- | --- |
-| SWE-EVO (2025) | ~65% (SWE-Bench Verified) | ~21% |
-| EvoClaw (2026) | >80% | ≤38% |
-| RoadmapBench (2026) | — | 39.1% (Claude Opus 4.7) |
+| SWE-EVO (v1, 2025), GPT-5 with OpenHands | 65% (SWE-Bench Verified) | 21% |
+| EvoClaw, now SWE-Milestone (2026), overall scores | >80% | ≤38% |
+| RoadmapBench (2026), strongest model | — | 39.1% (Claude Opus 4.7) |
 
 What is missing is not code generation but memory of what the system has become and a way to steer it. EPOCH provides that layer and lets Bob use it.
 

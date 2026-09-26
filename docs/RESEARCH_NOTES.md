@@ -1,231 +1,103 @@
-# EPOCH — Research & Source Notes
+# Research and sources
 
-> Every benchmark figure, product claim, and positioning statement in the EPOCH platform
-> is backed by a cited source. This document is the complete reference list.
->
-> **Attribution standard:** Claims attributed to primary IBM sources use IBM's own published language.
-> Benchmark figures are reproduced from the cited papers with explicit attribution.
-> Content was paraphrased for compliance with licensing restrictions where noted.
+The sources behind EPOCH's problem statement and its use of IBM Bob. All links were checked on 27 September 2026. Figures come from each paper's abstract, for the version named. Benchmark results depend on the model, the agent framework and the setup, so they are used here only to show that a gap exists, not as universal performance claims.
 
----
+## The problem: long-horizon evolution
 
-## Why This Document Exists
+### SWE-EVO
 
-The EPOCH platform makes claims about a real research gap — the degraded performance of frontier coding agents on long-horizon software evolution tasks. These claims underpin the platform's thesis and its judging narrative.
+**SWE-EVO: Benchmarking Coding Agents in Long-Horizon Software Evolution Scenarios.** Thai et al., arXiv:2512.18470, first version December 2025. <https://arxiv.org/abs/2512.18470v1>
 
-Judges are sophisticated engineers. Unsubstantiated performance claims invite scepticism. This document turns every claim into a citable, verifiable reference.
+- 48 evolution tasks from 7 Python projects; each task touches 21 files on average.
+- Version 1: GPT-5 with OpenHands resolves 21% of SWE-EVO tasks, against 65% on the single-issue SWE-Bench Verified.
+- Later versions (v5 onwards, 2026) report 25% for GPT-5.4 with OpenHands on SWE-EVO, against 72.8% for GPT-5.2 on SWE-Bench Verified.
 
----
+### EvoClaw (renamed SWE-Milestone)
 
-## Primary Sources
+**EvoClaw: Evaluating AI Agents on Continuous Software Evolution.** Deng et al., arXiv:2603.13428, March 2026. Renamed *SWE-Milestone* in version 3 (July 2026). <https://arxiv.org/abs/2603.13428v1>
 
----
+- Across 12 frontier models and 4 agent frameworks, overall performance scores drop from above 80% on isolated tasks to at most 38% in continuous settings (38.03% in version 4).
+- This is the accumulated-error effect EPOCH is built around: changes that are each fine in isolation compound.
 
-### R1 — IBM Bob V2: Faster, Better, Smarter
+### RoadmapBench
 
-**Source:** IBM Bob Engineering Blog  
-**URL:** https://bob.ibm.com/blog/bob-v2-release-announcement/  
-**Published:** June 24, 2026  
-**Type:** Primary product documentation (IBM)  
+**RoadmapBench: Evaluating Long-Horizon Agentic Software Development Across Version Upgrades.** Xu et al., arXiv:2605.15846, May 2026. <https://arxiv.org/abs/2605.15846>
 
-**What it establishes:**
-Bob V2 reaches general availability with background tasks, rollback, document understanding, subagents, and reusable workflows. The architecture uses a single agent that behaves identically across every client — Bob IDE first, Bob Shell following.
+- 115 version-upgrade tasks across 17 repositories and 5 languages, 13 models evaluated.
+- The strongest model, Claude Opus 4.7, resolves 39.1% of tasks.
 
-**How EPOCH uses it:**
-- Section 8 of ARCHITECTURE.md ("IBM Bob 2.0: Execution Fabric") maps each EPOCH use case to a specific Bob V2 capability
-- ADR-009 (MCP integration) references Bob's MCP support documented in this release
-- ADR-020 (Bob workflows) references the reusable workflow capability
+### AgenticFlict
 
-**Direct quote used in platform PDF:**
+**AgenticFlict: A Large-Scale Dataset of Merge Conflicts in AI Coding Agent Pull Requests on GitHub.** Ogenrwot and Businge, arXiv:2604.03551, April 2026. Dataset: <https://github.com/unlv-evol/AgenticFlict>. Paper: <https://arxiv.org/abs/2604.03551>
+
+- More than 142,000 agent-authored pull requests across 59,000 repositories; 27.67% of them conflict.
+- The authors state as a limitation that the dataset captures only syntactic conflicts reported by Git's three-way merge: semantic conflicts, where changes are syntactically compatible but behaviourally incompatible, are not detected (README, Limitations; the paper's threats to validity). That class of problem is what EPOCH's invariants and probes look for.
+
+## IBM Bob
+
+### Bob V2 general availability
+
+**Bob V2: Faster, better, smarter.** IBM Bob Team, 24 June 2026. <https://bob.ibm.com/blog/bob-v2-release-announcement/>
+
+- Bob V2 ships background tasks, rebuilt rollback, working with documents, subagents and workflows, on a single agent that behaves the same in every client, starting with Bob IDE.
+- At general availability the available workflows are the ones that ship with Bob and its packages; broader authoring comes later. This is why EPOCH does not package its own Bob workflows (ADR-026).
+
 > "Bob V2 reaches general availability on June 24, and it's a real step up in daily use: it's faster, it can keep tasks running in the background while you stay on something else, and it's built on a single agent that behaves identically across every client."
 
----
+### Premium Packages and the enterprise foundation
 
-### R2 — IBM Bob Expands with Premium Packages (July 9, 2026)
+**IBM Bob advances agentic software development with Premium Packages and a new enterprise AI foundation.** Neel Sundaresan and Michael Kwok, IBM, 9 July 2026. <https://www.ibm.com/new/announcements/ibm-bob-expands-with-premium-packages-new-architecture-and-greater-enterprise-control>
 
-**Source:** IBM Announcements  
-**URL:** https://www.ibm.com/new/announcements/ibm-bob-expands-with-premium-packages-new-architecture-and-greater-enterprise-control  
-**Published:** July 9, 2026  
-**Type:** Primary product announcement (IBM)  
+- Bob is "architected for agentic software development across the enterprise software development lifecycle", with a shared workflow engine for "reusable, governed, multi-step engineering workflows" and "native tool calling, parallel execution, subagents and background task orchestration".
+- EPOCH builds on this rather than duplicating it: Bob plans, implements and runs subagents; EPOCH supplies the system's history and the governance around each change.
 
-**What it establishes:**
-IBM Bob includes a shared workflow engine, parallel execution, subagents, background task orchestration, and enterprise lifecycle framing. IBM positions this as an agentic SDLC platform.
+### Multi-agent capabilities
 
-**How EPOCH uses it:**
-- Confirms that "WEAVE should extend Bob rather than duplicate it" (Architecture principle, ARCHITECTURE.md Section 4)
-- Validates the decision to use Bob's workflow engine rather than building a separate orchestrator
+**IBM Advances Enterprise AI Software Development with Multi-Agent Capabilities and Specialized Modernization Workflows.** IBM Newsroom, 9 July 2026. <https://newsroom.ibm.com/2026-07-09-ibm-advances-enterprise-ai-software-development-with-multi-agent-capabilities-and-specialized-modernization-workflows>
 
----
+- IBM cites a GitLab survey (*The 2026 AI Accountability Report*) in which 85% of DevSecOps professionals agree that AI has shifted the bottleneck from writing code to reviewing and validating it. EPOCH is aimed at that review and validation step.
 
-### R3 — IBM Newsroom: Multi-Agent Capabilities (July 9, 2026)
+### Hooks, policies and audit
 
-**Source:** IBM UK Newsroom  
-**URL:** https://uk.newsroom.ibm.com/IBM-Bob  
-**Published:** July 9, 2026  
-**Type:** Primary product announcement (IBM)  
+**New in Bob: Your editor, your policies, your audit trail.** IBM Bob Team, 31 August 2026. <https://bob.ibm.com/blog/august-2026-release-2/>
 
-**What it establishes:**
-IBM's public statement that AI is shifting bottlenecks in software development toward review and validation, not code generation. IBM explicitly frames the broader SDLC as the next frontier.
+- "An agent loop is non-deterministic by nature. Hooks are how you put deterministic rails around it." Bob IDE hooks run on `SessionStart`, `UserPromptSubmit`, `PreToolUse`, `PostToolUse` and `Stop`; policies can enforce hooks across an organisation, and audit events can be forwarded to a SIEM.
+- EPOCH exposes hook endpoints (`/api/hooks/*`) that Bob's hooks can call, and keeps its own drift checks deterministic for the same reason (ADR-015).
 
-**How EPOCH uses it:**
-- Validates the "bottleneck has shifted" framing in the problem statement (ARCHITECTURE.md Section 2)
-- Supports the judge-facing narrative: "code generation is commoditized; coherence is the hard problem"
+### Bob documentation
 
----
+The Bob IDE documentation describes the configuration EPOCH uses:
 
-### R4 — IBM Bob: Your Editor, Your Policies, Your Audit Trail (August 2026)
+| Topic | Page |
+| --- | --- |
+| MCP servers (`.bob/mcp.json`) | <https://bob.ibm.com/docs/ide/configuration/mcp/mcp-in-bob> |
+| Custom modes (`.bob/custom_modes.yaml`) | <https://bob.ibm.com/docs/ide/configuration/custom-modes> |
+| Skills (`.bob/skills/<name>/SKILL.md`) | <https://bob.ibm.com/docs/ide/features/skills> |
+| Slash commands (`.bob/commands/*.md`) | <https://bob.ibm.com/docs/ide/features/slash-commands> |
+| Lifecycle hooks (`.bob/settings.json`) | <https://bob.ibm.com/docs/ide/configuration/lifecycle-hooks> |
+| Rules and `AGENTS.md` | <https://bob.ibm.com/docs/ide/configuration/rules> |
 
-**Source:** IBM Bob Engineering Blog  
-**URL:** https://bob.ibm.com/blog/august-2026-release-2/  
-**Published:** August 2026  
-**Type:** Primary product documentation (IBM)  
+Tutorials: <https://developer.ibm.com/components/ibm-bob/tutorials/>
 
-**What it establishes:**
-Bob V2 ships hooks, deterministic rails around agent loops, and enterprise policy/audit framing. This directly supports EPOCH's governance model.
+## Claims and their sources
 
-**How EPOCH uses it:**
-- Bob hooks (PostFileSave, PostTaskExec) are used in the EPOCH integration — reference for the hook capability
-- "Deterministic rails" framing supports ADR-015 (deterministic drift patterns rather than non-deterministic LLM analysis)
-- Audit trail framing aligns with EPOCH's immutable event log design (ADR-012)
+| Claim | Source |
+| --- | --- |
+| Agents resolve far fewer long-horizon evolution tasks than isolated ones (21% vs 65% for GPT-5 with OpenHands, SWE-EVO v1) | SWE-EVO |
+| Overall scores fall from above 80% on isolated tasks to at most 38% under continuous evolution | EvoClaw / SWE-Milestone |
+| The strongest model resolves 39.1% of version-upgrade tasks | RoadmapBench |
+| Textual merge-conflict detection does not capture semantic conflicts | AgenticFlict (stated limitation) |
+| Bob V2 ships background tasks, rollback, subagents and workflows; custom workflow authoring comes later | Bob V2 announcement |
+| Bob's shared workflow engine supports parallel execution, subagents and background tasks | Premium Packages announcement |
+| 85% of surveyed DevSecOps professionals say AI moved the bottleneck to review and validation | IBM Newsroom, citing GitLab |
+| Bob hooks put deterministic rails around the agent loop | August 2026 release |
 
----
+## What EPOCH does not claim
 
-## Research Sources (Benchmarks)
-
----
-
-### R5 — SWE-EVO: Benchmarking Coding Agents on Long-Horizon Software Evolution (2025)
-
-**Source:** arXiv  
-**URL:** https://arxiv.org/abs/2512.18470  
-**Published:** December 2025  
-**Type:** Academic benchmark paper  
-
-**What it establishes:**
-Long-horizon software evolution tasks average approximately 21 files touched. On these tasks, GPT-5 + OpenHands resolved approximately 21% of tasks, compared to approximately 65% on the isolated SWE-Bench Verified benchmark in the same cited setup.
-
-**The gap:** ~44 percentage points between isolated coding performance and long-horizon evolution performance.
-
-**How EPOCH uses it:**
-- ARCHITECTURE.md Section 2 comparison table (row: SWE-EVO)
-- Establishes the "frontier research gap" that EPOCH's thesis addresses
-- PDF page 4 of the platform dossier cites this paper
-
-**Claim in our platform:** "SWE-EVO: Long-horizon evolution tasks average ~21 files; GPT-5 + OpenHands resolved 21% vs 65% on SWE-Bench Verified in the cited setup."  
-**Attribution:** This figure is reproduced from the paper with attribution. Paraphrased for compliance.
-
----
-
-### R6 — EvoClaw: Evaluating AI Agents on Continuous Software Evolution (2026)
-
-**Source:** arXiv  
-**URL:** https://arxiv.org/abs/2603.13428  
-**Published:** 2026  
-**Type:** Academic benchmark paper  
-
-**What it establishes:**
-On isolated settings, tested agents performed above 80%. On continuous-evolution settings (where changes accumulate over time), performance dropped to at most 38% across all tested agents and frameworks.
-
-**The gap:** >42 percentage points between isolated and continuous-evolution performance.
-
-**How EPOCH uses it:**
-- ARCHITECTURE.md Section 2 comparison table (row: EvoClaw)
-- Directly supports the "trajectory / accumulated-error thesis" — the core claim that the problem is not model capability but accumulated state
-
-**Claim in our platform:** "Performance drops from >80% on isolated settings to at most 38% in continuous-evolution settings."  
-**Attribution:** Reproduced from paper with attribution.
-
----
-
-### R7 — RoadmapBench: Long-Horizon Version-Upgrade Tasks (2026)
-
-**Source:** arXiv  
-**URL:** https://arxiv.org/abs/2605.15846  
-**Published:** 2026  
-**Type:** Academic benchmark paper  
-
-**What it establishes:**
-A benchmark of 115 long-horizon version-upgrade tasks across 17 repositories and 5 languages. Even Claude Opus 4.7 resolved only 39.1% of tasks in the reported evaluation, establishing that multi-version, multi-file development remains difficult for frontier models.
-
-**How EPOCH uses it:**
-- ARCHITECTURE.md Section 2 comparison table (row: RoadmapBench)
-- Shows the problem persists across languages and repositories, not just a specific benchmark artifact
-
-**Claim in our platform:** "115 long-horizon version-upgrade tasks; Claude Opus 4.7 resolved 39.1%."  
-**Attribution:** Reproduced from paper with attribution.
-
----
-
-### R8 — AgenticFlict: Merge Conflicts in AI Coding Agent PRs (2026)
-
-**Source:** GitHub / arXiv  
-**URL:** https://github.com/unlv-evol/AgenticFlict  
-**Published:** 2026  
-**Type:** Dataset + paper  
-
-**What it establishes:**
-A large dataset of merge conflicts in AI coding-agent PRs on GitHub. The paper explicitly notes that semantic conflicts — where two changes are both syntactically valid but disagree on behavior — are not captured by textual merge-conflict detection.
-
-**How EPOCH uses it:**
-- Supports the "Semantic conflict" drift pattern in ARCHITECTURE.md Section 17
-- Demonstrates that snapshot-based review is insufficient for detecting the class of problems EPOCH targets
-- The EPOCH trajectory model is explicitly designed to capture semantic conflicts that textual tools miss
-
-**Claim in our platform:** "Semantic conflicts are not captured by textual merge-conflict detection."  
-**Attribution:** Reproduced from paper with attribution.
-
----
-
-### R9 — IBM Bob Developer Tutorials (2026)
-
-**Source:** IBM Developer  
-**URL:** https://developer.ibm.com/components/ibm-bob/tutorials/  
-**Published:** 2026 (ongoing)  
-**Type:** Primary technical documentation (IBM)  
-
-**What it establishes:**
-Practical examples of Bob workflows and integrations in modernization and agentic development scenarios. Confirms integration patterns used in EPOCH.
-
-**How EPOCH uses it:**
-- Reference for Bob workflow YAML syntax used in `.bob/workflows/`
-- Reference for MCP integration patterns in the EPOCH-MCP server design
-
----
-
-## Claim → Source Mapping
-
-This table maps every external claim in the platform to its source.
-
-| Claim | Source | Status |
-|---|---|---|
-| "AI agents can now implement features at extraordinary speed" | R1, R2 | Primary IBM docs |
-| "~65% isolated task performance, ~21% long-horizon" | R5 (SWE-EVO) | Cited paper |
-| ">80% isolated, ≤38% continuous-evolution" | R6 (EvoClaw) | Cited paper |
-| "Claude Opus 4.7 resolved 39.1% of version-upgrade tasks" | R7 (RoadmapBench) | Cited paper |
-| "Semantic conflicts not captured by textual merge detection" | R8 (AgenticFlict) | Cited paper |
-| "Bob V2 ships background tasks, rollback, subagents, reusable workflows" | R1 | Primary IBM doc |
-| "IBM positions Bob as agentic SDLC platform with shared workflow engine" | R2, R3 | Primary IBM docs |
-| "AI is shifting bottlenecks toward review and validation" | R3 | Primary IBM doc |
-| "Bob ships hooks and deterministic rails" | R4 | Primary IBM doc |
-
----
-
-## What Is Not Claimed
-
-Intellectual honesty requires stating what EPOCH does not claim.
-
-| Non-claim | Why not claimed |
-|---|---|
-| "EPOCH provably detects all architectural drift" | Drift detection is heuristic. The three patterns are deterministic but not exhaustive. |
-| "EPOCH proves causality" | The platform produces candidate causal chains with evidence, explicitly labelled `hypothesised`. Causal proof is not claimed. |
-| "EPOCH improves agent performance by X%" | This would require a controlled experiment EPOCH has not run. The platform measures its own specific metrics (listed in ARCHITECTURE.md Section 27). |
-| "EPOCH is production-ready" | The prototype is a 48-hour MVP. ADR-025 and ARCHITECTURE.md Section 19 document the explicit scope limitations. |
-| "Counterfactual simulations predict production outcomes" | Simulations are isolated experiments for comparison, not production predictors. This is enforced by the `hypothesised` labelling. |
-
----
-
-## Note on Benchmark Figures
-
-The SWE-EVO, EvoClaw, and RoadmapBench figures represent performance in the specific evaluation setups described in each paper. Benchmark results are sensitive to evaluation methodology, model version, and setup specifics. These figures are used to establish that a performance gap exists at the research frontier — not to make precise universal performance claims.
-
-The EPOCH platform dossier (the PDF, page 4) includes this same caveat: "Current product claims are attributed to IBM/primary sources; benchmark figures are reproduced only where explicitly stated by the source."
+| Not claimed | Why |
+| --- | --- |
+| EPOCH detects all architectural drift | The three drift patterns are deterministic but not exhaustive. |
+| EPOCH proves causality | Causal chains are candidates ranked by evidence and labelled `inferred` or `hypothesised`. |
+| EPOCH improves agent performance by a given percentage | That needs a controlled experiment we have not run. EPOCH reports its own measurements (`GET /api/metrics`). |
+| EPOCH is production-ready | It is a hackathon prototype built around one watched service; see the limits in [ARCHITECTURE.md](../ARCHITECTURE.md#14-limits). |
+| Futures predict production outcomes | Futures are measured experiments in isolated worktrees, for comparison. |
