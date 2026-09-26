@@ -5,7 +5,8 @@ import type { Evidence } from '../../shared/schema/evidence.schema.js';
 import type { Mutation } from '../../shared/schema/mutation.schema.js';
 import type { ProbeResult } from '../../sandbox/runner.js';
 import { generateDecisionId, generateEdgeId } from '../../shared/utils/id.js';
-import { maxRisk, type RiskLevel, type Verification } from '../../agents/contracts.js';
+import { type RiskLevel, type Verification } from '../../agents/contracts.js';
+import { assessChange } from '../../agents/synthesis/index.js';
 import { diffStat, discardChanges, sampleRepoPath, workingTreeDiff } from '../../sandbox/sample-repo.js';
 import { mutationEngine } from '../epoch/mutation-engine.js';
 import { futuresSimulator } from '../futures/simulator.js';
@@ -25,6 +26,7 @@ export interface DecisionPackage {
   counts: { total: number; observed: number; inferred: number; hypothesised: number };
   evidenceByAgent: Record<string, Evidence[]>;
   openQuestions: string[];
+  improvements: string[];
   trajectoryPreview: {
     before: { couplingScore: number; boundaryIntegrityScore: number } | null;
     after: { couplingScore: number; boundaryIntegrityScore: number };
@@ -41,8 +43,6 @@ export interface DecisionPackage {
   decision?: Decision;
   generatedAt: number;
 }
-
-const SEVERITY_TO_RISK: Record<string, RiskLevel> = { critical: 'critical', high: 'high', medium: 'medium', low: 'low', info: 'low' };
 
 /**
  * The human (or policy) gate (ADR-019). Nothing reaches the evolution graph
@@ -142,8 +142,9 @@ export class ApprovalGate {
 
     const v = verification ?? loadVerification(workflowId);
     const head = loadHistory().at(-1)?.scan;
+    const assessment = assessChange(workflowId);
     const recommendationClaim = [...all].reverse().find(e => e.claim.startsWith('Recommendation: '));
-    const riskLevel = maxRisk(all.map(e => SEVERITY_TO_RISK[e.finding_severity ?? 'info'] ?? 'low'));
+    const riskLevel = assessment.risk;
     const decided = decisions.listDecisionsByWorkflow(workflowId).at(-1);
 
     const pkg: DecisionPackage = {
@@ -153,7 +154,7 @@ export class ApprovalGate {
       status: workflow.status,
       requirement: typeof event?.payload.requirement === 'string' ? event.payload.requirement : '',
       riskLevel,
-      recommendation: recommendationClaim?.claim.replace('Recommendation: ', '') ?? 'No recommendation yet; run the specialists first.',
+      recommendation: recommendationClaim?.claim.replace('Recommendation: ', '') ?? assessment.recommendation,
       counts: {
         total: all.length,
         observed: all.filter(e => e.status === 'observed').length,
@@ -161,7 +162,8 @@ export class ApprovalGate {
         hypothesised: all.filter(e => e.status === 'hypothesised').length
       },
       evidenceByAgent,
-      openQuestions: all.filter(e => e.claim.startsWith('Open question')).map(e => e.claim),
+      openQuestions: assessment.openQuestions.map(e => e.claim),
+      improvements: assessment.improvements,
       trajectoryPreview: v ? {
         before: head ? { couplingScore: head.couplingScore, boundaryIntegrityScore: head.boundaryIntegrityScore } : null,
         after: { couplingScore: v.scan.couplingScore, boundaryIntegrityScore: v.scan.boundaryIntegrityScore },
