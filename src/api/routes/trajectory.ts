@@ -1,74 +1,38 @@
 import { Hono } from 'hono';
-import { trajectoryEngine } from '../../core/epoch/trajectory.js';
-import { trajectoryAnalyzer } from '../../graph/trajectory/trajectory-analyzer.js';
-import { debtModel } from '../../core/epoch/debt-model.js';
+import { z } from 'zod';
+import { epochs } from '../../store/index.js';
+import { ENVELOPE, trajectoryEngine } from '../../core/epoch/trajectory.js';
 import { epochDetector } from '../../core/epoch/epoch-detector.js';
-import { getTrajectoryTimeSeries } from '../../store/index.js';
+import { debtModel } from '../../core/epoch/debt-model.js';
+import { inflections, project, velocity } from '../../graph/trajectory/analytics.js';
+import { ActorSchema, parseBody, queryInt } from '../http.js';
 
 export const trajectoryRoutes = new Hono();
 
-trajectoryRoutes.get('/snapshot', (c) => {
-  const snapshot = trajectoryEngine.getTrajectorySnapshot();
-  return c.json({ snapshot });
+trajectoryRoutes.get('/snapshot', c => c.json({ snapshot: trajectoryEngine.snapshot() }));
+
+trajectoryRoutes.get('/timeseries', c => c.json({ points: trajectoryEngine.series(queryInt(c, 'limit')) }));
+
+trajectoryRoutes.get('/envelope', c => {
+  const snapshot = trajectoryEngine.snapshot();
+  return c.json({ envelope: ENVELOPE, withinEnvelope: snapshot.withinEnvelope, couplingScore: snapshot.couplingScore, boundaryIntegrityScore: snapshot.boundaryIntegrityScore });
 });
 
-trajectoryRoutes.get('/timeseries', (c) => {
-  const limit = c.req.query('limit') ? parseInt(c.req.query('limit')!, 10) : undefined;
-  const series = trajectoryEngine.getTrajectoryTimeSeries(limit);
-  return c.json({ series });
+trajectoryRoutes.get('/epochs', c => c.json({ epochs: epochs.listEpochs() }));
+
+/** A person confirms a proposed epoch boundary (ADR-023). */
+trajectoryRoutes.post('/epochs/:id/confirm', async c => {
+  await parseBody(c, z.object({ actor: ActorSchema }));
+  return c.json({ epoch: epochDetector.confirm(c.req.param('id')) });
 });
 
-trajectoryRoutes.get('/envelope', (c) => {
-  const current = trajectoryEngine.getTrajectorySnapshot();
-  const trajectory = trajectoryEngine.compute(
-    {
-      couplingScore: current.couplingScore,
-      boundaryIntegrityScore: current.boundaryIntegrityScore,
-      behaviorScore: 0
-    },
-    {
-      couplingScore: current.couplingScore,
-      boundaryIntegrityScore: current.boundaryIntegrityScore,
-      behaviorScore: 0
-    }
-  );
+trajectoryRoutes.get('/debt', c => c.json({ debt: debtModel.summary() }));
 
-  return c.json({
-    withinEnvelope: trajectoryEngine.checkEnvelope(trajectory),
-    violations: trajectory.envelopeViolations
-  });
-});
+trajectoryRoutes.get('/velocity', c => c.json({ velocity: velocity(queryInt(c, 'window', 5)) }));
 
-trajectoryRoutes.get('/debt', (c) => {
-  const summary = debtModel.getSummary();
-  return c.json({ debt: summary });
-});
+trajectoryRoutes.get('/inflections', c => c.json({ inflections: inflections() }));
 
-trajectoryRoutes.get('/projections', (c) => {
-  const windowSize = c.req.query('window') ? parseInt(c.req.query('window')!, 10) : 10;
-  const projection = trajectoryAnalyzer.projectTrend(windowSize);
-  return c.json({ projection });
-});
-
-trajectoryRoutes.get('/velocity', (c) => {
-  const windowSize = c.req.query('window') ? parseInt(c.req.query('window')!, 10) : 10;
-  const velocity = trajectoryAnalyzer.computeVelocity(windowSize);
-  return c.json({ velocity });
-});
-
-trajectoryRoutes.get('/inflections', (c) => {
-  const windowSize = c.req.query('window') ? parseInt(c.req.query('window')!, 10) : 10;
-  const inflections = trajectoryAnalyzer.detectInflection(windowSize);
-  return c.json({ inflections });
-});
-
-trajectoryRoutes.get('/epochs', (c) => {
-  const current = epochDetector.getCurrentEpoch();
-  const series = getTrajectoryTimeSeries(100);
-  const epochIds = Array.from(new Set(series.map(p => p.epoch_id).filter((id): id is string => id !== null)));
-
-  return c.json({ current_epoch: current, epochs: epochIds });
-});
+trajectoryRoutes.get('/projection', c => c.json({ projection: project(queryInt(c, 'horizon', 5), queryInt(c, 'window', 5)) }));
 
 export function registerTrajectoryRoutes(app: Hono): void {
   app.route('/api/trajectory', trajectoryRoutes);
