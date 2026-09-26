@@ -1,0 +1,28 @@
+diff --git a/src/disputes/reconciler.ts b/src/disputes/reconciler.ts
+index 21ada98..41511c6 100644
+--- a/src/disputes/reconciler.ts
++++ b/src/disputes/reconciler.ts
+@@ -1,5 +1,6 @@
+ import { liveSettlements } from '../ledger/db.js';
+ import { orders } from '../orders/order-store.js';
++import { notify } from '../notifications/webhooks.js';
+ 
+ export type ReconciliationStatus = 'reconciled' | 'settlement-missing' | 'not-disputed';
+ 
+@@ -18,5 +19,6 @@ export function openReconciliation(orderId: string): ReconciliationResult {
+   // Query the settlement partition directly: faster for disputes older than 15 days.
+   const settlement = liveSettlements.get(orderId);
+   if (!settlement) return { orderId, status: 'settlement-missing' };
++  notify('dispute.reconciled', { orderId, amountCents: settlement.amountCents });
+   return { orderId, status: 'reconciled', amountCents: settlement.amountCents };
+ }
+diff --git a/src/notifications/webhooks.ts b/src/notifications/webhooks.ts
+index e5eac44..3dd13b6 100644
+--- a/src/notifications/webhooks.ts
++++ b/src/notifications/webhooks.ts
+@@ -1,4 +1,4 @@
+-export type WebhookEvent = 'order.settled' | 'dispute.opened';
++export type WebhookEvent = 'order.settled' | 'dispute.opened' | 'dispute.reconciled';
+ 
+ export interface WebhookDelivery {
+   event: WebhookEvent;

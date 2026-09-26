@@ -1,10 +1,12 @@
 {
   "name": "@epoch/sample-app",
-  "version": "0.1.0",
-  "description": "Seeded payment application used as the EPOCH demo substrate",
+  "version": "0.2.0",
+  "description": "Payments service used as EPOCH's demo substrate: orders, ledger, disputes, archival, webhooks and a card vault",
   "private": true,
   "type": "module",
   "scripts": {
+    "test": "node --import tsx --test test/disputes.test.ts test/ledger.test.ts test/archival.test.ts test/orders.test.ts test/vault.test.ts",
+    "probes": "node --import tsx scenarios/run.ts",
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {

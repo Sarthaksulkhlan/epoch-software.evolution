@@ -1,56 +1,55 @@
-# EPOCH Sample Payment Application
+# EPOCH sample payments service
 
-This is the demo substrate for EPOCH — a realistic payment/e-commerce application
-with a pre-seeded history of 25 mutations.
+The system EPOCH watches during the demo. It is small on purpose: seven modules, eleven tests and one runtime probe, so every number EPOCH shows can be traced to a line of code.
 
-## Purpose
+## Modules
 
-The sample app exists to make the "locally correct, globally worse" thesis tangible.
-It is not a production application. It is a carefully constructed demo vehicle.
+| Component | File | Owns |
+| --- | --- | --- |
+| api | `src/api/disputes.ts` | Customer dispute endpoint and `CHARGEBACK_WINDOW_DAYS` |
+| orders | `src/orders/order-service.ts`, `order-store.ts` | Checkout, receipts (`DISPUTE_WINDOW_NOTICE_DAYS`), the order table |
+| ledger | `src/ledger/ledger-service.ts`, `db.ts` | Settlements, archive-aware lookups, trial balance |
+| disputes | `src/disputes/reconciler.ts` | Holding funds for a disputed settlement |
+| archival | `src/archival/archival-job.ts` | Nightly archival after `LEDGER_RETENTION_DAYS` |
+| notifications | `src/notifications/webhooks.ts` | Merchant webhooks (recorded, never sent) |
+| vault | `src/vault/card-vault.ts`, `pan-store.ts` | Card tokenisation; the only holder of card numbers |
 
-## Application Structure
+## Invariants
 
-```
-src/
-├── OrderService.ts          # Order lifecycle management
-├── AuthService.ts           # Authentication and authorization
-├── PaymentService.ts        # Payment processing + chargeback logic
-├── NotificationService.ts   # Customer notifications
-└── ArchivalJob.ts           # Data archival + retention policies
-```
+Declared in `invariants.json` as machine-checkable rules. EPOCH evaluates them against the code at every mutation.
 
-## Declared Invariants (active in the demo)
+| Id | Rule |
+| --- | --- |
+| INV-BOUND-04 | `src/orders/order-store.ts` and `src/ledger/db.ts` are imported only from inside their own module (1 violation = WEAKENED, 2 = VIOLATED) |
+| INV-TIME-02 | `CHARGEBACK_WINDOW_DAYS` ≤ `LEDGER_RETENTION_DAYS`; VIOLATED when it fails and the ledger table is also read outside `src/ledger/` |
+| INV-DATA-01 | `test/ledger.test.ts` passes (double-entry balance) |
+| INV-SEC-09 | `src/vault/pan-store.ts` is imported only by `src/vault/card-vault.ts` |
 
-1. **I-001:** All customer payment data access must route through `PaymentService`
-2. **I-002:** Chargeback eligibility window must be consistent across API, PaymentService, and ArchivalJob
-3. **I-003:** Customer notification must be sent for every status transition
-4. **I-004:** All auth decisions must be logged with actor, action, and timestamp
+The runtime probe `scenarios/late-dispute-after-archival.ts` settles an order on day 0, archives on day 16 and disputes on day 20. It fails when a dispute is accepted but the settlement can no longer be found; that failure becomes incident INC-3312.
 
-## Mutation History
+## History
 
-| Range | Description | Trajectory effect |
-|---|---|---|
-| M-1001–M-1010 | Baseline establishment: core payment flow | Epoch 1: healthy monolith |
-| M-1011–M-1015 | Event-driven refactor | Epoch 1→2 transition |
-| M-1016–M-1022 | Feature additions: international payments, retry logic | Epoch 2: stable |
-| M-1023–M-1025 | Three changes introducing boundary erosion | Drift begins |
+- `history/baseline.json`: the seeded epoch E-0 history (M-1020 to M-1041). These are demo fixtures describing how the baseline came to be.
+- `history/scripted/M-1042.patch`: the 15 → 30 day chargeback change. In the live demo Bob makes this change; the patch is the fallback used by tests and `pnpm demo:replay --with-feature`.
+- `history/patches/M-1051.patch`, `M-1077.patch`, `M-1084.patch`: safe-looking AI changes replayed by `pnpm demo:replay`. Each one passes all eleven tests.
+- `history/futures/A-extend-retention.patch`, `B-restore-boundary.patch`: the two counterfactual futures, used by tests and as a fallback when Bob does not write them live.
 
-## Seeded Drift
+| State | Tests | Probe | INV-BOUND-04 | INV-TIME-02 |
+| --- | --- | --- | --- | --- |
+| Baseline | 11/11 | pass (dispute rejected by the 15-day policy) | HOLDING | HOLDING |
+| + M-1042 | 11/11 | pass | HOLDING | WEAKENED |
+| + M-1051 | 11/11 | pass | WEAKENED | WEAKENED |
+| + M-1077 | 11/11 | **fail** (settlement frozen) | VIOLATED | VIOLATED |
+| + M-1084 | 11/11 | fail | VIOLATED | VIOLATED |
+| Future A | 11/11 | pass | VIOLATED | HOLDING |
+| Future B | 11/11 | pass | HOLDING | HOLDING |
 
-Mutations M-1023, M-1024, and M-1025 each introduced a direct DataLayer access
-bypassing the PaymentService boundary. Each change:
-- Passed all its own tests ✓
-- Looked locally correct ✓
-- But collectively eroded Invariant I-001 ✗
-
-This is the "locally correct, globally worse" thesis made concrete.
-
-## Resetting
+## Commands
 
 ```bash
-# From repo root:
-pnpm demo-reset
+pnpm --filter @epoch/sample-app test      # node:test via tsx
+pnpm --filter @epoch/sample-app probes    # runtime probe, prints JSON
+pnpm --filter @epoch/sample-app typecheck
 ```
 
-This wipes `epoch.db` and re-seeds it with the 25 mutation history from `history/`.
-The sample app source code in `src/` is not modified by the reset — only the database.
+EPOCH never edits this folder at runtime. `pnpm demo-reset` copies it to `.epoch/sample-repo`, a separate git repository that Bob, the replay script and the futures work in.

@@ -1,49 +1,27 @@
 {
   "mcpServers": {
-    "epoch-evolution": {
+    "epoch": {
       "command": "node",
-      "args": ["--import", "tsx/esm", "src/api/mcp-server.ts"],
+      "args": ["--import", "tsx", "src/api/mcp/mcp-server.ts"],
       "env": {
-        "EPOCH_DB_PATH": "./data/epoch.db",
-        "MCP_PORT": "3001",
-        "NODE_ENV": "development"
+        "EPOCH_API_URL": "http://127.0.0.1:3000",
+        "EPOCH_MCP_AUTHOR": "IBM Bob"
       },
-      "disabled": false,
-      "description": "EPOCH evolution graph MCP server. Exposes mutation history, invariant status, trajectory snapshot, active workflows, and causal chain queries to Bob IDE.",
-      "tools": [
-        {
-          "name": "get_mutation_history",
-          "description": "Get recent mutations for a component or all components",
-          "parameters": {
-            "component": "Component name or '*' for all components",
-            "limit": "Maximum number of mutations to return (default: 10)"
-          }
-        },
-        {
-          "name": "check_invariants",
-          "description": "Check the current status of invariants for specified components",
-          "parameters": {
-            "components": "Array of component names"
-          }
-        },
-        {
-          "name": "get_trajectory_snapshot",
-          "description": "Get the current system trajectory snapshot: coupling score, boundary integrity, drift findings",
-          "parameters": {}
-        },
-        {
-          "name": "list_active_workflows",
-          "description": "List all currently active WEAVE workflows and their states",
-          "parameters": {}
-        },
-        {
-          "name": "get_causal_chain",
-          "description": "Run causal archaeology from a symptom description to find the earliest plausible mutation",
-          "parameters": {
-            "symptom": "Description of the drift finding or incident to trace backward"
-          }
-        }
-      ]
+      "alwaysAllow": [
+        "get_trajectory_snapshot",
+        "get_mutation_history",
+        "get_mutation",
+        "check_invariants",
+        "get_causal_chain",
+        "list_drift_findings",
+        "list_active_workflows",
+        "get_workflow_status",
+        "get_context_bundle",
+        "get_decision_package",
+        "get_repo_status",
+        "get_simulation"
+      ],
+      "disabled": false
     }
   }
 }

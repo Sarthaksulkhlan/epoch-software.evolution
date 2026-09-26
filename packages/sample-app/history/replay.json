@@ -1,0 +1,47 @@
+{
+  "description": "Safe-looking AI changes replayed after the live chargeback feature. Each one passes the service's own tests.",
+  "feature": {
+    "id": "M-1042",
+    "title": "Extend chargeback eligibility from 15 to 30 days",
+    "intent": "Extend chargeback eligibility from 15 to 30 days. All customer-facing touchpoints must reflect the new window.",
+    "author": "scripted fallback for the live Bob run",
+    "patch": "scripted/M-1042.patch"
+  },
+  "steps": [
+    {
+      "id": "M-1051",
+      "title": "Bypass OrderService for 30-day dispute lookups",
+      "intent": "Resolve latency on 30-day historical dispute lookups by reading order status straight from the order table.",
+      "author": "AI coding agent · latency hotfix",
+      "patch": "patches/M-1051.patch"
+    },
+    {
+      "id": "M-1077",
+      "title": "Direct ledger query for settlement reconciliation",
+      "intent": "Let the dispute reconciler read settled amounts directly from the ledger table for disputes older than 15 days.",
+      "author": "AI coding agent · reconciliation speed-up",
+      "patch": "patches/M-1077.patch"
+    },
+    {
+      "id": "M-1084",
+      "title": "Dispute telemetry webhooks",
+      "intent": "Emit a merchant webhook whenever a dispute is reconciled.",
+      "author": "AI coding agent · merchant visibility",
+      "patch": "patches/M-1084.patch"
+    }
+  ],
+  "futures": [
+    {
+      "id": "A",
+      "label": "A · Keep the current path",
+      "description": "Raise LEDGER_RETENTION_DAYS to 30 so settlements outlive the dispute window. The reconciler keeps reading the order and ledger tables directly.",
+      "patch": "futures/A-extend-retention.patch"
+    },
+    {
+      "id": "B",
+      "label": "B · Restore the boundary",
+      "description": "Route the reconciler back through OrderService and LedgerService (keeping the telemetry webhook) and set retention to 45 days with the invariant documented.",
+      "patch": "futures/B-restore-boundary.patch"
+    }
+  ]
+}

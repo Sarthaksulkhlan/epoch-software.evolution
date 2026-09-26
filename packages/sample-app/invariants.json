@@ -1,0 +1,80 @@
+{
+  "invariants": [
+    {
+      "id": "INV-BOUND-04",
+      "name": "Order & Ledger Boundary Isolation",
+      "category": "BOUNDARY",
+      "statement": "Order and ledger tables are reached only through OrderService and LedgerService.",
+      "owner": "payments-platform",
+      "components": ["orders", "ledger", "disputes", "api", "archival"],
+      "rule": {
+        "type": "import-boundary",
+        "modules": [
+          { "module": "src/orders/order-store.ts", "allowedImporters": ["src/orders/"] },
+          { "module": "src/ledger/db.ts", "allowedImporters": ["src/ledger/"] }
+        ],
+        "weakenedAt": 1,
+        "violatedAt": 2
+      }
+    },
+    {
+      "id": "INV-TIME-02",
+      "name": "Dispute Eligibility within Ledger Retention",
+      "category": "TEMPORAL",
+      "statement": "A settlement stays reachable for as long as it can still be disputed: CHARGEBACK_WINDOW_DAYS must not exceed LEDGER_RETENTION_DAYS.",
+      "owner": "payments-platform",
+      "components": ["api", "archival", "ledger", "disputes"],
+      "rule": {
+        "type": "constant-order",
+        "lesser": { "file": "src/api/disputes.ts", "name": "CHARGEBACK_WINDOW_DAYS" },
+        "greater": { "file": "src/archival/archival-job.ts", "name": "LEDGER_RETENTION_DAYS" },
+        "escalateWhen": { "module": "src/ledger/db.ts", "importedOutside": "src/ledger/" }
+      }
+    },
+    {
+      "id": "INV-DATA-01",
+      "name": "Double-Entry Ledger Balancing",
+      "category": "DATA_FLOW",
+      "statement": "Every settlement posts equal debits and credits.",
+      "owner": "ledger",
+      "components": ["ledger"],
+      "rule": { "type": "test", "file": "test/ledger.test.ts" }
+    },
+    {
+      "id": "INV-SEC-09",
+      "name": "PCI-DSS Tokenised Vault Perimeter",
+      "category": "SECURITY",
+      "statement": "Raw card numbers are held only by the card vault.",
+      "owner": "security",
+      "components": ["vault", "orders"],
+      "rule": {
+        "type": "import-boundary",
+        "modules": [
+          { "module": "src/vault/pan-store.ts", "allowedImporters": ["src/vault/card-vault.ts"] }
+        ],
+        "weakenedAt": 1,
+        "violatedAt": 1
+      }
+    }
+  ],
+  "probes": [
+    {
+      "id": "late-dispute-after-archival",
+      "component": "disputes",
+      "incident": {
+        "signal": "Premature ledger archival during 30-day dispute resolution: settlement frozen",
+        "severity": "critical"
+      }
+    }
+  ],
+  "consistency": [
+    {
+      "id": "dispute-window-copy",
+      "description": "Checkout receipt copy matches the chargeback policy",
+      "constants": [
+        { "file": "src/api/disputes.ts", "name": "CHARGEBACK_WINDOW_DAYS" },
+        { "file": "src/orders/order-service.ts", "name": "DISPUTE_WINDOW_NOTICE_DAYS" }
+      ]
+    }
+  ]
+}

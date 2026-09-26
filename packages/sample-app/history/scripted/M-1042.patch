@@ -1,0 +1,26 @@
+diff --git a/src/api/disputes.ts b/src/api/disputes.ts
+index bb14ba5..d5a6b50 100644
+--- a/src/api/disputes.ts
++++ b/src/api/disputes.ts
+@@ -4,7 +4,7 @@ import { openReconciliation, type ReconciliationResult } from '../disputes/recon
+ import { notify } from '../notifications/webhooks.js';
+ 
+ /** Customer-facing chargeback policy: days after settlement during which a dispute is accepted. */
+-export const CHARGEBACK_WINDOW_DAYS = 15;
++export const CHARGEBACK_WINDOW_DAYS = 30;
+ 
+ export interface DisputeResult {
+   accepted: boolean;
+diff --git a/src/orders/order-service.ts b/src/orders/order-service.ts
+index 0e60150..fa77176 100644
+--- a/src/orders/order-service.ts
++++ b/src/orders/order-service.ts
+@@ -3,7 +3,7 @@ import { recordSettlement } from '../ledger/ledger-service.js';
+ import { lastFour, tokenize } from '../vault/card-vault.js';
+ 
+ /** Printed on every checkout receipt. Customer-facing copy of the chargeback policy. */
+-export const DISPUTE_WINDOW_NOTICE_DAYS = 15;
++export const DISPUTE_WINDOW_NOTICE_DAYS = 30;
+ 
+ export function placeOrder(orderId: string, customerId: string, amountCents: number, cardNumber: string, day: number): OrderRow {
+   if (orders.has(orderId)) throw new Error(`Order ${orderId} already exists`);

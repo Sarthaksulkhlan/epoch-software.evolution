@@ -44,3 +44,11 @@ logs/
 
 # TypeScript build info
 *.tsbuildinfo
+.oxcode/
+.oxcode-memory/
+
+# Demo working state: sample repo copy, futures worktrees, context bundles
+.epoch/
+
+# Internal material (presenter script, team notes, concept dossier); never published
+.internal/

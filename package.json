@@ -1,6 +1,6 @@
 {
   "name": "epoch",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "AI-native control and intelligence plane for software that never stops changing",
   "private": true,
   "type": "module",
@@ -9,14 +9,14 @@
     "pnpm": ">=9.0.0"
   },
   "scripts": {
-    "dev": "vite --port=3000 --host=0.0.0.0",
-    "epoch:dev": "concurrently --names \"API,MCP,UI\" --prefix-colors \"blue,cyan,green\" \"pnpm api:dev\" \"pnpm mcp:dev\" \"pnpm console:dev\"",
+    "dev": "concurrently --names API,UI --prefix-colors blue,green \"pnpm api:dev\" \"pnpm console:dev\"",
+    "api": "tsx src/api/server.ts",
     "api:dev": "tsx watch src/api/server.ts",
-    "mcp:dev": "tsx watch src/api/mcp-server.ts",
-    "console:dev": "vite --port=3000 --host=0.0.0.0",
-    "build": "tsc -p tsconfig.json && vite build",
+    "mcp": "node --import tsx src/api/mcp/mcp-server.ts",
+    "console:dev": "vite",
+    "build": "vite build",
     "preview": "vite preview",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc --noEmit && pnpm --filter @epoch/sample-app typecheck",
     "test": "vitest --run",
     "test:unit": "vitest --run tests/unit",
     "test:integration": "vitest --run tests/integration",
@@ -24,12 +24,15 @@
     "seed": "tsx scripts/seed.ts",
     "migrate": "tsx scripts/migrate.ts",
     "demo-reset": "tsx scripts/demo-reset.ts",
+    "demo:replay": "tsx scripts/demo-replay.ts",
+    "demo:futures": "tsx scripts/demo-futures.ts",
     "lint": "eslint src --ext .ts,.tsx",
     "format": "prettier --write src docs scripts"
   },
   "dependencies": {
     "@google/genai": "^2.4.0",
     "@hono/node-server": "1.13.7",
+    "@modelcontextprotocol/sdk": "1.30.1",
     "@tailwindcss/vite": "^4.3.3",
     "better-sqlite3": "11.9.1",
     "eventemitter3": "5.0.1",
@@ -42,7 +45,7 @@
     "react-dom": "^19.0.1",
     "react-router-dom": "^7.18.4",
     "recharts": "^3.10.1",
-    "zod": "3.24.3"
+    "zod": "3.25.76"
   },
   "devDependencies": {
     "@types/better-sqlite3": "7.6.12",
@@ -57,9 +60,9 @@
     "eslint": "9.26.0",
     "prettier": "3.5.3",
     "tailwindcss": "^4.3.3",
-    "tsx": "^4.21.0",
+    "tsx": "4.19.3",
     "typescript": "5.5.4",
-    "vite": "^6.3.5",
+    "vite": "6.3.5",
     "vitest": "3.1.4"
   }
 }
