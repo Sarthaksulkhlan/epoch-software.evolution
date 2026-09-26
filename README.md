@@ -27,7 +27,7 @@
   <b>Live demo: <a href="https://epoch-wj5b.onrender.com/">epoch-wj5b.onrender.com</a></b><br>
   The real engine, running this repository's container in a guarded public mode.<br>
   It opens at the moment a reviewer chooses a future: INC-3312 open, drift raised, futures A and B measured (<a href="https://epoch-wj5b.onrender.com/api/v1/simulations">see them</a>).<br>
-  <sub>Hosted on Render's free plan: the first visit after a quiet spell takes about a minute to wake it.</sub>
+  <sub>Hosted on Render's free plan and kept awake by a scheduled GitHub Action. If it was asleep anyway, the first visit takes about a minute.</sub>
 </p>
 
 ---
