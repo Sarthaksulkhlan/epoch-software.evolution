@@ -1,5 +1,7 @@
 # EPOCH
 
+[![CI](https://github.com/vighriday/epoch-software-evolution/actions/workflows/ci.yml/badge.svg)](https://github.com/vighriday/epoch-software-evolution/actions/workflows/ci.yml)
+
 **The control and intelligence plane for software that never stops changing.**
 
 > AI can change your software one task at a time. EPOCH makes sure you do not lose the system in the process.
@@ -34,7 +36,7 @@ Requirements: Node.js 22+, pnpm 9+, Git. No database server, Docker or credentia
 ```bash
 pnpm install
 pnpm demo-reset          # fresh database + sample repo, seeded epoch E-0 (22 mutations)
-pnpm dev                 # API on http://127.0.0.1:3000, console on http://localhost:5173
+pnpm dev                 # API on http://127.0.0.1:3000, console on http://127.0.0.1:5173
 ```
 
 Then, in a second terminal (or from IBM Bob, see below):
@@ -49,11 +51,22 @@ Adopt a future from the console's Futures view, or with `POST /api/v1/simulation
 Other commands:
 
 ```bash
-pnpm test          # 32 tests: unit, integration and the golden path end to end
-pnpm typecheck     # strict TypeScript for the platform and the sample app
+pnpm test          # 38 tests: unit, integration and the golden path end to end
+pnpm typecheck     # strict TypeScript for the platform, the console and the sample app
 pnpm api           # API only
+pnpm build         # build the console into dist/
 pnpm mcp           # EPOCH-MCP on stdio (IBM Bob starts it from .bob/mcp.json)
 ```
+
+### Hosted demo
+
+The `Dockerfile` packages EPOCH as one service: the API serves the built console on the same port and runs in a guarded public mode. It opens on the moment a reviewer chooses a future, lets a visitor adopt one and approve it, keeps every other write closed, and restores itself after 20 idle minutes.
+
+```bash
+docker build -t epoch . && docker run --rm -p 8080:8080 epoch   # http://localhost:8080
+```
+
+`render.yaml` deploys the same image on Render (New → Blueprint → this repository).
 
 ## How IBM Bob fits
 
@@ -109,7 +122,7 @@ src/
   store/        SQLite schema and typed queries
   console/      the four-lens console
 packages/sample-app/   the watched payments service, its invariants, history and replayable changes
-scripts/        demo-reset, seed, demo:replay, demo:futures, migrate
+scripts/        demo-reset, seed, demo:replay, demo:futures, showcase:snapshot, migrate
 tests/          unit, integration and end-to-end tests
 .bob/           IBM Bob configuration (MCP server registration)
 ```

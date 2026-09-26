@@ -13,7 +13,7 @@ pnpm dev
 ```
 
 - API: <http://127.0.0.1:3000/api/health>
-- Console: <http://localhost:5173>
+- Console: <http://127.0.0.1:5173>
 - Live event stream: <http://127.0.0.1:3000/api/stream>
 
 `pnpm demo-reset` rebuilds the database and the sample repository (`.epoch/sample-repo`) and seeds epoch **E-0**: 22 mutations (M-1020 to M-1041), four invariants holding, boundary integrity 1.00, coupling 0.19. It is deterministic; run it any time to start over. With the API running, the scripts talk to it so the console updates live.
@@ -82,6 +82,19 @@ After approval:
 - **M-1085** is recorded, with a `SPAWNED` edge from the base mutation and a `REMEDIATES` edge to INC-3312.
 - INC-3312 is resolved, DRIFT-401 and DRIFT-402 are resolved, epoch **E-2** (recovery) is proposed.
 - Boundary integrity is back to 1.00 and the trajectory is inside the envelope.
+
+## Hosted demo
+
+The container image (`Dockerfile`) runs EPOCH in public demo mode with the console and the API on one port. It opens on the showcase: M-1042 and the three AI changes recorded, INC-3312 open, drift findings raised and futures A and B measured. A visitor can finish the story from the console: adopt a future, run its remediation to the approval gate and approve it, which records M-1085 and resolves INC-3312. Everything else is read-only, and a changed demo restores itself after 20 idle minutes.
+
+Run the image yourself:
+
+```bash
+docker build -t epoch .
+docker run --rm -p 8080:8080 epoch     # http://localhost:8080
+```
+
+Or host it on Render with the blueprint in `render.yaml` (New → Blueprint → this repository). The free plan sleeps when idle, so the first visit afterwards takes about a minute.
 
 ## Measurements
 
