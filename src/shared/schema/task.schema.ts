@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-export const AgentType = z.enum(['historian', 'context', 'security', 'qa', 'release', 'incident', 'evolution', 'counterfactual', 'adversarial', 'synthesis']);
+export const AgentType = z.enum(['historian', 'context', 'security', 'qa', 'release', 'incident', 'evolution', 'counterfactual', 'adversarial', 'synthesis', 'scanner', 'bob']);
 export type AgentType = z.infer<typeof AgentType>;
 
 export const TaskStatus = z.enum(['PENDING', 'RUNNING', 'COMPLETED', 'FAILED', 'SKIPPED']);

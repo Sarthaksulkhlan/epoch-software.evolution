@@ -22,7 +22,13 @@ export const MutationSchema = z.object({
   evidence_refs: z.array(z.string()).min(1),
   trajectory_delta: TrajectoryDeltaSchema,
   epoch_id: z.string().min(1),
-  created_at: z.number().int().positive()
+  created_at: z.number().int().positive(),
+  /** Commit in the sample repository that realises this mutation. */
+  commit_sha: z.string().optional(),
+  /** Who made the change, e.g. "IBM Bob (weave-lifecycle)" or "seed history". */
+  author: z.string().optional(),
+  /** Set when this mutation reverts an earlier one (mutations are never deleted). */
+  compensates_mutation_id: z.string().optional()
 });
 
 export type Mutation = z.infer<typeof MutationSchema>;
