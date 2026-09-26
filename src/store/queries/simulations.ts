@@ -1,84 +1,60 @@
 import { getDb } from '../db.js';
+import { compact, decodeJson, json, param, type Row } from '../rows.js';
+import { SimulationSchema, type Simulation } from '../../shared/schema/simulation.schema.js';
 
-export interface Simulation {
-  simulation_id: string;
-  base_mutation_id: string | null;
-  base_state_hash: string;
-  hypothesis: string;
-  scenarios: any; // JSON
-  status: string;
-  outcome_ref: string | null;
-  selected_scenario_id: string | null;
-  created_at: number;
-  completed_at: number | null;
+function toSimulation(row: Row): Simulation {
+  return SimulationSchema.parse(compact(decodeJson(row, ['scenarios'])));
 }
 
 export function insertSimulation(simulation: Simulation): void {
-  const db = getDb();
-  const stmt = db.prepare(`
+  getDb().prepare(`
     INSERT INTO simulations (
-      simulation_id, base_mutation_id, base_state_hash, hypothesis,
-      scenarios, status, outcome_ref, selected_scenario_id,
-      created_at, completed_at
+      simulation_id, base_mutation_id, base_state_hash, hypothesis, scenarios,
+      status, outcome_ref, selected_scenario_id, created_at, completed_at
     ) VALUES (
-      @simulation_id, @base_mutation_id, @base_state_hash, @hypothesis,
-      @scenarios, @status, @outcome_ref, @selected_scenario_id,
-      @created_at, @completed_at
+      @simulation_id, @base_mutation_id, @base_state_hash, @hypothesis, @scenarios,
+      @status, @outcome_ref, @selected_scenario_id, @created_at, @completed_at
     )
-  `);
-  stmt.run({
-    ...simulation,
-    scenarios: JSON.stringify(simulation.scenarios)
-  });
+  `).run(toParams(simulation));
+}
+
+/** Replace the mutable parts of a simulation (scenario results, status, selection). */
+export function updateSimulation(simulation: Simulation): void {
+  getDb().prepare(`
+    UPDATE simulations
+    SET scenarios = @scenarios, status = @status, outcome_ref = @outcome_ref,
+        selected_scenario_id = @selected_scenario_id, completed_at = @completed_at
+    WHERE simulation_id = @simulation_id
+  `).run(toParams(simulation));
 }
 
 export function getSimulation(simulationId: string): Simulation | undefined {
-  const db = getDb();
-  const stmt = db.prepare('SELECT * FROM simulations WHERE simulation_id = ?');
-  const row = stmt.get(simulationId) as any;
-  if (!row) return undefined;
-  
-  return {
-    ...row,
-    scenarios: JSON.parse(row.scenarios)
-  };
+  const row = getDb().prepare('SELECT * FROM simulations WHERE simulation_id = ?').get(simulationId) as Row | undefined;
+  return row ? toSimulation(row) : undefined;
 }
 
-export function listSimulations(options: { status?: string } = {}): Simulation[] {
-  const db = getDb();
-  let query = 'SELECT * FROM simulations';
-  const params: any[] = [];
-  
+export function listSimulations(options: { status?: string | undefined } = {}): Simulation[] {
+  const params: unknown[] = [];
+  let sql = 'SELECT * FROM simulations';
   if (options.status) {
-    query += ' WHERE status = ?';
+    sql += ' WHERE status = ?';
     params.push(options.status);
   }
-  
-  query += ' ORDER BY created_at DESC';
-  
-  const stmt = db.prepare(query);
-  const rows = stmt.all(...params) as any[];
-  
-  return rows.map(row => ({
-    ...row,
-    scenarios: JSON.parse(row.scenarios)
-  }));
+  sql += ' ORDER BY created_at DESC, rowid DESC';
+  return (getDb().prepare(sql).all(...params) as Row[]).map(toSimulation);
 }
 
-export function updateSimulationStatus(simulationId: string, status: string): void {
-  const db = getDb();
-  const stmt = db.prepare('UPDATE simulations SET status = ? WHERE simulation_id = ?');
-  stmt.run(status, simulationId);
-}
-
-export function completeSimulation(simulationId: string, outcomeRef: string): void {
-  const db = getDb();
-  const stmt = db.prepare('UPDATE simulations SET status = ?, outcome_ref = ?, completed_at = ? WHERE simulation_id = ?');
-  stmt.run('COMPLETED', outcomeRef, Date.now(), simulationId);
-}
-
-export function selectScenario(simulationId: string, scenarioId: string): void {
-  const db = getDb();
-  const stmt = db.prepare('UPDATE simulations SET selected_scenario_id = ? WHERE simulation_id = ?');
-  stmt.run(scenarioId, simulationId);
+function toParams(simulation: Simulation): Record<string, unknown> {
+  return {
+    simulation_id: simulation.simulation_id,
+    base_mutation_id: simulation.base_mutation_id,
+    base_state_hash: simulation.base_state_hash,
+    hypothesis: simulation.hypothesis,
+    scenarios: json(simulation.scenarios),
+    status: simulation.status,
+    outcome_ref: param(simulation.outcome_ref),
+    selected_scenario_id: param(simulation.selected_scenario_id),
+    created_at: simulation.created_at,
+    completed_at: param(simulation.completed_at)
+  };
 }

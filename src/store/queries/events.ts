@@ -1,73 +1,39 @@
 import { getDb } from '../db.js';
+import { compact, decodeJson, json, param, type Row } from '../rows.js';
+import { EventSchema, type Event } from '../../shared/schema/event.schema.js';
 
-export interface Event {
-  event_id: string;
-  type: string;
-  source: string;
-  timestamp: number;
-  repo: string | null;
-  branch: string | null;
-  payload: any;
+function toEvent(row: Row): Event {
+  return EventSchema.parse(compact(decodeJson(row, ['payload'])));
 }
 
 export function insertEvent(event: Event): void {
-  const db = getDb();
-  const stmt = db.prepare(`
+  getDb().prepare(`
     INSERT INTO events (event_id, type, source, timestamp, repo, branch, payload)
     VALUES (@event_id, @type, @source, @timestamp, @repo, @branch, @payload)
-  `);
-  
-  stmt.run({
-    ...event,
-    payload: JSON.stringify(event.payload)
+  `).run({
+    event_id: event.event_id,
+    type: event.type,
+    source: event.source,
+    timestamp: event.timestamp,
+    repo: param(event.repo),
+    branch: param(event.branch),
+    payload: json(event.payload)
   });
 }
 
 export function getEvent(eventId: string): Event | undefined {
-  const db = getDb();
-  const stmt = db.prepare('SELECT * FROM events WHERE event_id = ?');
-  const row = stmt.get(eventId) as any;
-  if (!row) return undefined;
-  
-  return {
-    ...row,
-    payload: JSON.parse(row.payload)
-  };
+  const row = getDb().prepare('SELECT * FROM events WHERE event_id = ?').get(eventId) as Row | undefined;
+  return row ? toEvent(row) : undefined;
 }
 
-export function listEvents(options: { type?: string, limit?: number, offset?: number } = {}): Event[] {
-  const db = getDb();
-  let query = 'SELECT * FROM events';
-  const params: any[] = [];
-  
+export function listEvents(options: { type?: string | undefined; limit?: number | undefined; offset?: number | undefined } = {}): Event[] {
+  const params: unknown[] = [];
+  let sql = 'SELECT * FROM events';
   if (options.type) {
-    query += ' WHERE type = ?';
+    sql += ' WHERE type = ?';
     params.push(options.type);
   }
-  
-  query += ' ORDER BY timestamp DESC';
-  
-  if (options.limit !== undefined) {
-    query += ' LIMIT ?';
-    params.push(options.limit);
-    if (options.offset !== undefined) {
-      query += ' OFFSET ?';
-      params.push(options.offset);
-    }
-  }
-  
-  const stmt = db.prepare(query);
-  const rows = stmt.all(...params) as any[];
-  
-  return rows.map(row => ({
-    ...row,
-    payload: JSON.parse(row.payload)
-  }));
-}
-
-export function countEvents(): number {
-  const db = getDb();
-  const stmt = db.prepare('SELECT COUNT(*) as count FROM events');
-  const row = stmt.get() as { count: number };
-  return row.count;
+  sql += ' ORDER BY timestamp DESC, rowid DESC LIMIT ? OFFSET ?';
+  params.push(options.limit ?? 100, options.offset ?? 0);
+  return (getDb().prepare(sql).all(...params) as Row[]).map(toEvent);
 }

@@ -1,20 +1,13 @@
 import { getDb } from '../db.js';
+import { compact, param, type Row } from '../rows.js';
+import { GraphEdgeSchema, type GraphEdge, type Relationship } from '../../shared/schema/graph-edge.schema.js';
 
-export interface GraphEdge {
-  edge_id: string;
-  from_id: string;
-  from_type: string;
-  to_id: string;
-  to_type: string;
-  relationship: string;
-  confidence: number;
-  evidence_ref: string | null;
-  created_at: number;
+function toEdge(row: Row): GraphEdge {
+  return GraphEdgeSchema.parse(compact(row));
 }
 
 export function insertEdge(edge: GraphEdge): void {
-  const db = getDb();
-  const stmt = db.prepare(`
+  getDb().prepare(`
     INSERT INTO graph_edges (
       edge_id, from_id, from_type, to_id, to_type,
       relationship, confidence, evidence_ref, created_at
@@ -22,81 +15,61 @@ export function insertEdge(edge: GraphEdge): void {
       @edge_id, @from_id, @from_type, @to_id, @to_type,
       @relationship, @confidence, @evidence_ref, @created_at
     )
-  `);
-  stmt.run(edge);
+  `).run({
+    edge_id: edge.edge_id,
+    from_id: edge.from_id,
+    from_type: edge.from_type,
+    to_id: edge.to_id,
+    to_type: edge.to_type,
+    relationship: edge.relationship,
+    confidence: edge.confidence,
+    evidence_ref: param(edge.evidence_ref),
+    created_at: edge.created_at
+  });
 }
 
-export function getEdgesFrom(fromId: string, relationship?: string): GraphEdge[] {
-  const db = getDb();
-  if (relationship) {
-    const stmt = db.prepare('SELECT * FROM graph_edges WHERE from_id = ? AND relationship = ?');
-    return stmt.all(fromId, relationship) as GraphEdge[];
-  }
-  const stmt = db.prepare('SELECT * FROM graph_edges WHERE from_id = ?');
-  return stmt.all(fromId) as GraphEdge[];
+export function getEdgesFrom(fromId: string, relationship?: Relationship): GraphEdge[] {
+  const rows = relationship
+    ? getDb().prepare('SELECT * FROM graph_edges WHERE from_id = ? AND relationship = ? ORDER BY rowid').all(fromId, relationship)
+    : getDb().prepare('SELECT * FROM graph_edges WHERE from_id = ? ORDER BY rowid').all(fromId);
+  return (rows as Row[]).map(toEdge);
 }
 
-export function getEdgesTo(toId: string, relationship?: string): GraphEdge[] {
-  const db = getDb();
-  if (relationship) {
-    const stmt = db.prepare('SELECT * FROM graph_edges WHERE to_id = ? AND relationship = ?');
-    return stmt.all(toId, relationship) as GraphEdge[];
-  }
-  const stmt = db.prepare('SELECT * FROM graph_edges WHERE to_id = ?');
-  return stmt.all(toId) as GraphEdge[];
+export function getEdgesTo(toId: string, relationship?: Relationship): GraphEdge[] {
+  const rows = relationship
+    ? getDb().prepare('SELECT * FROM graph_edges WHERE to_id = ? AND relationship = ? ORDER BY rowid').all(toId, relationship)
+    : getDb().prepare('SELECT * FROM graph_edges WHERE to_id = ? ORDER BY rowid').all(toId);
+  return (rows as Row[]).map(toEdge);
 }
 
-export function getFullGraph(): { nodes: any[], edges: GraphEdge[] } {
-  const db = getDb();
-  const edges = db.prepare('SELECT * FROM graph_edges').all() as GraphEdge[];
-  // Extract nodes dynamically from edges for basic representation
-  // Actual node details would require joining with other tables if needed.
-  const nodesMap = new Map();
-  for (const edge of edges) {
-    if (!nodesMap.has(edge.from_id)) {
-      nodesMap.set(edge.from_id, { id: edge.from_id, type: edge.from_type });
-    }
-    if (!nodesMap.has(edge.to_id)) {
-      nodesMap.set(edge.to_id, { id: edge.to_id, type: edge.to_type });
-    }
-  }
-  return { nodes: Array.from(nodesMap.values()), edges };
+export function listEdgesByRelationship(relationship: Relationship): GraphEdge[] {
+  const rows = getDb().prepare('SELECT * FROM graph_edges WHERE relationship = ? ORDER BY rowid').all(relationship) as Row[];
+  return rows.map(toEdge);
 }
 
-export function getComponentSubgraph(componentId: string): { nodes: any[], edges: GraphEdge[] } {
-  const db = getDb();
-  const stmt = db.prepare(`
-    SELECT * FROM graph_edges 
-    WHERE from_id = ? OR to_id = ?
-  `);
-  const edges = stmt.all(componentId, componentId) as GraphEdge[];
-  
-  const nodesMap = new Map();
-  for (const edge of edges) {
-    if (!nodesMap.has(edge.from_id)) {
-      nodesMap.set(edge.from_id, { id: edge.from_id, type: edge.from_type });
-    }
-    if (!nodesMap.has(edge.to_id)) {
-      nodesMap.set(edge.to_id, { id: edge.to_id, type: edge.to_type });
-    }
-  }
-  return { nodes: Array.from(nodesMap.values()), edges };
+export function listAllEdges(): GraphEdge[] {
+  return (getDb().prepare('SELECT * FROM graph_edges ORDER BY rowid').all() as Row[]).map(toEdge);
 }
 
-export function ancestorTraversal(startId: string, maxDepth: number): Array<{ mutation_id: string, depth: number }> {
-  const db = getDb();
-  // Using recursive CTE for BFS backward traversal on graph_edges assuming relationship like 'mutates_from' or similar
-  const stmt = db.prepare(`
-    WITH RECURSIVE
-      traverse(id, depth) AS (
-        SELECT to_id, 0 FROM graph_edges WHERE from_id = ? 
-        UNION
-        SELECT e.to_id, t.depth + 1
-        FROM graph_edges e
-        JOIN traverse t ON e.from_id = t.id
-        WHERE t.depth < ?
-      )
-    SELECT id as mutation_id, depth FROM traverse
-  `);
-  return stmt.all(startId, maxDepth) as Array<{ mutation_id: string, depth: number }>;
+/** Edges that touch a node in either direction. */
+export function listEdgesForNode(nodeId: string): GraphEdge[] {
+  const rows = getDb().prepare('SELECT * FROM graph_edges WHERE from_id = ? OR to_id = ? ORDER BY rowid').all(nodeId, nodeId) as Row[];
+  return rows.map(toEdge);
+}
+
+/**
+ * Mutations reachable backwards from a mutation through FOLLOWS edges,
+ * nearest first, bounded by depth (recursive CTE, ARCHITECTURE §13).
+ */
+export function ancestorMutations(mutationId: string, maxDepth: number): Array<{ mutation_id: string; depth: number }> {
+  return getDb().prepare(`
+    WITH RECURSIVE ancestors(mutation_id, depth) AS (
+      SELECT from_id, 1 FROM graph_edges WHERE to_id = ? AND relationship = 'FOLLOWS'
+      UNION
+      SELECT e.from_id, a.depth + 1
+      FROM graph_edges e JOIN ancestors a ON e.to_id = a.mutation_id
+      WHERE e.relationship = 'FOLLOWS' AND a.depth < ?
+    )
+    SELECT mutation_id, MIN(depth) AS depth FROM ancestors GROUP BY mutation_id ORDER BY depth ASC
+  `).all(mutationId, maxDepth) as Array<{ mutation_id: string; depth: number }>;
 }

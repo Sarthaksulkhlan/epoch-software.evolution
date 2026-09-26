@@ -1,37 +1,34 @@
 import { getDb } from '../db.js';
+import { compact, param, type Row } from '../rows.js';
+import { DecisionSchema, type Decision } from '../../shared/schema/decision.schema.js';
 
-export interface Decision {
-  decision_id: string;
-  workflow_id: string | null;
-  actor: string;
-  action: string;
-  rationale: string | null;
-  scope: string | null;
-  timestamp: number;
+function toDecision(row: Row): Decision {
+  return DecisionSchema.parse(compact(row));
 }
 
 export function insertDecision(decision: Decision): void {
-  const db = getDb();
-  const stmt = db.prepare(`
-    INSERT INTO decisions (
-      decision_id, workflow_id, actor, action,
-      rationale, scope, timestamp
-    ) VALUES (
-      @decision_id, @workflow_id, @actor, @action,
-      @rationale, @scope, @timestamp
-    )
-  `);
-  stmt.run(decision);
+  getDb().prepare(`
+    INSERT INTO decisions (decision_id, workflow_id, actor, action, rationale, scope, timestamp)
+    VALUES (@decision_id, @workflow_id, @actor, @action, @rationale, @scope, @timestamp)
+  `).run({
+    decision_id: decision.decision_id,
+    workflow_id: decision.workflow_id,
+    actor: decision.actor,
+    action: decision.action,
+    rationale: param(decision.rationale),
+    scope: param(decision.scope),
+    timestamp: decision.timestamp
+  });
 }
 
-export function getDecision(decisionId: string): Decision | undefined {
-  const db = getDb();
-  const stmt = db.prepare('SELECT * FROM decisions WHERE decision_id = ?');
-  return stmt.get(decisionId) as Decision | undefined;
+export function listDecisionsByWorkflow(workflowId: string): Decision[] {
+  const rows = getDb()
+    .prepare('SELECT * FROM decisions WHERE workflow_id = ? ORDER BY timestamp ASC, rowid ASC')
+    .all(workflowId) as Row[];
+  return rows.map(toDecision);
 }
 
-export function getDecisionByWorkflow(workflowId: string): Decision | undefined {
-  const db = getDb();
-  const stmt = db.prepare('SELECT * FROM decisions WHERE workflow_id = ?');
-  return stmt.get(workflowId) as Decision | undefined;
+export function listDecisions(limit = 100): Decision[] {
+  const rows = getDb().prepare('SELECT * FROM decisions ORDER BY timestamp DESC, rowid DESC LIMIT ?').all(limit) as Row[];
+  return rows.map(toDecision);
 }

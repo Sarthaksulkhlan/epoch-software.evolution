@@ -1,66 +1,72 @@
 import { getDb } from '../db.js';
+import { compact, json, type Row } from '../rows.js';
+import { TrajectoryPointSchema, type TrajectoryPoint } from '../../shared/schema/trajectory-point.schema.js';
 
-export interface TrajectoryPoint {
-  id?: number;
-  mutation_id: string | null;
-  timestamp: number;
-  coupling_score: number | null;
-  boundary_integrity_score: number | null;
-  drift_delta: number | null;
-  epoch_id: string | null;
-  state_hash: string | null;
+function toPoint(row: Row): TrajectoryPoint {
+  const { scan: _scan, ...rest } = row;
+  return TrajectoryPointSchema.parse(compact(rest));
 }
 
-export function insertTrajectoryPoint(point: TrajectoryPoint): void {
-  const db = getDb();
-  const stmt = db.prepare(`
+/**
+ * Insert a trajectory point. The structural scan behind it is stored alongside
+ * so later mutations can be diffed against it.
+ */
+export function insertTrajectoryPoint(point: TrajectoryPoint, scan: unknown): number {
+  const result = getDb().prepare(`
     INSERT INTO trajectory_points (
       mutation_id, timestamp, coupling_score, boundary_integrity_score,
-      drift_delta, epoch_id, state_hash
+      drift_delta, epoch_id, state_hash, scan
     ) VALUES (
       @mutation_id, @timestamp, @coupling_score, @boundary_integrity_score,
-      @drift_delta, @epoch_id, @state_hash
+      @drift_delta, @epoch_id, @state_hash, @scan
     )
-  `);
-  stmt.run(point);
+  `).run({
+    mutation_id: point.mutation_id,
+    timestamp: point.timestamp,
+    coupling_score: point.coupling_score,
+    boundary_integrity_score: point.boundary_integrity_score,
+    drift_delta: point.drift_delta,
+    epoch_id: point.epoch_id,
+    state_hash: point.state_hash,
+    scan: json(scan)
+  });
+  return Number(result.lastInsertRowid);
 }
 
 export function getTrajectoryPoint(mutationId: string): TrajectoryPoint | undefined {
-  const db = getDb();
-  const stmt = db.prepare('SELECT * FROM trajectory_points WHERE mutation_id = ?');
-  return stmt.get(mutationId) as TrajectoryPoint | undefined;
-}
-
-export function listTrajectoryPoints(options: { limit?: number, epochId?: string } = {}): TrajectoryPoint[] {
-  const db = getDb();
-  let query = 'SELECT * FROM trajectory_points';
-  const params: any[] = [];
-  
-  if (options.epochId) {
-    query += ' WHERE epoch_id = ?';
-    params.push(options.epochId);
-  }
-  
-  query += ' ORDER BY timestamp DESC';
-  
-  if (options.limit !== undefined) {
-    query += ' LIMIT ?';
-    params.push(options.limit);
-  }
-  
-  const stmt = db.prepare(query);
-  return stmt.all(...params) as TrajectoryPoint[];
+  const row = getDb().prepare('SELECT * FROM trajectory_points WHERE mutation_id = ? ORDER BY id DESC LIMIT 1').get(mutationId) as Row | undefined;
+  return row ? toPoint(row) : undefined;
 }
 
 export function getLatestTrajectoryPoint(): TrajectoryPoint | undefined {
-  const db = getDb();
-  const stmt = db.prepare('SELECT * FROM trajectory_points ORDER BY timestamp DESC LIMIT 1');
-  return stmt.get() as TrajectoryPoint | undefined;
+  const row = getDb().prepare('SELECT * FROM trajectory_points ORDER BY id DESC LIMIT 1').get() as Row | undefined;
+  return row ? toPoint(row) : undefined;
 }
 
-export function getTrajectoryWindow(count: number): TrajectoryPoint[] {
-  const db = getDb();
-  const stmt = db.prepare('SELECT * FROM trajectory_points ORDER BY timestamp DESC LIMIT ?');
-  const rows = stmt.all(count) as TrajectoryPoint[];
-  return rows.reverse(); // Return in chronological order
+/** Points in chronological order; `limit` keeps the most recent N. */
+export function listTrajectoryPoints(options: { limit?: number | undefined; epochId?: string | undefined } = {}): TrajectoryPoint[] {
+  const params: unknown[] = [];
+  let sql = 'SELECT * FROM trajectory_points';
+  if (options.epochId) {
+    sql += ' WHERE epoch_id = ?';
+    params.push(options.epochId);
+  }
+  sql += ' ORDER BY id DESC LIMIT ?';
+  params.push(options.limit ?? -1);
+  return (getDb().prepare(sql).all(...params) as Row[]).map(toPoint).reverse();
+}
+
+/** The structural scan recorded with a mutation's trajectory point (untyped JSON). */
+export function getScanForMutation(mutationId: string): unknown {
+  const row = getDb()
+    .prepare('SELECT scan FROM trajectory_points WHERE mutation_id = ? ORDER BY id DESC LIMIT 1')
+    .get(mutationId) as { scan: string | null } | undefined;
+  return row?.scan ? (JSON.parse(row.scan) as unknown) : undefined;
+}
+
+export function getLatestScan(): { mutationId: string; scan: unknown } | undefined {
+  const row = getDb()
+    .prepare('SELECT mutation_id, scan FROM trajectory_points WHERE scan IS NOT NULL ORDER BY id DESC LIMIT 1')
+    .get() as { mutation_id: string; scan: string } | undefined;
+  return row ? { mutationId: row.mutation_id, scan: JSON.parse(row.scan) as unknown } : undefined;
 }

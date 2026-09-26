@@ -1,86 +1,61 @@
 import { getDb } from '../db.js';
+import { compact, decodeJson, json, param, type Row } from '../rows.js';
+import { InvariantSchema, type Invariant, type InvariantStatus } from '../../shared/schema/invariant.schema.js';
 
-export interface Invariant {
-  invariant_id: string;
-  statement: string;
-  owner: string | null;
-  scope_components: string[]; // JSON
-  status: string;
-  last_checked_mutation_id: string | null;
-  violation_mutations: string[]; // JSON
-  created_at: number;
+function toInvariant(row: Row): Invariant {
+  return InvariantSchema.parse(compact(decodeJson(row, ['scope_components', 'violation_mutations'])));
 }
 
 export function insertInvariant(invariant: Invariant): void {
-  const db = getDb();
-  const stmt = db.prepare(`
+  getDb().prepare(`
     INSERT INTO invariants (
-      invariant_id, statement, owner, scope_components,
-      status, last_checked_mutation_id, violation_mutations, created_at
+      invariant_id, statement, owner, scope_components, status,
+      last_checked_mutation_id, violation_mutations, created_at
     ) VALUES (
-      @invariant_id, @statement, @owner, @scope_components,
-      @status, @last_checked_mutation_id, @violation_mutations, @created_at
+      @invariant_id, @statement, @owner, @scope_components, @status,
+      @last_checked_mutation_id, @violation_mutations, @created_at
     )
-  `);
-  stmt.run({
-    ...invariant,
-    scope_components: JSON.stringify(invariant.scope_components),
-    violation_mutations: JSON.stringify(invariant.violation_mutations)
+  `).run({
+    invariant_id: invariant.invariant_id,
+    statement: invariant.statement,
+    owner: param(invariant.owner),
+    scope_components: json(invariant.scope_components),
+    status: invariant.status,
+    last_checked_mutation_id: param(invariant.last_checked_mutation_id),
+    violation_mutations: json(invariant.violation_mutations),
+    created_at: invariant.created_at
   });
 }
 
 export function getInvariant(invariantId: string): Invariant | undefined {
-  const db = getDb();
-  const stmt = db.prepare('SELECT * FROM invariants WHERE invariant_id = ?');
-  const row = stmt.get(invariantId) as any;
-  if (!row) return undefined;
-  
-  return {
-    ...row,
-    scope_components: JSON.parse(row.scope_components),
-    violation_mutations: JSON.parse(row.violation_mutations)
-  };
+  const row = getDb().prepare('SELECT * FROM invariants WHERE invariant_id = ?').get(invariantId) as Row | undefined;
+  return row ? toInvariant(row) : undefined;
 }
 
 export function listInvariants(): Invariant[] {
-  const db = getDb();
-  const stmt = db.prepare('SELECT * FROM invariants');
-  const rows = stmt.all() as any[];
-  
-  return rows.map(row => ({
-    ...row,
-    scope_components: JSON.parse(row.scope_components),
-    violation_mutations: JSON.parse(row.violation_mutations)
-  }));
+  const rows = getDb().prepare('SELECT * FROM invariants ORDER BY invariant_id ASC').all() as Row[];
+  return rows.map(toInvariant);
 }
 
-export function updateInvariantStatus(invariantId: string, status: string, mutationId: string): void {
-  const db = getDb();
-  const stmt = db.prepare(`
-    UPDATE invariants 
-    SET status = ?, last_checked_mutation_id = ? 
-    WHERE invariant_id = ?
-  `);
-  stmt.run(status, mutationId, invariantId);
+export function listInvariantsByComponent(component: string): Invariant[] {
+  const rows = getDb().prepare(`
+    SELECT * FROM invariants
+    WHERE EXISTS (SELECT 1 FROM json_each(invariants.scope_components) WHERE json_each.value = ?)
+    ORDER BY invariant_id ASC
+  `).all(component) as Row[];
+  return rows.map(toInvariant);
+}
+
+export function updateInvariantStatus(invariantId: string, status: InvariantStatus, mutationId: string): void {
+  getDb()
+    .prepare('UPDATE invariants SET status = ?, last_checked_mutation_id = ? WHERE invariant_id = ?')
+    .run(status, mutationId, invariantId);
 }
 
 export function addViolationMutation(invariantId: string, mutationId: string): void {
   const invariant = getInvariant(invariantId);
-  if (!invariant) return;
-  
-  const violations = new Set(invariant.violation_mutations);
-  violations.add(mutationId);
-  
-  const db = getDb();
-  const stmt = db.prepare(`
-    UPDATE invariants 
-    SET violation_mutations = ? 
-    WHERE invariant_id = ?
-  `);
-  stmt.run(JSON.stringify(Array.from(violations)), invariantId);
-}
-
-export function getInvariantsByComponent(component: string): Invariant[] {
-  const all = listInvariants();
-  return all.filter(inv => inv.scope_components.includes(component));
+  if (!invariant || invariant.violation_mutations.includes(mutationId)) return;
+  getDb()
+    .prepare('UPDATE invariants SET violation_mutations = ? WHERE invariant_id = ?')
+    .run(json([...invariant.violation_mutations, mutationId]), invariantId);
 }
