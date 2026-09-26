@@ -21,8 +21,6 @@
 
 <p align="center">
   <a href="https://codespaces.new/vighriday/epoch-software-evolution?quickstart=1"><img alt="Open in GitHub Codespaces" src="https://github.com/codespaces/badge.svg" height="32"></a>
-  &nbsp;
-  <a href="https://render.com/deploy?repo=https://github.com/vighriday/epoch-software-evolution"><img alt="Deploy to Render" src="https://render.com/images/deploy-to-render-button.svg" height="32"></a>
 </p>
 
 ---
@@ -82,7 +80,7 @@ Adopt a future with `POST /api/v1/simulations/remediate`, run it to the gate, ap
 | --- | --- |
 | GitHub Codespaces | Use the button above. The container installs, seeds the demo and forwards the console (5173) and the API (3000); run `pnpm dev`. |
 | One container | `docker build -t epoch . && docker run --rm -p 8080:8080 epoch`, then open <http://localhost:8080>. The API serves the console on the same port in a guarded public mode. |
-| Render | Use the button above. [`render.yaml`](render.yaml) builds the same image; every push to `main` redeploys it. |
+| Your own hosted copy | [![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/vighriday/epoch-software-evolution) builds the same image from [`render.yaml`](render.yaml) on your Render account; every push to the repository redeploys it. |
 
 The container opens on the moment a reviewer chooses a future. Visitors can adopt one, run it to the gate and approve it; every other write answers 403, and a changed demo restores itself after 20 idle minutes ([ADR-029](DECISIONS.md#adr-029-a-hosted-demo-runs-in-a-guarded-public-mode)). CI builds the image, boots it and finishes the story as a visitor on every push.
 
