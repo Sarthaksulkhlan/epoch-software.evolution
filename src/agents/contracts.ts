@@ -1,62 +1,93 @@
-import type { ContextBundle, Evidence, FindingSeverity } from '../shared/schema/index.js';
-import { generateEvidenceId } from '../shared/utils/id.js';
+import type { ContextBundle } from '../shared/schema/context-bundle.schema.js';
+import type { EvidenceStatus, FindingSeverity } from '../shared/schema/evidence.schema.js';
+import type { AgentType } from '../shared/schema/task.schema.js';
+import type { WorkflowKind } from '../shared/schema/workflow.schema.js';
+import type { RepoSpec } from '../graph/scanner/spec.js';
+import type { ScanResult } from '../graph/scanner/scanner.js';
+import type { ScanDiff } from '../graph/scanner/diff.js';
+import type { PatternOutcome } from '../graph/drift/patterns.js';
+import type { ProbeResult, TestRun } from '../sandbox/runner.js';
 
-/**
- * Context passed to every specialist agent. Contains the shared ContextBundle
- * plus workflow/task identifiers and any optional analysis inputs (diff,
- * dependency manifest, acceptance criteria, affected components).
- */
+/** Results of checking the working tree before a change is approved. */
+export interface Verification {
+  tests: TestRun;
+  probes: ProbeResult[];
+  /** Scan of the working tree, i.e. the system as it would be after approval. */
+  scan: ScanResult;
+  /** HEAD → working tree. */
+  diff: ScanDiff;
+  /** Drift findings that approving would raise or escalate. */
+  driftPreview: PatternOutcome[];
+  changedFiles: string[];
+  withinEnvelope: boolean;
+}
+
+export type AgentPhase = 'analysis' | 'verification';
+
 export interface AgentContext {
   workflowId: string;
   taskId: string;
-  contextBundle: ContextBundle;
-  diff?: string;
-  dependencyManifest?: string;
-  acceptanceCriteria?: string[];
-  affectedComponents?: string[];
+  kind: WorkflowKind;
+  phase: AgentPhase;
+  requirement: string;
+  bundle: ContextBundle;
+  repoPath: string;
+  spec: RepoSpec;
+  /** Scan recorded with the latest mutation (the system as it is). */
+  headScan: ScanResult | undefined;
+  /** Unified diff of the working tree against HEAD. */
+  diff: string;
+  verification?: Verification | undefined;
 }
 
 /**
- * Result returned by a specialist agent. Evidence uses the canonical schema
- * shape so it can be persisted directly by the coordinator or workflow engine.
+ * One claim an agent makes. `observed` claims must be measurements; anything
+ * derived is `inferred`, and candidate explanations are `hypothesised` (ADR-011).
  */
+export interface AgentClaim {
+  claim: string;
+  status: EvidenceStatus;
+  sourceRef: string;
+  severity?: FindingSeverity;
+}
+
+export type RiskLevel = 'low' | 'medium' | 'high' | 'critical';
+
 export interface AgentResult {
-  agentName: string;
-  evidence: Evidence[];
+  agent: AgentType;
+  claims: AgentClaim[];
   summary: string;
-  riskLevel: 'low' | 'medium' | 'high' | 'critical';
+  riskLevel: RiskLevel;
 }
 
-/**
- * Specialist agent contract. Every agent is stateless and implements a single
- * `run` method that produces evidence and a risk assessment.
- */
 export interface Agent {
-  readonly name: string;
+  readonly type: AgentType;
+  /** One line shown on the console's agent card. */
+  readonly role: string;
   run(ctx: AgentContext): Promise<AgentResult>;
 }
 
-/**
- * Helper to build a schema-shaped Evidence record from an AgentContext.
- */
-export function createEvidence(
-  ctx: AgentContext,
-  claim: string,
-  status: Evidence['status'],
-  sourceArtifactRef: string,
-  findingSeverity?: FindingSeverity
-): Evidence {
-  const evidence: Evidence = {
-    evidence_id: generateEvidenceId(),
-    workflow_id: ctx.workflowId,
-    task_id: ctx.taskId,
-    claim,
-    status,
-    source_artifact_ref: sourceArtifactRef,
-    created_at: Date.now()
-  };
-  if (findingSeverity !== undefined) {
-    evidence.finding_severity = findingSeverity;
-  }
-  return evidence;
+export function observed(claim: string, sourceRef: string, severity?: FindingSeverity): AgentClaim {
+  return severity ? { claim, status: 'observed', sourceRef, severity } : { claim, status: 'observed', sourceRef };
+}
+
+export function inferred(claim: string, sourceRef: string, severity?: FindingSeverity): AgentClaim {
+  return severity ? { claim, status: 'inferred', sourceRef, severity } : { claim, status: 'inferred', sourceRef };
+}
+
+export function hypothesised(claim: string, sourceRef: string, severity?: FindingSeverity): AgentClaim {
+  return severity ? { claim, status: 'hypothesised', sourceRef, severity } : { claim, status: 'hypothesised', sourceRef };
+}
+
+const RISK_ORDER: RiskLevel[] = ['low', 'medium', 'high', 'critical'];
+
+export function maxRisk(levels: RiskLevel[]): RiskLevel {
+  return levels.reduce<RiskLevel>((max, level) => (RISK_ORDER.indexOf(level) > RISK_ORDER.indexOf(max) ? level : max), 'low');
+}
+
+export function riskFromClaims(claims: AgentClaim[]): RiskLevel {
+  if (claims.some(c => c.severity === 'critical')) return 'critical';
+  if (claims.some(c => c.severity === 'high')) return 'high';
+  if (claims.some(c => c.severity === 'medium')) return 'medium';
+  return 'low';
 }
