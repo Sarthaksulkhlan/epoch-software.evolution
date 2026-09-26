@@ -1,6 +1,6 @@
 {
   "name": "epoch",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "AI-native control and intelligence plane for software that never stops changing",
   "private": true,
   "type": "module",
@@ -9,12 +9,12 @@
     "pnpm": ">=9.0.0"
   },
   "scripts": {
-    "dev": "concurrently --names \"API,MCP,UI\" --prefix-colors \"blue,cyan,green\" \"pnpm api:dev\" \"pnpm mcp:dev\" \"pnpm console:dev\"",
+    "dev": "concurrently --names API,UI --prefix-colors blue,green \"pnpm api:dev\" \"pnpm console:dev\"",
+    "api": "tsx src/api/server.ts",
     "api:dev": "tsx watch src/api/server.ts",
-    "mcp:dev": "tsx watch src/api/mcp/mcp-server.ts",
-    "console:dev": "vite src/console",
-    "build": "tsc -p tsconfig.json && vite build src/console",
-    "typecheck": "tsc --noEmit",
+    "mcp": "node --import tsx src/api/mcp/mcp-server.ts",
+    "console:dev": "vite --config src/console/vite.config.ts",
+    "typecheck": "tsc --noEmit && pnpm --filter @epoch/sample-app typecheck",
     "test": "vitest --run",
     "test:unit": "vitest --run tests/unit",
     "test:integration": "vitest --run tests/integration",
@@ -22,16 +22,18 @@
     "seed": "tsx scripts/seed.ts",
     "migrate": "tsx scripts/migrate.ts",
     "demo-reset": "tsx scripts/demo-reset.ts",
-    "lint": "eslint src --ext .ts,.tsx",
+    "demo:replay": "tsx scripts/demo-replay.ts",
+    "demo:futures": "tsx scripts/demo-futures.ts",
     "format": "prettier --write src docs scripts"
   },
   "dependencies": {
     "@hono/node-server": "1.13.7",
+    "@modelcontextprotocol/sdk": "1.30.1",
     "better-sqlite3": "11.9.1",
     "eventemitter3": "5.0.1",
     "hono": "4.7.9",
     "nanoid": "5.0.9",
-    "zod": "3.24.3"
+    "zod": "3.25.76"
   },
   "devDependencies": {
     "@types/better-sqlite3": "7.6.12",
