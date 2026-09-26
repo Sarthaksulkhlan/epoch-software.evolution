@@ -1,148 +1,256 @@
-# EPOCH — Software Evolution Control Plane
+# EPOCH
 
-> **AI-Native Mission Control for Continuous Software Evolution, Boundary Invariants, and Counterfactual Reasoning**
+**The AI-native control and intelligence plane for software that never stops changing.**
 
-EPOCH is an operational control plane engineered to monitor, govern, and reason about autonomous and agent-assisted software mutations. While AI coding agents (such as IBM Bob 2.0 and orchestrators like WEAVE) synthesize and commit code rapidly, EPOCH acts as the architectural sentinel—tracking causal mutation lineage, evaluating boundary invariant drift, gating risky changes, and projecting counterfactual futures.
-
----
-
-## 🧭 Four Operational Lenses
-
-EPOCH organizes complex system evolution into four interconnected, high-cohesion operational lenses:
-
-### 1. `CURRENT` — Workflow Lifecycle Deck
-* **Real-time Lifecycle Pipeline**: Interactive inspection across stages: `INTAKE` (statutory requirements/directives), `PLAN` (task decomposition and boundary checks), `IMPLEMENT` (synthesized diffs and mutations), `VERIFY` (regression oracles), and `APPROVAL` (governance gate).
-* **Agent Fabric Orchestration**: Live telemetry for specialist synthesizers (IBM Bob 2.0) and architectural sentinels.
-* **Governed Approval Gate**: Two-step human-in-the-loop checkpoint (`GATE-774`). Approving requires an explicit confirmation dialogue before committing to production (`Approve ≠ Automatic Commit`).
-* **Live SSE Telemetry Stream**: Streaming event bus for mutation logs, oracle passes, and drift warnings with pause/resume controls.
-
-### 2. `HISTORY` — Temporal Lineage & Causal Archaeology
-* **Causal Mutation DAG**: Visual graph of interconnected codebase mutations (`M-1042`, `M-1051`, `M-1077`, etc.) mapped against incident timelines.
-* **Semantic Diff Inspector**: Line-by-line syntax inspection with diff highlights, author metadata, and affected subsystems.
-* **Evidence Archaeology**: Cryptographically verified audit artifacts linking changes to statutory directives (`EU-2026-PAY-882`).
-
-### 3. `TRAJECTORY` — Evolution & Architectural Drift
-* **Drift Trajectory Detection**: Identifies subtle architectural divergences before catastrophic production failure (e.g., expanding dispute windows to 30 days while settlement ledger partition archival remains set to 15 days).
-* **Evidence-Backed "Why?" Reasoning Panel**:
-  - Diagnostic assessment of candidate causal chains.
-  - Identification of earliest plausible mutations.
-  - Affected components (`Payment API`, `Order Service`, `Ledger DB Partitions`, `Archival Job Cron`).
-  - Boundary invariant status (`INV-BOUND-04`: Cross-Service Ledger Boundary Isolation).
-* **Epistemic Qualification**: Rigorous qualification as heuristic candidate correlation rather than unsupported mathematical certainty.
-
-### 4. `FUTURES` — Counterfactual Simulation & Branch Forking
-* **Forking Counterfactual Realities**: Simulate *"What if mutation M-1042 was deployed with an updated 45-day archival partition cron?"*
-* **Side-by-side Outcome Projections**: Real-time divergence metrics comparing production trajectory vs. counterfactual branches.
-* **Risk Delta & Mitigation**: Automated policy recommendations for architectural debt reduction.
+> *AI can change your software one task at a time. EPOCH makes sure you do not lose the system in the process.*
 
 ---
 
-## ⚡ Tech Stack & Architecture
-
-- **Frontend**: [React 19](https://react.dev/) + [TypeScript](https://www.typescriptlang.org/)
-- **Bundler & Tooling**: [Vite 8](https://vitejs.dev/) with [Tailwind CSS v4](https://tailwindcss.com/)
-- **Routing**: [React Router v7](https://reactrouter.com/) (SPA architecture with direction-aware 800ms lens-shift transitions)
-- **Icons**: [Lucide React](https://lucide.dev/)
-- **Charts & Visualization**: [Recharts](https://recharts.org/)
-- **Server / Middleware**: Node.js + Express (with Vite dev middlewares)
-- **AI SDK**: `@google/genai` (Gemini API ready)
+[![IBM Bob 2.0 Hackathon](https://img.shields.io/badge/IBM%20Bob%202.0-Hackathon%20Submission-0062FF?style=flat-square)](https://lablab.ai/ai-hackathons/ibm-bob-2-hackathon)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.5-3178C6?style=flat-square)](https://www.typescriptlang.org/)
+[![Node.js](https://img.shields.io/badge/Node.js-22%20LTS-339933?style=flat-square)](https://nodejs.org/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow?style=flat-square)](LICENSE)
 
 ---
 
-## 🚀 Getting Started Locally (VS Code / Terminal)
+## What Is EPOCH?
 
-Follow these simple steps to run EPOCH on your local machine:
+Modern coding agents — including IBM Bob — are remarkably good at individual tasks. They can implement features, fix bugs, and modernize code at extraordinary speed.
 
-### 1. Prerequisites
-- **Node.js**: Version `18.0.0` or higher (Node `20.x` or `22.x` recommended)
-- **Package Manager**: `npm` (included with Node.js) or `pnpm` / `yarn`
-- **Git**
+The unresolved problem is **long-horizon coherence**: dozens of locally-correct changes accumulate into architectural drift, semantic conflicts, hidden dependencies, and new failure modes. Research confirms this is a frontier-level gap:
 
-### 2. Clone the Repository
+| Benchmark | Isolated task | Long-horizon evolution | Gap |
+|---|---|---|---|
+| SWE-EVO (2025) | ~65% | ~21% | −44pp |
+| EvoClaw (2026) | >80% | ≤38% | −42pp |
+| RoadmapBench (2026) | — | 39.1% (Claude Opus 4.7) | frontier still fails |
+
+EPOCH solves this by treating the **system trajectory** — not the individual change — as a first-class engineering object.
+
+---
+
+## The Platform: Three Layers, One System
+
+```
+┌─────────────────────────────────────────────────────────┐
+│                    EPOCH PLATFORM                       │
+│                                                         │
+│  EVOLUTION PLANE (EPOCH)                                │
+│  What has the system become? What could it become?      │
+│  mutation graph · trajectory · drift · causal ancestry  │
+│  phase detection · counterfactual futures               │
+│            ▲ mutations        │ new workflows            │
+│  LIFECYCLE PLANE (WEAVE)                                │
+│  What are we doing now?                                 │
+│  events · context · plan · agents · evidence · gates    │
+│            ▲ tasks            │ results                  │
+│  EXECUTION FABRIC (IBM Bob 2.0)                         │
+│  How do we perform the work?                            │
+│  Plan · Agent · subagents · parallel · background       │
+│  rollback · workflows · MCP · hooks                     │
+└─────────────────────────────────────────────────────────┘
+```
+
+**WEAVE** is the lifecycle control plane: it turns requirements, commits, pull requests, and incidents into stateful, evidence-producing workflows.
+
+**EPOCH** is the longitudinal intelligence layer: it records every workflow as a system mutation, models trajectories, detects drift and phase changes, and reconstructs how the current state emerged.
+
+**IBM Bob 2.0** is the execution fabric: it plans, delegates, implements, validates, and rolls back — with full awareness of the system's evolutionary history via the EPOCH-MCP integration.
+
+---
+
+## The Signature Insight
+
+```
+A change can be correct.
+A system can still be getting worse.
+```
+
+The evolution graph makes this visible: click any mutation to see the workflow that created it. Click any incident to trace the mutation ancestry. Drag the time axis to compare two system states.
+
+---
+
+## Quick Start
+
+> **Requirements:** Node.js 22 LTS, pnpm 9+, IBM Bob IDE (v2.0.2+), Git
+
 ```bash
-git clone https://github.com/Sarthaksulkhlan/epoch-software-evolution.git
+# Clone
+git clone https://github.com/vighriday/epoch-software-evolution.git
 cd epoch-software-evolution
+
+# Install all workspace dependencies
+pnpm install
+
+# Seed the database with the sample payment app history (25 mutations)
+pnpm seed
+
+# Start API server (port 3000) + EPOCH-MCP server (port 3001) + console (port 5173)
+pnpm dev
 ```
 
-### 3. Install Dependencies
+Open `http://localhost:5173` to see the console.
+
+### Run the golden demo
+
 ```bash
-npm install
+# Reset to a clean demo state at any time
+pnpm demo-reset
+
+# Then open Bob IDE, load the feature-lifecycle workflow
+# .bob/workflows/feature-lifecycle.yaml
 ```
 
-### 4. Configure Environment Variables (Optional)
-Copy the example environment configuration:
-```bash
-cp .env.example .env
-```
-*(Note: EPOCH runs out-of-the-box in local simulation mode without external API keys required).*
-
-### 5. Start the Development Server
-```bash
-npm run dev
-```
-Open your browser and navigate to:
-```
-http://localhost:3000
-```
+See [docs/DEMO_GUIDE.md](docs/DEMO_GUIDE.md) for the full scripted walkthrough.
 
 ---
 
-## 🛠 Available Scripts
+## IBM Bob Integration
 
-In the project directory, you can run:
+EPOCH uses **every major Bob 2.0 capability** — not as a peripheral tool but as the execution substrate of the entire platform:
 
-| Command | Description |
-| :--- | :--- |
-| `npm run dev` | Starts the Vite development server on `http://localhost:3000` |
-| `npm run build` | Compiles TypeScript and builds production-ready static assets in `dist/` |
-| `npm run preview` | Locally serves the production build to verify bundle output |
-| `npm run lint` | Runs `tsc --noEmit` to validate all TypeScript types and imports |
-| `npm run clean` | Removes compiled `dist/` artifacts |
+| Bob capability | How EPOCH uses it |
+|---|---|
+| **Plan mode** | Converts each event + context bundle into a lifecycle plan and task DAG |
+| **Agent mode** | Implements proposed mutations on the codebase inside sandbox branches |
+| **Subagents** | Each specialist (Security, QA, Historian, Evolution Analyst) runs as a spawned subagent |
+| **Parallel execution** | Security + QA + Historian run concurrently on every workflow |
+| **Background tasks** | Trajectory analysis and counterfactual simulations run while the console stays interactive |
+| **Document understanding** | Reads PRDs, ADRs, incident reports, and this PDF as context |
+| **Rollback** | Experiment on counterfactual branches; restore on failure |
+| **Reusable workflows** | Feature-lifecycle and incident-remediation paths packaged as Bob workflows |
+| **MCP tools** | EPOCH-MCP exposes 5 tools: Bob queries mutation history before every change |
+| **Hooks** | `PostFileSave` triggers drift check; `PostTaskExec` commits mutation record |
+
+All Bob sessions are logged to `.bob/sessions/` with purpose and outcome — see [docs/BOB_SESSIONS.md](docs/BOB_SESSIONS.md).
 
 ---
 
-## 📂 Project Structure
+## Console: Four Lenses
+
+| Lens | URL | Question answered |
+|---|---|---|
+| **CURRENT** | `/` | What is happening right now? |
+| **HISTORY** | `/history` | How did we get here? |
+| **TRAJECTORY** | `/trajectory` | What is the system becoming? |
+| **FUTURES** | `/futures` | What could happen next? |
+
+The **TRAJECTORY** lens is the signature view: a time-aware, interactive graph of components, mutations, incidents, invariants, and epoch boundaries — built with React Flow.
+
+---
+
+## Project Structure
 
 ```
-epoch-software-evolution/
+epoch/
+├── ARCHITECTURE.md      ← authoritative system architecture (20 sections)
+├── DECISIONS.md         ← 25 Architecture Decision Records
+├── CHANGELOG.md         ← version history
+│
 ├── src/
-│   ├── console/
-│   │   ├── components/
-│   │   │   ├── layout/          # Sidebar navigation, TopBar, and ConsoleLayout
-│   │   │   ├── shared/          # MetricCards, StatusBadges, EventFeed, Search
-│   │   │   ├── trajectory/      # DriftAlertBanner, "Why?" Reasoning Panel
-│   │   │   └── workflow/        # Interactive WorkflowTimeline, ApprovalGate, EvidencePanel
-│   │   ├── data/
-│   │   │   └── mock/            # Canonical workflows, mutations, invariants, telemetry
-│   │   ├── hooks/               # useWorkflow, useEventStream, useLineage
-│   │   ├── types/               # TypeScript domain interfaces (Lifecycle, Invariants, Gates)
-│   │   └── views/               # Four Operational Lenses:
-│   │       ├── CurrentView.tsx  # CURRENT lens
-│   │       ├── HistoryView.tsx  # HISTORY lens
-│   │       ├── TrajectoryView.tsx # TRAJECTORY lens
-│   │       └── FuturesView.tsx  # FUTURES lens
-│   ├── App.tsx                  # Root application & Router configuration
-│   ├── index.css                # Tailwind CSS v4, live grid keyframes, motion styling
-│   └── main.tsx                 # React 19 entry point
-├── public/                      # Static assets & icons
-├── metadata.json                # AI Studio application metadata
-├── package.json                 # Project dependencies & scripts
-├── tsconfig.json                # TypeScript compiler configuration
-├── vite.config.ts               # Vite configuration with Tailwind CSS plugin
-└── README.md                    # Project documentation
+│   ├── core/weave/      ← lifecycle control plane (FSM, context, approval gate)
+│   ├── core/epoch/      ← evolution intelligence (mutations, trajectory, drift)
+│   ├── agents/          ← 8 specialist agent implementations
+│   ├── graph/           ← evolution graph (mutations, drift, causal, simulation)
+│   ├── console/         ← React 18 four-lens UI
+│   ├── api/             ← Hono REST + SSE + EPOCH-MCP server
+│   ├── store/           ← SQLite persistence
+│   └── sandbox/         ← Git branch isolation manager
+│
+├── packages/
+│   └── sample-app/      ← seeded payment app (25-mutation demo history)
+│
+├── .bob/
+│   ├── workflows/       ← Bob reusable workflow definitions
+│   ├── skills/          ← Bob custom skill definitions
+│   └── sessions/        ← Bob session logs (judge evidence)
+│
+└── docs/
+    ├── DEMO_GUIDE.md    ← timestamped golden demo script
+    ├── BOB_SESSIONS.md  ← IBM Bob usage log
+    ├── DATA_MODEL.md    ← entity schemas + ER diagram
+    ├── AGENTS.md        ← multi-agent contracts
+    └── RESEARCH_NOTES.md← academic + IBM source citations
 ```
 
 ---
 
-## 🔒 Governance & Architectural Invariants
+## Tech Stack
 
-EPOCH monitors core architectural invariants across every mutation:
-- **`INV-BOUND-04`**: Cross-Service Ledger Boundary Isolation (prevents order and payment services from bypassing service APIs to query database partitions directly).
-- **`INV-TIME-02`**: Temporal Archival Parity (ensures dispute eligibility windows and archival cron partition retention remain synchronized).
-- **`INV-AUTH-01`**: Idempotent Dispute Token Validation.
+| Layer | Technology | Why |
+|---|---|---|
+| Language | TypeScript 5.5 | Single language across all layers; first-class Bob context |
+| Runtime | Node.js 22 LTS | Zero additional runtime setup |
+| Backend | Hono | Lightweight, first-class TypeScript, built-in SSE |
+| Frontend | React 18 + Vite | Fast HMR; zero config |
+| Graph UI | React Flow | Purpose-built interactive graph; custom node types |
+| Charts | Recharts | React-native, free, zero config |
+| Persistence | SQLite (better-sqlite3) | Zero infrastructure; recursive CTEs for graph traversal |
+| Validation | Zod | Single source of truth for types + runtime validation |
+| Styling | Tailwind CSS | Zero-build-cost; "mission control" aesthetic |
+| Testing | Vitest | ESM-native; Jest-compatible API |
+| Monorepo | pnpm workspaces | Fast installs; clean package isolation |
+
+Zero Docker. Zero cloud services. Zero credentials required. `pnpm install && pnpm dev`.
 
 ---
 
-## 📄 License
+## Scripts
 
-This project is licensed under the MIT License.
+```bash
+pnpm dev          # Start API + MCP server + console concurrently
+pnpm build        # Build all packages
+pnpm test         # Run all tests (single pass)
+pnpm typecheck    # tsc --noEmit across all packages
+pnpm seed         # Seed database with 25-mutation sample app history
+pnpm demo-reset   # Wipe and re-seed database (< 5 seconds)
+pnpm migrate      # Run pending database migrations
+```
+
+---
+
+## Key Documentation
+
+| Document | Contents |
+|---|---|
+| [ARCHITECTURE.md](ARCHITECTURE.md) | Full system architecture: layers, components, data flows, SQL schema, API, console design |
+| [DECISIONS.md](DECISIONS.md) | 25 ADRs: every technology and design choice with rationale and alternatives considered |
+| [docs/DEMO_GUIDE.md](docs/DEMO_GUIDE.md) | Timestamped golden demo script; judge Q&A preparation; clean-run instructions |
+| [docs/BOB_SESSIONS.md](docs/BOB_SESSIONS.md) | Complete IBM Bob session log with tool calls, outcomes, and evidence |
+| [docs/DATA_MODEL.md](docs/DATA_MODEL.md) | All 12 entity types: fields, constraints, relationships, ER diagram |
+| [docs/AGENTS.md](docs/AGENTS.md) | 8 specialist agent contracts: inputs, outputs, guardrails, communication pattern |
+| [docs/RESEARCH_NOTES.md](docs/RESEARCH_NOTES.md) | 9 cited sources backing every benchmark claim and positioning statement |
+| [CHANGELOG.md](CHANGELOG.md) | Complete version history with all additions and changes |
+
+---
+
+## Why This Wins
+
+EPOCH is not another AI coding assistant. The positioning is precise:
+
+> **WEAVE** is the execution/control plane.  
+> **EPOCH** is the longitudinal intelligence layer.  
+> **Bob** is the execution fabric.  
+> **The product is the combination** — and nothing else on the market does what the combination does.
+
+| Judging criterion | EPOCH's answer |
+|---|---|
+| **Tool usage & depth of adoption (30%)** | Bob is the execution substrate: Plan, Agent, subagents, parallel work, background tasks, documents, rollback, workflows, MCP, and hooks — all used in the single golden demo path |
+| **Innovation & use case relevance (30%)** | The central object is the evolving software trajectory, not the individual code change — a genuinely new abstraction built on top of Bob's capabilities |
+| **Functionality & technical execution (30%)** | `pnpm demo-reset && pnpm dev` → full golden demo in under 5 minutes; deterministic, replayable, evidence-backed |
+| **Presentation & clarity (10%)** | A 4-lens mission-control console with a visual evolution graph; story arc from "locally correct" to "globally worse" to "corrected trajectory" |
+
+---
+
+## Hackathon Submission
+
+- **Event:** IBM Bob 2.0 Hackathon — lablab.ai  
+- **Build window:** September 25–27, 2026 (48 hours)  
+- **Team:** vighriday  
+- **Category:** AI-assisted software development  
+
+---
+
+## License
+
+MIT — see [LICENSE](LICENSE)
