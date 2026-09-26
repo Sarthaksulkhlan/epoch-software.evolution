@@ -1,6 +1,0 @@
-{
-  "name": "EPOCH — Software Evolution Control Plane",
-  "description": "AI-native software evolution control plane visualizing system history, active workflows, architectural drift trajectory, and counterfactual futures.",
-  "requestFramePermissions": [],
-  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
-}
