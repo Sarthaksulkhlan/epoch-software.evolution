@@ -2,7 +2,22 @@
 
 The EPOCH API listens on `http://127.0.0.1:3000` (set `PORT` and `HOST` to change it). Request and response bodies are JSON. Invalid bodies return `400` with Zod details, missing records `404`, state conflicts (for example an illegal workflow transition) `409` with the valid transitions.
 
-CORS allows `http://localhost:5173` by default; set `CORS_ORIGIN` (comma-separated) to change it.
+CORS allows `http://localhost:5173` by default; set `CORS_ORIGIN` (comma-separated) to change it. In development the console calls the API through Vite's proxy, so it never needs CORS; with `EPOCH_CONSOLE_DIR` set, the API serves the built console itself.
+
+## Public demo mode
+
+A hosted instance runs with `EPOCH_PUBLIC_DEMO=1` (the container image sets it). Reads work as documented below. Writes are limited to the steps a visitor needs to finish the story:
+
+| Method | Path | Purpose |
+| --- | --- | --- |
+| POST | `/api/v1/simulations/remediate` | Adopt a measured future |
+| POST | `/api/workflows/:id/run-to-approval` | Run the remediation workflow's specialists and verification up to the gate |
+| POST | `/api/v1/workflows/:id/decision` | Approve or reject at the gate |
+| POST | `/api/demo/showcase` | Restore the showcase (at most once a minute) |
+
+Every other write answers `403`, including every route that accepts a patch, a file path or evidence text: a patch applied to a worktree runs as code when its tests execute. Allowed writes run one at a time; a concurrent one, or any write while the showcase is being prepared, gets `429`.
+
+The showcase is the moment a reviewer chooses a future: M-1042 and the three AI changes recorded, INC-3312 open, futures A and B measured. `GET /api/health` reports `demo: { mode, showcase, restoresAfterIdleMinutes }`, where `showcase` is `building`, `ready` or `failed`. A changed demo restores itself after 20 minutes without activity.
 
 ## Console endpoints (`/api/v1`)
 
@@ -53,7 +68,7 @@ Reconnect with the standard `Last-Event-ID` header (the browser's `EventSource` 
 | Area | Endpoints |
 | --- | --- |
 | System | `GET /api/health`, `GET /api/metrics`, `GET /api/repo/status`, `GET /api/repo/diff`, `POST /api/repo/discard` |
-| Demo | `POST /api/demo/reset`, `POST /api/demo/replay { with_feature? }`, `POST /api/demo/futures` |
+| Demo | `POST /api/demo/reset`, `POST /api/demo/replay { with_feature? }`, `POST /api/demo/futures`, `POST /api/demo/showcase` (reset, replay and measure futures in one step) |
 | Events | `POST /api/events`, `GET /api/events`, `GET /api/events/:id` |
 | Workflows | `POST /api/workflows { requirement, title?, kind?, author?, auto? }`, `GET /api/workflows`, `GET /api/workflows/active`, `GET /api/workflows/:id` (full replay: transitions, tasks, evidence, decisions, mutation, plan, timeline), `GET /api/workflows/:id/context`, `POST /api/workflows/:id/plan { actor, plan? }`, `POST /api/workflows/:id/run`, `POST /api/workflows/:id/run-to-approval`, `POST /api/workflows/:id/specialists/:agent`, `POST /api/workflows/:id/evidence { claim, status, source_ref, severity?, agent? }`, `POST /api/workflows/:id/transition`, `POST /api/workflows/:id/request-approval`, `GET /api/workflows/:id/decision-package`, `POST /api/workflows/:id/approve`, `POST /api/workflows/:id/reject`, `POST /api/workflows/:id/request-changes`, `GET /api/workflows/:id/diff` |
 | Mutations | `GET /api/mutations`, `GET /api/mutations/:id`, `GET /api/mutations/:id/evidence`, `GET /api/mutations/:id/ancestry`, `POST /api/mutations/:id/compensate { actor }` |
@@ -76,6 +91,25 @@ POST /api/workflows/:id/request-approval → VERIFYING → AWAITING_APPROVAL wit
    … a person approves or rejects in the console …
 GET  /api/workflows/:id                 → COMPLETED with the recorded mutation
 ```
+
+## Configuration
+
+EPOCH reads these environment variables (it does not load `.env` files). All are optional.
+
+| Variable | Default | Effect |
+| --- | --- | --- |
+| `PORT`, `HOST` | `3000`, `127.0.0.1` | Where the API listens |
+| `CORS_ORIGIN` | `http://localhost:5173,…` | Browser origins allowed to call the API |
+| `EPOCH_DB_PATH` | `data/epoch.db` | SQLite database file |
+| `EPOCH_WORK_DIR` | `.epoch` | Sample repository copy, futures worktrees, context bundles, plans |
+| `EPOCH_SAMPLE_REPO` | `$EPOCH_WORK_DIR/sample-repo` | The watched repository |
+| `EPOCH_CONSOLE_DIR` | unset | Serve the built console (`pnpm build` writes `dist/`) from the API |
+| `EPOCH_PUBLIC_DEMO` | unset | `1` turns on public demo mode |
+| `EPOCH_SHOWCASE_SNAPSHOT` | unset | Directory where the showcase is saved and restored from |
+| `EPOCH_DEMO_RESTORE_MINUTES` | `20` | Idle minutes before a changed public demo restores itself |
+| `EPOCH_TEST_CONCURRENCY` | CPU count | Test and probe processes allowed at once |
+| `EPOCH_API_URL` | `http://127.0.0.1:3000` | API that EPOCH-MCP and the scripts talk to; also the Vite proxy target |
+| `EPOCH_MCP_AUTHOR` | `IBM Bob` | Author recorded for workflows started through EPOCH-MCP |
 
 ## EPOCH-MCP tools
 
