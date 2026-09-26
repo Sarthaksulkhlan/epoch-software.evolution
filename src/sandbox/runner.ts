@@ -1,11 +1,31 @@
 import { execFile } from 'node:child_process';
 import fs from 'node:fs';
 import { createRequire } from 'node:module';
+import os from 'node:os';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { promisify } from 'node:util';
 
 const execFileAsync = promisify(execFile);
+
+/**
+ * Child processes (test files, probes) allowed at once across all runs. Small
+ * hosts set EPOCH_TEST_CONCURRENCY to stay inside their memory limit.
+ */
+const MAX_CHILDREN = Math.max(1, Number.parseInt(process.env.EPOCH_TEST_CONCURRENCY ?? '', 10) || os.availableParallelism());
+let activeChildren = 0;
+const waitingForSlot: Array<() => void> = [];
+
+async function withChildSlot<T>(task: () => Promise<T>): Promise<T> {
+  if (activeChildren >= MAX_CHILDREN) await new Promise<void>(resolve => waitingForSlot.push(resolve));
+  activeChildren++;
+  try {
+    return await task();
+  } finally {
+    activeChildren--;
+    waitingForSlot.shift()?.();
+  }
+}
 
 /** tsx's ESM loader, resolved from the platform so repos outside the project (tests, worktrees) can run TypeScript. */
 const TSX_LOADER = pathToFileURL(
@@ -43,7 +63,7 @@ export function listTestFiles(repoPath: string): string[] {
     .map(name => `test/${name}`);
 }
 
-/** Run each test file in its own node:test process, in parallel. */
+/** Run each test file in its own node:test process, in parallel up to the child-process limit. */
 export async function runTests(repoPath: string): Promise<TestRun> {
   const started = Date.now();
   const files = await Promise.all(listTestFiles(repoPath).map(file => runTestFile(repoPath, file)));
@@ -59,11 +79,11 @@ export async function runTests(repoPath: string): Promise<TestRun> {
 async function runTestFile(repoPath: string, file: string): Promise<TestFileResult> {
   let output: string;
   try {
-    const result = await execFileAsync(process.execPath, ['--import', TSX_LOADER, '--test', '--test-reporter=tap', file], {
+    const result = await withChildSlot(() => execFileAsync(process.execPath, ['--import', TSX_LOADER, '--test', '--test-reporter=tap', file], {
       cwd: repoPath,
       encoding: 'utf8',
       timeout: 60_000
-    });
+    }));
     output = result.stdout;
   } catch (error) {
     // node --test exits non-zero when a test fails; the TAP output is still on stdout.
@@ -85,11 +105,11 @@ export async function runProbes(repoPath: string): Promise<ProbeResult[]> {
   const entry = path.join(repoPath, 'scenarios', 'run.ts');
   if (!fs.existsSync(entry)) return [];
   try {
-    const { stdout } = await execFileAsync(process.execPath, ['--import', TSX_LOADER, 'scenarios/run.ts'], {
+    const { stdout } = await withChildSlot(() => execFileAsync(process.execPath, ['--import', TSX_LOADER, 'scenarios/run.ts'], {
       cwd: repoPath,
       encoding: 'utf8',
       timeout: 60_000
-    });
+    }));
     const parsed = JSON.parse(stdout.trim().split('\n').pop() ?? '[]') as unknown;
     return Array.isArray(parsed) ? parsed.filter(isProbeResult) : [];
   } catch (error) {
