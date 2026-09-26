@@ -45,3 +45,6 @@ logs/
 *.tsbuildinfo
 .oxcode/
 .oxcode-memory/
+
+# Demo working state: sample repo copy, futures worktrees, context bundles
+.epoch/
