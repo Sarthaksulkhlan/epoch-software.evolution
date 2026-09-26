@@ -1,7 +1,9 @@
-export { mutationEngine, MutationEngine } from './mutation-engine.js';
-export { trajectoryEngine, TrajectoryEngine } from './trajectory.js';
-export { invariantManager, InvariantManager } from './invariant-store.js';
-export { epochDetector, EpochDetector } from './epoch-detector.js';
-export { debtModel, EvolutionDebtModel } from './debt-model.js';
-export type { DebtDimension, DebtScore } from './debt-model.js';
-export type { EpochConditionResult } from './epoch-detector.js';
+export * from './mutation-engine.js';
+export * from './trajectory.js';
+export * from './invariant-store.js';
+export * from './epoch-detector.js';
+export * from './debt-model.js';
+export * from './incidents.js';
+export * from './history.js';
+export * from './spec-registry.js';
+export * from './evidence-writer.js';
