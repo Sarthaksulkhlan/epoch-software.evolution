@@ -7,6 +7,8 @@ import {
   GitBranch,
   Cpu
 } from 'lucide-react';
+import { shortSha, useHealth } from '../../hooks/useHealth';
+import { useStreamStatus } from '../../hooks/useApi';
 
 interface SidebarProps {
   driftFindingCount?: number;
@@ -55,8 +57,11 @@ const LENS_THEMES = [
   }
 ];
 
-export const Sidebar: React.FC<SidebarProps> = ({ driftFindingCount = 1 }) => {
+export const Sidebar: React.FC<SidebarProps> = ({ driftFindingCount = 0 }) => {
   const location = useLocation();
+  const { health, error: healthError, latencyMs } = useHealth();
+  const streamStatus = useStreamStatus();
+  const apiUp = Boolean(health) && !healthError;
 
   const navItems = [
     {
@@ -134,16 +139,19 @@ export const Sidebar: React.FC<SidebarProps> = ({ driftFindingCount = 1 }) => {
         <div className="px-4 py-3 border-b border-[#1a2333] bg-[#0f1624]/70">
           <div className="flex items-center justify-between text-[9px] font-mono text-zinc-400 uppercase tracking-[0.18em] font-semibold mb-1">
             <span>Target Subsystem</span>
-            <span className="text-zinc-300 font-mono font-semibold bg-[#162136] px-1.5 py-0.2 rounded border border-[#243555] text-[9px]">
-              v3.4.1
+            <span
+              className="text-zinc-300 font-mono font-semibold bg-[#162136] px-1.5 py-0.2 rounded border border-[#243555] text-[9px]"
+              title={health?.sampleRepo?.head ?? 'HEAD unknown'}
+            >
+              {health?.sampleRepo ? shortSha(health.sampleRepo.head) : '—'}
             </span>
           </div>
           <div className="text-xs font-semibold text-zinc-100 truncate flex items-center gap-1.5 tracking-tight font-sans">
             <span className="w-1.5 h-1.5 rounded-full bg-cyan-400/80 shrink-0" />
-            <span className="truncate">Hyperion Commerce</span>
+            <span className="truncate">Payments service (sample-app)</span>
           </div>
           <div className="text-[10px] font-mono text-zinc-400/90 truncate mt-0.5 pl-3 tracking-tight">
-            feat/extend-chargeback-30d
+            {health?.sampleRepo ? `branch ${health.sampleRepo.branch}` : healthError ? 'API unreachable' : 'sample repo not initialised'}
           </div>
         </div>
 
@@ -240,30 +248,32 @@ export const Sidebar: React.FC<SidebarProps> = ({ driftFindingCount = 1 }) => {
       <div className="p-3 border-t border-[#1a2333] bg-[#0c121e]/95 backdrop-blur space-y-2 font-mono text-[10px]">
         <div className="flex items-center justify-between text-zinc-400 tracking-[0.18em] uppercase text-[9px] font-semibold">
           <span>System Status</span>
-          <span className="flex items-center gap-1.5 text-emerald-400 font-semibold bg-emerald-950/30 px-1.5 py-0.5 rounded border border-emerald-500/20">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse-live" />
-            LIVE
+          <span className={`flex items-center gap-1.5 font-semibold px-1.5 py-0.5 rounded border ${apiUp ? 'text-emerald-400 bg-emerald-950/30 border-emerald-500/20' : 'text-rose-400 bg-rose-950/30 border-rose-500/30'}`}>
+            <span className={`w-1.5 h-1.5 rounded-full ${apiUp ? 'bg-emerald-400 animate-pulse-live' : 'bg-rose-400'}`} />
+            {apiUp ? 'LIVE' : 'OFFLINE'}
           </span>
         </div>
 
         <div className="space-y-1 pt-1 text-zinc-400">
           <div className="flex items-center justify-between py-0.5 px-1 rounded hover:bg-[#151f30]/60 transition-colors">
-            <span className="text-zinc-500">WEAVE</span>
-            <span className="text-zinc-300 font-mono text-[9px]">CONNECTED</span>
+            <span className="text-zinc-500">API</span>
+            <span className={`font-mono text-[9px] ${apiUp ? 'text-zinc-300' : 'text-rose-400'}`}>{apiUp ? 'CONNECTED' : 'UNREACHABLE'}</span>
           </div>
           <div className="flex items-center justify-between py-0.5 px-1 rounded hover:bg-[#151f30]/60 transition-colors">
-            <span className="text-zinc-500">BOB 2.0</span>
-            <span className="text-zinc-300 font-mono text-[9px]">READY</span>
+            <span className="text-zinc-500">EVENT STREAM</span>
+            <span className="text-zinc-300 font-mono text-[9px]">{streamStatus.toUpperCase()}</span>
           </div>
           <div className="flex items-center justify-between py-0.5 px-1 rounded hover:bg-[#151f30]/60 transition-colors">
             <span className="text-zinc-500">EPOCH</span>
-            <span className="text-amber-400/90 font-medium font-mono text-[9px]">MONITORING</span>
+            <span className="text-amber-400/90 font-medium font-mono text-[9px]">
+              {health?.demo.mode === 'public' ? `PUBLIC DEMO · ${health.demo.showcase.toUpperCase()}` : 'MONITORING'}
+            </span>
           </div>
         </div>
 
         <div className="pt-2 border-t border-[#1a2333] text-[9px] text-zinc-500 flex items-center justify-between">
-          <span>LATENCY: <strong className="text-zinc-400 font-normal">18ms</strong></span>
-          <span>REVISION: <strong className="text-zinc-400 font-normal">E04</strong></span>
+          <span>LATENCY: <strong className="text-zinc-400 font-normal">{latencyMs !== undefined && apiUp ? `${latencyMs}ms` : '—'}</strong></span>
+          <span>MUTATIONS: <strong className="text-zinc-400 font-normal">{health?.mutations ?? '—'}</strong></span>
         </div>
       </div>
     </aside>

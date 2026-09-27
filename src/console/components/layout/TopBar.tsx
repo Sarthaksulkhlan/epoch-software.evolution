@@ -1,16 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import { NavLink } from 'react-router-dom';
-import { AlertTriangle, Radio, Activity, Cpu, ArrowUpRight } from 'lucide-react';
+import { AlertTriangle } from 'lucide-react';
+import { shortSha, useHealth } from '../../hooks/useHealth';
+import { useStreamStatus } from '../../hooks/useApi';
 
 interface TopBarProps {
   activeTitle?: string;
   activeDriftCount?: number;
+  /** e.g. the invariant the open drift violates. */
+  driftLabel?: string;
 }
 
 export const TopBar: React.FC<TopBarProps> = ({
-  activeDriftCount = 1
+  activeDriftCount = 0,
+  driftLabel
 }) => {
   const [tickerTime, setTickerTime] = useState<string>('');
+  const { health } = useHealth();
+  const streamStatus = useStreamStatus();
 
   useEffect(() => {
     const updateTime = () => {
@@ -43,17 +50,17 @@ export const TopBar: React.FC<TopBarProps> = ({
         <div className="hidden lg:flex items-center gap-3 text-[11px]">
           <div>
             <span className="text-zinc-500">System: </span>
-            <span className="text-zinc-200 font-medium">Hyperion Commerce Engine</span>
+            <span className="text-zinc-200 font-medium">Payments service (sample-app)</span>
+          </div>
+          <span className="text-zinc-700">·</span>
+          <div title={health?.sampleRepo?.head ?? 'Sample repository not initialised'}>
+            <span className="text-zinc-500">HEAD: </span>
+            <span className="text-zinc-300">{health?.sampleRepo ? shortSha(health.sampleRepo.head) : '—'}</span>
           </div>
           <span className="text-zinc-700">·</span>
           <div>
-            <span className="text-zinc-500">Version: </span>
-            <span className="text-zinc-300">v3.4.1</span>
-          </div>
-          <span className="text-zinc-700">·</span>
-          <div>
-            <span className="text-zinc-500">Env: </span>
-            <span className="text-zinc-400">DEMO / SIMULATION</span>
+            <span className="text-zinc-500">Mode: </span>
+            <span className="text-zinc-400">{health ? (health.demo.mode === 'public' ? 'PUBLIC DEMO' : 'LOCAL') : 'API OFFLINE'}</span>
           </div>
         </div>
       </div>
@@ -69,9 +76,11 @@ export const TopBar: React.FC<TopBarProps> = ({
 
         {/* Operational Status Dots (Restrained, calm) */}
         <div className="flex items-center gap-3 text-[10px] text-zinc-400">
-          <div className="flex items-center gap-1.5" title="Server-Sent Events active">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse-live" />
-            <span className="hidden sm:inline text-zinc-200 font-medium">LIVE EVENTS</span>
+          <div className="flex items-center gap-1.5" title={`Server-Sent Events: ${streamStatus}`}>
+            <span className={`w-1.5 h-1.5 rounded-full ${streamStatus === 'live' ? 'bg-emerald-400 animate-pulse-live' : streamStatus === 'offline' ? 'bg-rose-400' : 'bg-amber-400'}`} />
+            <span className="hidden sm:inline text-zinc-200 font-medium">
+              {streamStatus === 'live' ? 'LIVE EVENTS' : streamStatus === 'offline' ? 'STREAM OFFLINE' : 'CONNECTING'}
+            </span>
           </div>
 
           <div className="hidden md:flex items-center gap-1.5" title="WEAVE execution plane">
@@ -98,7 +107,7 @@ export const TopBar: React.FC<TopBarProps> = ({
           >
             <AlertTriangle className="w-3.5 h-3.5 text-amber-400" />
             <span className="hidden sm:inline font-semibold">DRIFT:</span>
-            <span>INV-BOUND-04</span>
+            <span>{driftLabel ?? `${activeDriftCount} OPEN`}</span>
           </NavLink>
         )}
       </div>

@@ -2,6 +2,9 @@ import React, { useRef } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import { Sidebar } from './Sidebar';
 import { TopBar } from './TopBar';
+import { PublicDemoBanner } from './PublicDemoBanner';
+import { useApi } from '../../hooks/useApi';
+import type { DriftFinding } from '../../types';
 
 const BACKDROPS = [
   // 0: CURRENT: dark graphite + restrained operational green
@@ -32,6 +35,12 @@ export const ConsoleLayout: React.FC = () => {
   };
 
   const currentIndex = getLensIndex(location.pathname);
+
+  // Open drift drives the DRIFT badge and the top-bar callout.
+  const { data: driftData } = useApi<DriftFinding[]>('/api/v1/trajectory/drift-findings?activeOnly=true', ['drift', 'mutation']);
+  const openDrift = driftData ?? [];
+  const worst = openDrift.find(d => d.severity === 'CRITICAL') ?? openDrift[0];
+  const driftLabel = worst ? `${worst.violatedInvariantId || worst.id}${openDrift.length > 1 ? ` +${openDrift.length - 1}` : ''}` : undefined;
   const prevIndexRef = useRef<number>(currentIndex);
   const isForward = currentIndex >= prevIndexRef.current;
   prevIndexRef.current = currentIndex;
@@ -95,12 +104,13 @@ export const ConsoleLayout: React.FC = () => {
       </div>
 
       {/* Distinct Slate Sidebar (Fast GPU Translate Rail & Opacity Cross-Fading) */}
-      <Sidebar />
+      <Sidebar driftFindingCount={openDrift.length} />
 
       {/* Main Viewport Column */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden relative z-10">
         {/* Stable Command Console Top Bar */}
-        <TopBar />
+        <TopBar activeDriftCount={openDrift.length} driftLabel={driftLabel} />
+        <PublicDemoBanner />
 
         {/* Viewport Content with Snappy 200ms Directional Transition */}
         <main className="flex-1 overflow-y-auto p-4 sm:p-5 relative">
