@@ -4,7 +4,7 @@ This page indexes the IBM Bob task sessions used to set up, build and run EPOCH.
 
 Only sessions with an export are listed. Every row is written from its export and from EPOCH's own records; nothing here is reconstructed after the fact.
 
-All sessions ran on 27 Sep 2026 in the workspace `E:\Projects\Epoch`, on the branch `epoch-hriday`, with the EPOCH API running locally.
+All sessions ran on 27 Sep 2026 with the EPOCH API running locally. Hriday's ran in the workspace `E:\Projects\Epoch` on the branch `epoch-hriday`; Sarthak's ran on the branch `epoch-frontend`.
 
 | Task | Member | What Bob did | Bob features used | Bobcoins | Evidence | Commits |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -16,8 +16,9 @@ All sessions ran on 27 Sep 2026 in the workspace `E:\Projects\Epoch`, on the bra
 | 06 Remediation to M-1085 | Hriday | After future B was adopted in the console, found the remediation workflow and drove it to the gate: plan, the Historian, Security, QA and Evolution specialists, evidence and `request_approval`. It was approved in the console as M-1085: INC-3312 resolved, DRIFT-401 and DRIFT-402 resolved, boundary integrity back to 1.0 inside the envelope, and epoch E-2 proposed. | `epoch-engineer` mode, `list_active_workflows`, four specialists, the human approval gate in the console | 1.55 | [summary](../bob_sessions/hriday/epoch_task06_remediation_m1085_summary.png), [export](../bob_sessions/hriday/epoch_task06_remediation_m1085.json) | b61fa97 |
 | 07 Console and API fixes | Hriday | Closed three gaps in EPOCH itself. The event stream now sends a `ready` event on connect, so the console can tell a live stream from a stuck one. Adopting a future stores the remediation workflow id, `GET /api/v1/simulations` returns it, and the Futures view links straight to that workflow. The evolution graph and the incidents endpoint now share one status mapping. Added two integration tests (40 passing) and ran the typecheck and build. | Agent mode, multi-file edits across the API and the console, integration tests | 7.18 | [summary](../bob_sessions/hriday/epoch_task07_console_api_fixes_summary.png), [export](../bob_sessions/hriday/epoch_task07_console_api_fixes.json) | b60a30d, adf5c79 |
 | 08 Evolution report | Hriday | Planned the feature in Plan mode, answered review questions, then built it: `GET /api/v1/report` returns a Markdown report built only from EPOCH's store, the read-only MCP tool `get_evolution_report` returns it to Bob, `pnpm report` writes `EVOLUTION_REPORT.md`, and an integration test adopts future B and checks that the report names INC-3312, DRIFT-401 and M-1085 (41 passing). Updated the API contract, the changelog and the tool count. | Plan mode (plan file), Agent mode, a new API route, a new MCP tool, a script, an integration test, documentation | 13.04 | [summary](../bob_sessions/hriday/epoch_task08_evolution_report_summary.png), [export](../bob_sessions/hriday/epoch_task08_evolution_report.json), [plan](../bob_sessions/hriday/epoch_task08_evolution_report_plan.md) | 812e172 |
+| 09 Report view in the console | Sarthak | Added a fifth console view, Report, that shows the evolution report from `GET /api/v1/report`, with loading, empty and error states and buttons to refresh and copy the Markdown. Wrote a small Markdown renderer with no new dependencies that escapes all text, and a unit test that checks a heading, a table and an escaped `<script>` string. Ran the typecheck, the tests and the build. | Agent mode, multi-file edits across the router, the sidebar and a new view, a unit test | 4.33 | [export](../bob_sessions/sarthak/epoch_task09_console_report_view.json) | 1b9324b |
 
-Total: 30.05 Bobcoins across eight tasks.
+Total: 34.38 Bobcoins across nine tasks, from two team members.
 
 Bob 2.2 also turned the three slash commands into user-invocable skills under `.bob/skills/` on its own; they are committed as it wrote them (9e2ba66).
 
