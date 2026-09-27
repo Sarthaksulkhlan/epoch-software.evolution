@@ -1,0 +1,27 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "^(write_file|apply_diff)$",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node scripts/bob-hook.mjs file-changed",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node scripts/bob-hook.mjs stop",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  }
+}

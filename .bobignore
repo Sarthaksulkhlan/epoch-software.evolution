@@ -1,0 +1,11 @@
+.internal/
+data/
+node_modules/
+dist/
+bob_sessions/
+pnpm-lock.yaml
+.oxcode/
+.oxcode-memory/
+.veris/
+.env
+.env.*
