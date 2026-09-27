@@ -6,7 +6,7 @@ import { useLiveStatus, type LiveStatus } from './useLiveStatus';
 import './landing.css';
 
 const REPO = 'https://github.com/vighriday/epoch-software-evolution';
-const CONSOLE = '/console/trajectory';
+const CONSOLE = '/console';
 
 // Shared with the console: mono labels, graphite panels, rounded-sm corners.
 const LABEL = 'font-mono text-[10px] uppercase tracking-[0.18em]';
