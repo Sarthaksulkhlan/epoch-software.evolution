@@ -30,6 +30,8 @@
     "src/App.tsx",
     "src/console/**/*.ts",
     "src/console/**/*.tsx",
+    "src/landing/**/*.ts",
+    "src/landing/**/*.tsx",
     "vite.config.ts"
   ]
 }
