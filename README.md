@@ -12,6 +12,7 @@
 </p>
 
 <p align="center">
+  <a href="#in-plain-words">In plain words</a> ·
   <a href="#see-it-run">See it run</a> ·
   <a href="#the-story-in-numbers">The story in numbers</a> ·
   <a href="#how-ibm-bob-drives-epoch">IBM Bob</a> ·
@@ -25,7 +26,7 @@
 
 <p align="center">
   <b>Live demo: <a href="https://epoch-wj5b.onrender.com/">epoch-wj5b.onrender.com</a></b><br>
-  The real engine, running this repository's container in a guarded public mode.<br>
+  The landing page tells the story in two minutes. The <a href="https://epoch-wj5b.onrender.com/console/trajectory">live console</a> runs the real engine in a guarded public mode.<br>
   It opens at the moment a reviewer chooses a future: INC-3312 open, drift raised, futures A and B measured.<br>
   In Futures, adopt B, run EPOCH's specialists to the gate and approve it to record M-1085.<br>
   <sub>Hosted on Render's free plan. If it has gone to sleep, the first visit takes about a minute to wake it.</sub>
@@ -33,31 +34,18 @@
 
 ---
 
+## In plain words
+
+1. IBM Bob extends a payments service's chargeback window from 15 to 30 days. The tests pass. EPOCH warns that a rule about keeping dispute records just got weaker, and a person approves the change anyway.
+2. Three quick AI changes follow, and each one passes all 11 tests. Meanwhile EPOCH watches the boundary score fall from 1.00 to 0.50, until a real incident opens: a dispute filed on day 20 can no longer find its settlement, so the customer's money stays frozen.
+3. Bob asks EPOCH why and gets the likely chain of changes in about 2 seconds. Bob then builds two fixes at the same time, EPOCH measures both, and a person approves the one that brings the score back to 1.00.
+
+**Four changes made the system worse. Every one passed all 11 tests. EPOCH flagged all four, the first one at review, two changes before the incident.**
+
 Coding agents are good at individual tasks. What they lose is the system: dozens of changes that each pass their own tests can still erode a boundary, break a business rule, or set up an incident nobody traces back. **EPOCH treats the trajectory of a system, not the individual change, as the thing to engineer.** IBM Bob does the work; EPOCH remembers what the system has become and puts a person at the gate.
 
 > [!IMPORTANT]
 > **A change can be correct. A system can still be getting worse.** EPOCH records every approved change as a *mutation*, measures the system after it, and reasons over the sequence.
-
-## Why
-
-Frontier coding agents do far worse on long-horizon evolution than on isolated tasks ([sources](docs/RESEARCH_NOTES.md)):
-
-| Benchmark | Isolated tasks | Long-horizon evolution |
-| --- | --- | --- |
-| SWE-EVO (v1, 2025), GPT-5 with OpenHands | 65% (SWE-Bench Verified) | 21% |
-| EvoClaw, now SWE-Milestone (2026), overall scores | above 80% | at most 38% |
-| RoadmapBench (2026), strongest model | | 39.1% (Claude Opus 4.7) |
-
-The missing piece is not code generation. It is memory of what the system has become, and a way to steer it.
-
-## What it is
-
-| Plane | Question it answers | What it does |
-| --- | --- | --- |
-| **WEAVE** | What are we doing now? | Runs each change as a governed workflow: requirement → context bundle → plan → specialists in parallel → verification → human approval |
-| **EPOCH** | What has the system become? | Records mutations, scans the code after each one, tracks invariants, trajectory, drift, epochs and incidents, and traces candidate causal chains |
-| **Futures** | What could it become? | Forks the system into git worktrees, measures alternative fixes like real changes, and adopts one through the same gate |
-| **IBM Bob** | How is the work done? | Plans, implements and runs specialists from subagents, all through the 21-tool EPOCH-MCP server |
 
 ## See it run
 
@@ -66,7 +54,7 @@ Requirements: Node.js 22+, pnpm 9+, Git. No database server, Docker or credentia
 ```bash
 pnpm install
 pnpm demo-reset                    # fresh database and sample repo: epoch E-0, 22 mutations
-pnpm dev                           # API on http://127.0.0.1:3000, console on http://127.0.0.1:5173
+pnpm dev                           # API on :3000; landing page on http://127.0.0.1:5173, console at /console
 ```
 
 Then, from IBM Bob (see below) or a second terminal:
@@ -76,7 +64,7 @@ pnpm demo:replay --with-feature    # M-1042, then three AI changes: drift, INC-3
 pnpm demo:futures                  # fork and measure futures A and B from the latest mutation
 ```
 
-Open the console at <http://127.0.0.1:5173>. In Futures, adopt future B, run EPOCH's specialists to the gate, approve it, and M-1085 brings the trajectory back. The full walkthrough is in [docs/DEMO_GUIDE.md](docs/DEMO_GUIDE.md).
+Open the console at <http://127.0.0.1:5173/console>. In Futures, adopt future B, run EPOCH's specialists to the gate, approve it, and M-1085 brings the trajectory back. The full walkthrough is in [docs/DEMO_GUIDE.md](docs/DEMO_GUIDE.md).
 
 <details>
 <summary><b>More ways to run it</b></summary>
@@ -239,6 +227,27 @@ There is deliberately no approve tool: a person decides at the gate. Read tools 
 | `evaluate_future` | write | Run tests, probes and the scan inside one future |
 
 </details>
+
+## What it is
+
+| Plane | Question it answers | What it does |
+| --- | --- | --- |
+| **WEAVE** | What are we doing now? | Runs each change as a governed workflow: requirement → context bundle → plan → specialists in parallel → verification → human approval |
+| **EPOCH** | What has the system become? | Records mutations, scans the code after each one, tracks invariants, trajectory, drift, epochs and incidents, and traces candidate causal chains |
+| **Futures** | What could it become? | Forks the system into git worktrees, measures alternative fixes like real changes, and adopts one through the same gate |
+| **IBM Bob** | How is the work done? | Plans, implements and runs specialists from subagents, all through the 21-tool EPOCH-MCP server |
+
+## Why
+
+Frontier coding agents do far worse on long-horizon evolution than on isolated tasks ([sources](docs/RESEARCH_NOTES.md)):
+
+| Benchmark | Isolated tasks | Long-horizon evolution |
+| --- | --- | --- |
+| SWE-EVO (v1, 2025), GPT-5 with OpenHands | 65% (SWE-Bench Verified) | 21% |
+| EvoClaw, now SWE-Milestone (2026), overall scores | above 80% | at most 38% |
+| RoadmapBench (2026), strongest model | | 39.1% (Claude Opus 4.7) |
+
+The missing piece is not code generation. It is memory of what the system has become, and a way to steer it.
 
 ## Architecture
 
