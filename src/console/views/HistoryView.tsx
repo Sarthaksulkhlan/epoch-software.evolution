@@ -3,13 +3,21 @@ import { useSearchParams } from 'react-router-dom';
 import { useMutationHistory, type HistoryFilterType } from '../hooks/useMutationHistory';
 import { MutationCard } from '../components/mutation/MutationCard';
 import { MutationDetail } from '../components/mutation/MutationDetail';
-import { History, Play, AlertTriangle, GitCommit, Layers } from 'lucide-react';
+import { ViewState } from '../components/shared/ViewState';
+import { Play, AlertTriangle } from 'lucide-react';
 
 export const HistoryView: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const mutationIdParam = searchParams.get('mutationId');
 
   const {
+    isLoading,
+    error,
+    reload,
+    mutations,
+    epochs,
+    storyIncident,
+    originMutationId,
     filteredItems,
     selectedMutation,
     selectedIncident,
@@ -20,6 +28,11 @@ export const HistoryView: React.FC = () => {
     setFilterType,
     setActiveReplayEpoch
   } = useMutationHistory();
+
+  const pad = (n: number) => String(n).padStart(2, '0');
+  const latestEpoch = epochs.length > 0 ? epochs[epochs.length - 1] : 0;
+  const originMutation = mutations.find(m => m.id === originMutationId);
+  const laterChain = (storyIncident?.candidateCausalChain ?? []).filter(id => id !== originMutationId);
 
   useEffect(() => {
     if (mutationIdParam) {
@@ -41,6 +54,18 @@ export const HistoryView: React.FC = () => {
       .sort((a, b) => b.epoch - a.epoch); // newest epoch first
   }, [filteredItems]);
 
+  if (isLoading) return <ViewState kind="loading" title="Loading recorded history…" />;
+  if (error) return <ViewState kind="error" error={error} onRetry={reload} />;
+  if (mutations.length === 0) {
+    return (
+      <ViewState
+        kind="empty"
+        title="No mutations recorded yet"
+        message="Record the sample service's history with pnpm demo-reset, then replay the AI changes with pnpm demo:replay, or let IBM Bob land a change through a workflow."
+      />
+    );
+  }
+
   return (
     <div className="space-y-5 select-none font-mono">
       {/* Header Context Deck (Stagger 1) */}
@@ -57,8 +82,9 @@ export const HistoryView: React.FC = () => {
           </h1>
 
           <p className="text-xs text-zinc-400 font-sans mt-1 max-w-3xl leading-relaxed">
-            History is not merely a Git commit list. Trace how individually passing mutations across epochs 0 through 4
-            cumulatively weakened architectural boundaries and yielded production freeze INC-3312.
+            History is not merely a Git commit list. Trace how {mutations.length} recorded mutations across epochs{' '}
+            {epochs[0] ?? 0} through {latestEpoch} changed the service&apos;s boundaries
+            {storyIncident ? `, and which ones plausibly led to ${storyIncident.id}` : ''}.
           </p>
         </div>
 
@@ -70,12 +96,12 @@ export const HistoryView: React.FC = () => {
               <span>Historical Replay</span>
             </span>
             <span className="text-zinc-200 font-bold">
-              {activeReplayEpoch === null ? 'EPOCH 04 (LATEST)' : `EPOCH 0${activeReplayEpoch}`}
+              {activeReplayEpoch === null ? `EPOCH ${pad(latestEpoch)} (LATEST)` : `EPOCH ${pad(activeReplayEpoch)}`}
             </span>
           </div>
 
-          <div className="flex items-center gap-1">
-            {[0, 1, 2, 3, 4].map(ep => (
+          <div className="flex flex-wrap items-center gap-1">
+            {epochs.map(ep => (
               <button
                 key={ep}
                 onClick={() => setActiveReplayEpoch(ep)}
@@ -85,7 +111,7 @@ export const HistoryView: React.FC = () => {
                     : 'bg-zinc-900 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800'
                 }`}
               >
-                E0{ep}
+                E{pad(ep)}
               </button>
             ))}
             <button
@@ -102,21 +128,28 @@ export const HistoryView: React.FC = () => {
       <div className="reveal-delay-2 p-3 rounded-sm border border-zinc-800 bg-[#06070a] flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
         <div className="flex items-center gap-2 text-zinc-400 font-sans text-xs">
           <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0 animate-pulse-warn" />
-          <span>
-            Seeded Storyline: Notice mutation{' '}
-            <button
-              onClick={() => {
-                setSelectedMutationId('M-1042');
-                setSelectedIncidentId(null);
-                setSearchParams({ mutationId: 'M-1042' });
-              }}
-              className="font-mono text-amber-300 font-bold underline hover:no-underline"
-            >
-              M-1042
-            </button>{' '}
-            ("Extend chargeback eligibility from 15 to 30 days"). Tests passed cleanly, but it left archival jobs at 15 days,
-            leading to hotfixes M-1051, M-1077, and production freeze INC-3312.
-          </span>
+          {storyIncident && originMutationId ? (
+            <span>
+              Storyline: notice mutation{' '}
+              <button
+                onClick={() => {
+                  setSelectedMutationId(originMutationId);
+                  setSelectedIncidentId(null);
+                  setSearchParams({ mutationId: originMutationId });
+                }}
+                className="font-mono text-amber-300 font-bold underline hover:no-underline"
+              >
+                {originMutationId}
+              </button>
+              {originMutation ? ` ("${originMutation.title}")` : ''}. Its tests passed, yet EPOCH names it the earliest plausible
+              contributor to {storyIncident.id} ({storyIncident.status.toLowerCase()})
+              {laterChain.length > 0 ? `, followed by ${laterChain.join(', ')}` : ''}.
+            </span>
+          ) : (
+            <span>
+              {mutations.length} mutations recorded. No incident has been traced to them yet.
+            </span>
+          )}
         </div>
 
         {/* Filter buttons */}
@@ -151,7 +184,7 @@ export const HistoryView: React.FC = () => {
               <div className="flex items-center gap-2 pt-1 pb-1">
                 <span className="w-2.5 h-2.5 rounded-full bg-cyan-400/80 shadow-[0_0_6px_rgba(56,189,248,0.5)]" />
                 <span className="text-xs font-bold text-zinc-200 uppercase tracking-widest">
-                  EPOCH 0{epochGroup.epoch}
+                  EPOCH {pad(epochGroup.epoch)}
                 </span>
                 <div className="flex-1 h-px bg-zinc-800" />
                 <span className="text-[10px] text-zinc-500 font-mono">
@@ -172,7 +205,7 @@ export const HistoryView: React.FC = () => {
                       key={item.data.id}
                       item={item}
                       isSelected={isSelected}
-                      isCausalOrigin={item.data.id === 'M-1042'}
+                      isCausalOrigin={Boolean(originMutationId) && item.data.id === originMutationId}
                       isLastInEpoch={idx === epochGroup.items.length - 1}
                       onSelect={() => {
                         if (isMutation) {
@@ -204,6 +237,8 @@ export const HistoryView: React.FC = () => {
             <MutationDetail
               mutation={selectedIncident ? null : selectedMutation}
               incident={selectedIncident}
+              originMutationId={originMutationId}
+              storyIncident={storyIncident}
               onSelectMutationById={id => {
                 setSelectedMutationId(id);
                 setSelectedIncidentId(null);

@@ -21,12 +21,18 @@ interface MutationDetailProps {
   mutation?: Mutation | null;
   incident?: Incident | null;
   onSelectMutationById?: (id: string) => void;
+  /** Earliest plausible contributing mutation of the storyline incident. */
+  originMutationId?: string;
+  /** The incident that mutation contributed to. */
+  storyIncident?: Incident | null;
 }
 
 export const MutationDetail: React.FC<MutationDetailProps> = ({
   mutation,
   incident,
-  onSelectMutationById
+  onSelectMutationById,
+  originMutationId,
+  storyIncident
 }) => {
   const [showFullDiff, setShowFullDiff] = useState(false);
 
@@ -38,7 +44,7 @@ export const MutationDetail: React.FC<MutationDetailProps> = ({
             <ShieldAlert className="w-4 h-4 text-rose-400" />
             <span className="text-sm font-bold text-rose-300">{incident.id}</span>
             <span className="text-zinc-600">·</span>
-            <span className="text-xs text-zinc-400">EPOCH 0{incident.epoch} INCIDENT</span>
+            <span className="text-xs text-zinc-400">EPOCH {String(incident.epoch).padStart(2, '0')} INCIDENT · {incident.status}</span>
           </div>
           <StatusBadge status={incident.severity} size="md" />
         </div>
@@ -111,7 +117,8 @@ export const MutationDetail: React.FC<MutationDetailProps> = ({
     );
   }
 
-  const isCausalOrigin = mutation.id === 'M-1042';
+  const isCausalOrigin = Boolean(originMutationId) && mutation.id === originMutationId;
+  const laterInChain = (storyIncident?.candidateCausalChain ?? []).filter(id => id !== mutation.id);
 
   return (
     <div className="rounded-sm border border-zinc-800 bg-[#08090d] p-4 space-y-3.5 font-mono select-none">
@@ -121,7 +128,7 @@ export const MutationDetail: React.FC<MutationDetailProps> = ({
           <div className="flex items-center gap-2 mb-1 text-xs">
             <span className="font-bold text-zinc-100">{mutation.id}</span>
             <span className="text-zinc-600">·</span>
-            <span className="text-zinc-400">EPOCH 0{mutation.epoch}</span>
+            <span className="text-zinc-400">EPOCH {String(mutation.epoch).padStart(2, '0')}</span>
             <span className="text-zinc-600">·</span>
             <span className="text-zinc-500">{mutation.commitHash}</span>
           </div>
@@ -130,7 +137,7 @@ export const MutationDetail: React.FC<MutationDetailProps> = ({
         <StatusBadge status={mutation.status} size="md" />
       </div>
 
-      {/* Semantic Causal Callout for M-1042 */}
+      {/* Semantic Causal Callout for the earliest plausible contributor */}
       {isCausalOrigin && (
         <div className="p-3 rounded-sm border border-amber-500/40 bg-[#120e0a] text-xs text-amber-200 space-y-1.5">
           <div className="flex items-center gap-2 font-bold text-amber-300">
@@ -138,8 +145,9 @@ export const MutationDetail: React.FC<MutationDetailProps> = ({
             <span className="tracking-wide text-[11px] uppercase">EARLIEST PLAUSIBLE CONTRIBUTING MUTATION</span>
           </div>
           <p className="font-sans leading-relaxed text-amber-200/90 text-xs">
-            Retention boundary remained at 15d despite chargeback eligibility expansion to 30d.
-            Silent temporal gap catalyzed downstream hotfixes M-1051, M-1077, and production freeze INC-3312.
+            This change passed its own tests, yet EPOCH names it the earliest plausible contributor to{' '}
+            {storyIncident ? `${storyIncident.id} (${storyIncident.status.toLowerCase()})` : 'the open drift'}
+            {laterInChain.length > 0 ? `. Later changes in the candidate chain: ${laterInChain.join(', ')}.` : '.'}
           </p>
         </div>
       )}
@@ -229,10 +237,14 @@ export const MutationDetail: React.FC<MutationDetailProps> = ({
                 )}
               </React.Fragment>
             ))}
-            <ArrowRight className="w-3.5 h-3.5 text-rose-500 shrink-0" />
-            <span className="px-2 py-0.5 rounded-sm bg-rose-950/60 border border-rose-500/40 text-rose-300 text-xs font-bold">
-              INC-3312
-            </span>
+            {storyIncident && (
+              <>
+                <ArrowRight className="w-3.5 h-3.5 text-rose-500 shrink-0" />
+                <span className="px-2 py-0.5 rounded-sm bg-rose-950/60 border border-rose-500/40 text-rose-300 text-xs font-bold">
+                  {storyIncident.id}
+                </span>
+              </>
+            )}
           </div>
         </div>
       )}
