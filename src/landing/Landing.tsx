@@ -1,5 +1,5 @@
 import { useEffect, type ReactNode } from 'react';
-import { Activity, Compass, Cpu, GitBranch, GitCommit, ShieldCheck, type LucideIcon } from 'lucide-react';
+import { Activity, Compass, Cpu, FileText, GitBranch, GitCommit, ShieldCheck, type LucideIcon } from 'lucide-react';
 import { Strata, formatScore, scoreTone } from './Strata';
 import { FUTURES, FUTURES_WALL_SECONDS, TESTS_PER_CHANGE } from './story';
 import { useLiveStatus, type LiveStatus } from './useLiveStatus';
@@ -266,7 +266,7 @@ export default function Landing() {
           id="how"
           dot="bg-emerald-400"
           label="How it works"
-          meta="One console, four views"
+          meta="Four views and a report"
           title="Four views, each answering one question"
           intro="EPOCH sits next to a codebase and keeps a record of what the system has become. The live console shows that record in four views, in the same colours you will see inside."
         >
@@ -286,6 +286,21 @@ export default function Landing() {
               </a>
             ))}
           </div>
+          <a
+            href="/console/report"
+            className={`btn-control group mt-3 flex flex-col gap-3 ${CELL} p-5 hover:border-zinc-500/60 sm:flex-row sm:items-center sm:justify-between`}
+          >
+            <span>
+              <span className={`${LABEL} flex items-center gap-2 text-zinc-300`}>
+                <FileText className="h-3.5 w-3.5" aria-hidden="true" />
+                Report
+              </span>
+              <span className="mt-2 block text-[13.5px] leading-relaxed text-zinc-400">
+                The whole story in writing: the system’s health, every change, the problems and the fixes, ready to copy and share.
+              </span>
+            </span>
+            <span className={`${LABEL} shrink-0 text-zinc-500 transition-colors group-hover:text-zinc-200`}>Open Report</span>
+          </a>
         </Section>
 
         <Section
