@@ -21,7 +21,8 @@
         "get_context_bundle",
         "get_decision_package",
         "get_repo_status",
-        "get_simulation"
+        "get_simulation",
+        "get_evolution_report"
       ],
       "disabled": false
     }

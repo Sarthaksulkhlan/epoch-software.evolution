@@ -41,6 +41,7 @@ These return exactly the view models the console renders (`src/console/types`), 
 | GET | `/api/v1/simulations?divergenceMutationId` | `CounterfactualScenario[]` (plus `simulationId`, `scenarioId`, `status`, `measured`, `recommended`, `changedFiles`, `selected`). `projectedTimeDays` carries the number of changed files: EPOCH does not estimate calendar time. |
 | POST | `/api/v1/simulations/remediate` | Body `{ scenarioId: "<simulationId>:<scenarioId>", author?, dryRun? }`. Applies the future's diff and opens a remediation workflow. |
 | GET | `/api/v1/activity?limit=30` | `ActivityEvent[]`, newest first |
+| GET | `/api/v1/report` | Markdown evolution report: current state, mutations table, drift findings, incidents, futures comparison and human decisions. Returns `text/markdown`. |
 | GET | `/api/v1/stream` | Server-Sent Events, see below |
 
 Mappings worth knowing:
@@ -129,6 +130,7 @@ EPOCH reads these environment variables (it does not load `.env` files). All are
 | `get_decision_package` | read | What the reviewer sees at the gate |
 | `get_repo_status` | read | Path of the watched repository and its uncommitted changes |
 | `get_simulation` | read | Futures with their measurements and the recommended one |
+| `get_evolution_report` | read | Markdown evolution report built from the EPOCH store |
 | `start_workflow` | write | Record a requirement and open a workflow |
 | `record_plan` | write | Store the plan and create the specialist task graph |
 | `run_specialist` | write | Run one deterministic specialist and record its claims |

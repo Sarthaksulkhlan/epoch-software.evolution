@@ -4,7 +4,7 @@
 
 <p align="center">
   <a href="https://github.com/vighriday/epoch-software-evolution/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/vighriday/epoch-software-evolution/actions/workflows/ci.yml/badge.svg"></a>
-  <img alt="EPOCH-MCP: 20 tools" src="https://img.shields.io/badge/EPOCH--MCP-20%20tools-0b6e80">
+  <img alt="EPOCH-MCP: 21 tools" src="https://img.shields.io/badge/EPOCH--MCP-21%20tools-0b6e80">
   <img alt="TypeScript strict" src="https://img.shields.io/badge/TypeScript-strict-3178c6?logo=typescript&logoColor=white">
   <img alt="Node 22+" src="https://img.shields.io/badge/node-22%2B-339933?logo=nodedotjs&logoColor=white">
   <img alt="Built for the IBM Bob 2.0 hackathon" src="https://img.shields.io/badge/IBM%20Bob%202.0-hackathon-5b3fb8">
@@ -57,7 +57,7 @@ The missing piece is not code generation. It is memory of what the system has be
 | **WEAVE** | What are we doing now? | Runs each change as a governed workflow: requirement → context bundle → plan → specialists in parallel → verification → human approval |
 | **EPOCH** | What has the system become? | Records mutations, scans the code after each one, tracks invariants, trajectory, drift, epochs and incidents, and traces candidate causal chains |
 | **Futures** | What could it become? | Forks the system into git worktrees, measures alternative fixes like real changes, and adopts one through the same gate |
-| **IBM Bob** | How is the work done? | Plans, implements and runs specialists from subagents, all through the 20-tool EPOCH-MCP server |
+| **IBM Bob** | How is the work done? | Plans, implements and runs specialists from subagents, all through the 21-tool EPOCH-MCP server |
 
 ## See it run
 
@@ -212,7 +212,7 @@ sequenceDiagram
 There is deliberately no approve tool: a person decides at the gate. Read tools are auto-allowed in Bob; write tools ask first. Exported Bob task sessions are kept in [`bob_sessions/`](bob_sessions/) and indexed in [docs/BOB_SESSIONS.md](docs/BOB_SESSIONS.md).
 
 <details>
-<summary><b>All 20 EPOCH-MCP tools</b></summary>
+<summary><b>All 21 EPOCH-MCP tools</b></summary>
 
 | Tool | Access | Purpose |
 | --- | --- | --- |
@@ -228,6 +228,7 @@ There is deliberately no approve tool: a person decides at the gate. Read tools 
 | `get_decision_package` | read | What the reviewer sees at the gate |
 | `get_repo_status` | read | Path, HEAD and changed files of the watched repo |
 | `get_simulation` | read | Futures with their measurements and the recommendation |
+| `get_evolution_report` | read | Markdown evolution report: current state, mutations, drift, incidents, futures and decisions |
 | `start_workflow` | write | Open a WEAVE workflow for a requirement |
 | `record_plan` | write | Record the plan and create the specialist task graph |
 | `run_specialist` | write | Run context, historian, security, QA, evolution, incident or synthesis |
@@ -247,7 +248,7 @@ flowchart TB
         direction LR
         P["Plan mode"] --> S["Parallel subagents"] --> E["Agent mode edits"]
     end
-    BOB -- "stdio MCP · 20 tools" --> MCP["EPOCH-MCP"]
+    BOB -- "stdio MCP · 21 tools" --> MCP["EPOCH-MCP"]
     MCP -- "HTTP" --> API
     subgraph API["EPOCH API · Hono"]
         direction TB

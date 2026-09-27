@@ -27,6 +27,7 @@
     "demo-reset": "tsx scripts/demo-reset.ts",
     "demo:replay": "tsx scripts/demo-replay.ts",
     "demo:futures": "tsx scripts/demo-futures.ts",
+    "report": "tsx scripts/report.ts",
     "showcase:snapshot": "tsx scripts/showcase-snapshot.ts",
     "format": "prettier --write src docs scripts"
   },

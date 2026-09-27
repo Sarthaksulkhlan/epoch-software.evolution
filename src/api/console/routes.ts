@@ -21,6 +21,7 @@ import {
   trajectorySnapshots,
   trendData
 } from './views.js';
+import { buildEvolutionReport } from './report.js';
 
 /**
  * /api/v1: the console adapter. Every response uses the view models the
@@ -147,6 +148,10 @@ consoleRoutes.route('/stream', streamEvents(event => {
   }
   return out;
 }));
+
+consoleRoutes.get('/report', c =>
+  c.text(buildEvolutionReport(), 200, { 'Content-Type': 'text/markdown; charset=utf-8' })
+);
 
 export function registerConsoleRoutes(app: Hono): void {
   app.route('/api/v1', consoleRoutes);

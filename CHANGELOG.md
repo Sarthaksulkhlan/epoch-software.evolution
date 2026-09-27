@@ -12,6 +12,7 @@ All notable changes to EPOCH. Format: [Keep a Changelog](https://keepachangelog.
 - The API serves the built console when `EPOCH_CONSOLE_DIR` is set; `pnpm start` runs it without watch mode.
 - A `Dockerfile` that runs everything as one service, a Render blueprint, and CI that typechecks, tests and builds the console and the image.
 - 6 tests for public demo mode (38 in total).
+- `get_evolution_report` MCP tool and `GET /api/v1/report`: a Markdown evolution report built from the EPOCH store; `pnpm report` writes it to `EVOLUTION_REPORT.md`.
 
 ### Changed
 

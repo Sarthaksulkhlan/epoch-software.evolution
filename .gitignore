@@ -53,3 +53,4 @@ logs/
 
 # Internal material (presenter script, team notes, concept dossier); never published
 .internal/
+EVOLUTION_REPORT.md

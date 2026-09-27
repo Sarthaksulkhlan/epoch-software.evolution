@@ -34,6 +34,18 @@ async function call(method: 'GET' | 'POST', path: string, body?: unknown): Promi
   return data;
 }
 
+async function callText(path: string): Promise<string> {
+  let response: Response;
+  try {
+    response = await fetch(`${API}${path}`, { headers: { Accept: 'text/markdown' } });
+  } catch {
+    throw new Error(`EPOCH API is not reachable at ${API}. Start it with "pnpm api:dev".`);
+  }
+  const text = await response.text();
+  if (!response.ok) throw new Error(`GET ${path} failed (${response.status}): ${text.slice(0, 200)}`);
+  return text;
+}
+
 function ok(summary: string, data?: unknown): CallToolResult {
   const text = data === undefined ? summary : `${summary}\n\n${JSON.stringify(data, null, 2)}`;
   return { content: [{ type: 'text', text }] };
@@ -340,6 +352,15 @@ export function createMcpServer(): McpServer {
   }, ({ simulation_id }) => run(async () => {
     const r = asJson(await call('GET', `/api/simulations/${simulation_id}`));
     return ok(`Recommended future: ${r.recommended ?? 'none yet'}.`, r);
+  }));
+
+  server.registerTool('get_evolution_report', {
+    title: 'Evolution report',
+    description: 'A Markdown document describing how the watched service has changed and why: current state, mutations table, drift findings, incidents, latest futures comparison and human decisions. Every figure comes from the EPOCH store.',
+    annotations: READ_ONLY
+  }, () => run(async () => {
+    const md = await callText('/api/v1/report');
+    return ok(md);
   }));
 
   return server;
