@@ -161,6 +161,9 @@ export interface DriftFinding {
   candidateCausalChain: string[];
   violatedInvariantId: string;
   integrityScore: number; // 0..100
+  /** Live API only: 'open' or 'resolved', and the mutation that resolved it. */
+  status?: string;
+  resolvedBy?: string | null;
 }
 
 export interface TrajectorySnapshot {
@@ -198,6 +201,44 @@ export interface CounterfactualScenario {
     type: string;
     finding: string;
   }[];
+  /** Live API only (GET /api/v1/simulations). `id` is "<simulationId>:<scenarioId>". */
+  simulationId?: string;
+  scenarioId?: string;
+  status?: string;
+  measured?: boolean;
+  recommended?: boolean;
+  changedFiles?: string[];
+  selected?: boolean;
+}
+
+export interface GraphNodeData {
+  id: string;
+  type: 'MutationNode' | 'IncidentNode' | 'InvariantNode' | 'EpochBoundaryNode';
+  label: string;
+  sublabel?: string;
+  epoch: number;
+  status?: string;
+  severity?: string;
+  x: number;
+  y: number;
+  isCausalChain?: boolean;
+}
+
+export interface GraphEdgeData {
+  id: string;
+  source: string;
+  target: string;
+  label?: string;
+  isCausal?: boolean;
+  style?: 'default' | 'critical' | 'warning' | 'success' | 'dashed';
+}
+
+/** GET /api/v1/trajectory/trend: one point per recorded mutation. */
+export interface IntegrityTrendPoint {
+  epochLabel: string;
+  score: number;
+  threshold: number;
+  coupling: number;
 }
 
 export interface ActivityEvent {
