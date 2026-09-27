@@ -26,7 +26,8 @@
 <p align="center">
   <b>Live demo: <a href="https://epoch-wj5b.onrender.com/">epoch-wj5b.onrender.com</a></b><br>
   The real engine, running this repository's container in a guarded public mode.<br>
-  It opens at the moment a reviewer chooses a future: INC-3312 open, drift raised, futures A and B measured (<a href="https://epoch-wj5b.onrender.com/api/v1/simulations">see them</a>).<br>
+  It opens at the moment a reviewer chooses a future: INC-3312 open, drift raised, futures A and B measured.<br>
+  In Futures, adopt B, run EPOCH's specialists to the gate and approve it to record M-1085.<br>
   <sub>Hosted on Render's free plan. If it has gone to sleep, the first visit takes about a minute to wake it.</sub>
 </p>
 
@@ -75,10 +76,7 @@ pnpm demo:replay --with-feature    # M-1042, then three AI changes: drift, INC-3
 pnpm demo:futures                  # fork and measure futures A and B from the latest mutation
 ```
 
-Adopt a future with `POST /api/v1/simulations/remediate`, run it to the gate, approve it, and M-1085 brings the trajectory back. The full walkthrough is in [docs/DEMO_GUIDE.md](docs/DEMO_GUIDE.md).
-
-> [!NOTE]
-> The console's four views are being switched from their design data to the live `/api/v1` feed. Until that lands, follow the story through Bob, the API and the event stream at `/api/stream`.
+Open the console at <http://127.0.0.1:5173>. In Futures, adopt future B, run EPOCH's specialists to the gate, approve it, and M-1085 brings the trajectory back. The full walkthrough is in [docs/DEMO_GUIDE.md](docs/DEMO_GUIDE.md).
 
 <details>
 <summary><b>More ways to run it</b></summary>
