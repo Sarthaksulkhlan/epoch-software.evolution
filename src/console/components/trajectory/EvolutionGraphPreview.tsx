@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import type { GraphNodeData, GraphEdgeData } from '../../types';
 import { ZoomIn, ZoomOut, Maximize2 } from 'lucide-react';
 
@@ -71,6 +71,20 @@ export const EvolutionGraphPreview: React.FC<EvolutionGraphPreviewProps> = ({
 }) => {
   const [hoveredNodeId, setHoveredNodeId] = useState<string | null>(null);
   const [zoom, setZoom] = useState(1);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const scrolledFor = useRef<string | null>(null);
+
+  // The recorded history is wider than the viewport: bring the origin of the
+  // causal chain (or the newest mutation) into view once per data set.
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el || nodes.length === 0) return;
+    const target = nodes.find(n => n.id === originMutationId) ?? [...nodes].filter(n => n.type === 'MutationNode').sort((a, b) => b.x - a.x)[0];
+    const key = `${target?.id ?? ''}:${nodes.length}`;
+    if (!target || scrolledFor.current === key) return;
+    scrolledFor.current = key;
+    el.scrollLeft = Math.max(0, target.x * zoom - 160);
+  }, [nodes, originMutationId, zoom]);
 
   const nodeById = useMemo(() => new Map(nodes.map(n => [n.id, n])), [nodes]);
 
@@ -204,7 +218,7 @@ export const EvolutionGraphPreview: React.FC<EvolutionGraphPreviewProps> = ({
       </div>
 
       {/* Main SVG Interactive Graph Workspace */}
-      <div className={`relative flex-1 w-full overflow-x-auto ${zoom > 1 ? 'overflow-y-auto' : 'overflow-y-hidden'} p-4`}>
+      <div ref={scrollRef} className={`relative flex-1 w-full overflow-x-auto ${zoom > 1 ? 'overflow-y-auto' : 'overflow-y-hidden'} p-4`}>
         <svg
           className="select-none"
           style={{ width: width * zoom, height: SVG_HEIGHT * zoom }}
