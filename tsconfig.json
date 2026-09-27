@@ -13,5 +13,5 @@
     }
   },
   "include": ["src/**/*.ts", "scripts/**/*.ts"],
-  "exclude": ["node_modules", "dist", "src/console", "packages"]
+  "exclude": ["node_modules", "dist", "src/console", "src/landing", "packages"]
 }
