@@ -14,7 +14,7 @@ Every choice keeps the demo self-contained: `pnpm install && pnpm demo-reset && 
 | Events | `node:events` behind a typed bus | Envelopes with ids for SSE resume | ADR-006 |
 | IDs | nanoid | Prefixed ids (`wf_`, `evt_`, …); sequences for mutations, epochs, incidents, findings | |
 | Git | the `git` CLI through `execFile` | Never a shell; validated identifiers; worktrees for futures | ADR-027 |
-| IBM Bob integration | `@modelcontextprotocol/sdk` 1.30, stdio transport | EPOCH-MCP, 20 tools | ADR-026 |
+| IBM Bob integration | `@modelcontextprotocol/sdk` 1.30, stdio transport | EPOCH-MCP, 21 tools | ADR-026 |
 
 ## Watched service
 
