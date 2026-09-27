@@ -4,19 +4,20 @@ import { LAYERS, TESTS_PER_CHANGE, type LayerId } from './story';
 
 type Lens = 'tests' | 'epoch';
 
-// The drawing is a cross-section of the codebase's history: one layer per
-// approved change, oldest at the bottom. It stretches to its box, so the
-// labels live in HTML on top of it and keep their size at any width.
+// A cross-section of the codebase's history: one layer per approved change,
+// oldest at the bottom. The drawing stretches to its box, so the labels live
+// in HTML on top of it and keep their size at any width.
 const VB_W = 1000;
 const TOP = 14;
 const BAND = 100;
 const VB_H = TOP + BAND * LAYERS.length;
 const CRACK_X = 560;
 
-const FILL_STOPS: Array<[number, string]> = [[0.5, '#7d2935'], [0.75, '#7a5d1f'], [1, '#1a6a61']];
-const EDGE_STOPS: Array<[number, string]> = [[0.5, '#f05a67'], [0.75, '#e2b857'], [1, '#43c6ac']];
-const TESTS_FILL = '#22324a';
-const TESTS_EDGE = '#3b5475';
+// The console's palette: emerald healthy, amber strained, rose broken.
+const FILL_STOPS: Array<[number, string]> = [[0.5, '#4c1321'], [0.75, '#4a3410'], [1, '#0b3b30']];
+const EDGE_STOPS: Array<[number, string]> = [[0.5, '#fb7185'], [0.75, '#fbbf24'], [1, '#34d399']];
+const TESTS_FILL = '#12161d';
+const TESTS_EDGE = '#2a3140';
 const PATTERNS = ['st-dash', 'st-dots', 'st-hatch'];
 
 function hexToRgb(hex: string): number[] {
@@ -41,6 +42,11 @@ function ramp(stops: Array<[number, string]>, value: number): string {
 
 export function formatScore(score: number): string {
   return score === 0.875 ? '0.875' : score.toFixed(2);
+}
+
+/** Text colour for a boundary score, in the console's semantic colours. */
+export function scoreTone(score: number): string {
+  return score >= 0.8 ? 'text-emerald-300' : score >= 0.7 ? 'text-amber-300' : 'text-rose-300';
 }
 
 const bandTop = (i: number) => TOP + (LAYERS.length - 1 - i) * BAND;
@@ -94,12 +100,14 @@ function prefersReducedMotion(): boolean {
   return typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches === true;
 }
 
+const LABEL = 'font-mono text-[10px] uppercase tracking-[0.18em]';
+
 export function Strata() {
   const [lens, setLens] = useState<Lens>(() => (prefersReducedMotion() ? 'epoch' : 'tests'));
   const [touched, setTouched] = useState(false);
   const [selected, setSelected] = useState<LayerId>('M-1077');
 
-  // One reveal on load: the page opens on what the tests saw, then shows what EPOCH saw.
+  // One reveal on load: the panel opens on what the tests saw, then shows what EPOCH measured.
   useEffect(() => {
     if (touched || lens === 'epoch') return;
     const timer = window.setTimeout(() => setLens('epoch'), 1700);
@@ -112,41 +120,49 @@ export function Strata() {
   };
 
   const layer = LAYERS.find(l => l.id === selected) ?? LAYERS[0];
+  const tab = (active: boolean) =>
+    `rounded-[2px] px-2.5 py-1.5 transition-colors duration-150 ${
+      active
+        ? 'bg-[#131b29] text-cyan-300 shadow-[inset_0_0_0_1px_rgba(56,189,248,0.45)]'
+        : 'text-zinc-400 hover:text-zinc-200'
+    }`;
 
   return (
-    <div className="st" data-lens={lens}>
-      <div className="st-toggle" role="group" aria-label="Choose what the layers show">
-        <button type="button" aria-pressed={lens === 'tests'} onClick={() => choose('tests')}>
-          What your tests see
-        </button>
-        <button type="button" aria-pressed={lens === 'epoch'} onClick={() => choose('epoch')}>
-          What EPOCH sees
-        </button>
+    <div className="st overflow-hidden rounded-sm border border-zinc-800/80 bg-[#08090d]/90 backdrop-blur" data-lens={lens}>
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-zinc-800/80 px-4 py-3">
+        <span className={`${LABEL} flex items-center gap-2 text-zinc-300`}>
+          <span className="h-1.5 w-1.5 rounded-full bg-cyan-400" aria-hidden="true" />
+          System history
+          <span className="text-zinc-600">//</span>
+          <span className="text-zinc-500">Payments service</span>
+        </span>
+        <div className={`${LABEL} flex rounded-sm border border-zinc-800 bg-[#06070a] p-0.5`} role="group" aria-label="Choose what the layers show">
+          <button type="button" className={tab(lens === 'tests')} aria-pressed={lens === 'tests'} onClick={() => choose('tests')}>
+            What your tests see
+          </button>
+          <button type="button" className={tab(lens === 'epoch')} aria-pressed={lens === 'epoch'} onClick={() => choose('epoch')}>
+            What EPOCH sees
+          </button>
+        </div>
       </div>
 
-      <p className="st-caption">
+      <p className="min-h-[4.2em] px-4 pt-3 text-[13px] leading-relaxed text-zinc-400 sm:min-h-[3em]">
         {lens === 'tests'
           ? `Each layer is one approved change, oldest at the bottom. Every one passed all ${TESTS_PER_CHANGE} tests.`
-          : 'Same changes, measured as a system. The boundary score falls from 1.00 to 0.50, a crack opens under the surface, and an incident follows. Select a layer to see what happened.'}
+          : 'The same changes, measured as a system. The boundary score falls from 1.00 to 0.50, a crack opens under the surface and an incident follows. Select a layer.'}
       </p>
 
-      <div className="st-frame">
-        <svg
-          className="st-svg"
-          viewBox={`0 0 ${VB_W} ${VB_H}`}
-          preserveAspectRatio="none"
-          aria-hidden="true"
-          focusable="false"
-        >
+      <div className="st-frame relative mx-4 mt-2 h-[360px] overflow-hidden rounded-sm border border-zinc-800 sm:h-[400px]">
+        <svg className="absolute inset-0 h-full w-full" viewBox={`0 0 ${VB_W} ${VB_H}`} preserveAspectRatio="none" aria-hidden="true" focusable="false">
           <defs>
             <pattern id="st-dash" width="28" height="12" patternUnits="userSpaceOnUse">
-              <path d="M2 6h12" stroke="#fff" strokeOpacity="0.09" strokeWidth="1.2" />
+              <path d="M2 6h12" stroke="#fff" strokeOpacity="0.07" strokeWidth="1.2" />
             </pattern>
             <pattern id="st-dots" width="14" height="14" patternUnits="userSpaceOnUse">
-              <circle cx="4" cy="4" r="1.3" fill="#fff" fillOpacity="0.09" />
+              <circle cx="4" cy="4" r="1.3" fill="#fff" fillOpacity="0.07" />
             </pattern>
             <pattern id="st-hatch" width="14" height="14" patternUnits="userSpaceOnUse">
-              <path d="M0 14L14 0" stroke="#fff" strokeOpacity="0.07" strokeWidth="1.2" />
+              <path d="M0 14L14 0" stroke="#fff" strokeOpacity="0.055" strokeWidth="1.2" />
             </pattern>
             <clipPath id="st-reveal">
               <rect className="st-clip" x="0" y="0" width={VB_W} height={VB_H} style={{ '--vbh': `${VB_H}px` } as CSSProperties} />
@@ -173,37 +189,40 @@ export function Strata() {
           </g>
         </svg>
 
-        <div className="st-rows" style={{ top: `${(TOP / VB_H) * 100}%` }}>
+        <div className="absolute inset-x-0 bottom-0 flex flex-col-reverse" style={{ top: `${(TOP / VB_H) * 100}%` }}>
           {LAYERS.map(l => (
             <button
               key={l.id}
               type="button"
-              className="st-row"
+              className="st-row relative flex flex-1 items-center justify-between gap-3 px-3.5 text-left sm:px-4"
               data-selected={selected === l.id}
               aria-pressed={selected === l.id}
               aria-label={`${l.id}, ${l.title}. Show what happened.`}
               onClick={() => setSelected(l.id)}
             >
-              <span className="st-name">
-                <span className="st-id">{l.id}</span>
-                <span className="st-title">{l.title}</span>
+              <span className="grid min-w-0 max-w-[54%] leading-tight">
+                <span className="font-mono text-[10px] text-white/55">{l.id}</span>
+                <span className="truncate text-[13.5px] font-semibold text-zinc-100 [text-shadow:0_1px_2px_rgb(0_0_0/0.4)]">{l.title}</span>
               </span>
               {l.incident && lens === 'epoch' && (
-                <span className="st-incident" style={{ left: `${(CRACK_X / VB_W) * 100 + 2.5}%` }}>
-                  <span className="st-incident-dot" aria-hidden="true" />
+                <span
+                  className="st-incident absolute top-1/2 inline-flex items-center gap-1.5 rounded-sm border border-rose-500/60 bg-rose-950/85 px-1.5 py-0.5 font-mono text-[10px] font-bold uppercase tracking-wider text-rose-300"
+                  style={{ left: `${(CRACK_X / VB_W) * 100 + 2.5}%` }}
+                >
+                  <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-rose-400" aria-hidden="true" />
                   {l.incident}
                 </span>
               )}
-              <span className="st-badge">
+              <span className="inline-flex shrink-0 items-center gap-2 rounded-sm border border-zinc-800 bg-[#06070a]/85 px-2 py-1 font-mono text-[10.5px] text-zinc-200">
                 {lens === 'tests' ? (
                   <>
-                    <Check className="st-check" aria-hidden="true" />
+                    <Check className="h-3.5 w-3.5 text-emerald-400" aria-hidden="true" />
                     {TESTS_PER_CHANGE}/{TESTS_PER_CHANGE} tests
                   </>
                 ) : (
                   <>
-                    <span className="st-score">{formatScore(l.boundary)}</span>
-                    <span className="st-flag">{l.flag}</span>
+                    <span className={`font-semibold ${scoreTone(l.boundary)}`}>{formatScore(l.boundary)}</span>
+                    <span className="hidden text-[9.5px] uppercase tracking-[0.12em] text-zinc-400 sm:inline">{l.flag}</span>
                   </>
                 )}
               </span>
@@ -212,21 +231,25 @@ export function Strata() {
         </div>
       </div>
 
-      <div className="st-detail" aria-live="polite">
-        <p className="st-detail-head">
-          <span className="st-id">{layer.id}</span>
-          <span>{layer.title}</span>
-          <span className="st-by">by {layer.by}</span>
-        </p>
-        <div className="st-detail-grid">
-          <div>
-            <p className="st-detail-label">Tests say</p>
-            <p>{TESTS_PER_CHANGE} of {TESTS_PER_CHANGE} passed.</p>
+      <div className="p-4" aria-live="polite">
+        <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+          <span className="font-mono text-[11px] text-zinc-500">{layer.id}</span>
+          <span className="text-[14px] font-semibold text-zinc-100">{layer.title}</span>
+          <span className={`${LABEL} text-zinc-500`}>By {layer.by}</span>
+        </div>
+        <div className="mt-3 grid gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,2.3fr)]">
+          <div className="rounded-sm border border-zinc-800 bg-[#06070a] p-3">
+            <p className={`${LABEL} text-zinc-500`}>Tests say</p>
+            <p className="mt-1.5 flex items-center gap-1.5 text-[13.5px] text-zinc-200">
+              <Check className="h-3.5 w-3.5 text-emerald-400" aria-hidden="true" />
+              {TESTS_PER_CHANGE} of {TESTS_PER_CHANGE} passed
+            </p>
           </div>
-          <div>
-            <p className="st-detail-label">EPOCH says</p>
-            <p>
-              {layer.epochSaw} <span className="st-detail-score">Boundary score {formatScore(layer.boundary)}.</span>
+          <div className="rounded-sm border border-zinc-800 bg-[#06070a] p-3">
+            <p className={`${LABEL} text-zinc-500`}>EPOCH says</p>
+            <p className="mt-1.5 text-[13.5px] leading-relaxed text-zinc-200">{layer.epochSaw}</p>
+            <p className={`${LABEL} mt-2 text-zinc-500`}>
+              Boundary score <span className={`font-semibold ${scoreTone(layer.boundary)}`}>{formatScore(layer.boundary)}</span>
             </p>
           </div>
         </div>
