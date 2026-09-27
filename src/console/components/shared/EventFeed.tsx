@@ -1,7 +1,14 @@
 import React, { useState } from 'react';
 import type { ActivityEvent } from '../../types';
 import { StatusBadge } from './StatusBadge';
-import { Play, Pause, Trash2, Terminal, ChevronDown, ChevronUp } from 'lucide-react';
+import { Play, Pause, Trash2, Terminal } from 'lucide-react';
+import { useStreamStatus } from '../../hooks/useApi';
+
+/** ISO timestamps from the API render as local wall-clock time; anything else passes through. */
+function formatTime(value: string): string {
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? value : date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+}
 
 interface EventFeedProps {
   events: ActivityEvent[];
@@ -19,6 +26,7 @@ export const EventFeed: React.FC<EventFeedProps> = ({
   onSelectEntity
 }) => {
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
+  const streamStatus = useStreamStatus();
 
   return (
     <div className="rounded-sm border border-zinc-800/80 bg-[#08090d] flex flex-col h-full font-mono select-none">
@@ -30,7 +38,7 @@ export const EventFeed: React.FC<EventFeedProps> = ({
             Live Stream
           </span>
           <span className="text-[9px] text-zinc-500">
-            {isPaused ? '[PAUSED]' : '[SSE ACTIVE]'}
+            {isPaused ? '[PAUSED]' : streamStatus === 'live' ? '[SSE ACTIVE]' : '[SSE RECONNECTING]'}
           </span>
         </div>
         <div className="flex items-center gap-1">
@@ -57,7 +65,7 @@ export const EventFeed: React.FC<EventFeedProps> = ({
       <div className="p-2 space-y-1.5 overflow-y-auto flex-1 max-h-[380px]">
         {events.length === 0 ? (
           <div className="text-center py-8 text-[11px] text-zinc-500">
-            No events in telemetry queue. Awaiting SSE dispatch...
+            No activity yet. New events appear here as EPOCH records them.
           </div>
         ) : (
           events.map((event, idx) => {
@@ -90,7 +98,7 @@ export const EventFeed: React.FC<EventFeedProps> = ({
                     />
                     <span className="text-zinc-300 font-semibold truncate">{event.actor}</span>
                   </div>
-                  <span className="text-zinc-500 tabular-nums shrink-0">{event.timestamp}</span>
+                  <span className="text-zinc-500 tabular-nums shrink-0">{formatTime(event.timestamp)}</span>
                 </div>
 
                 <p className="text-zinc-200 font-sans text-xs leading-snug line-clamp-1">
@@ -127,8 +135,10 @@ export const EventFeed: React.FC<EventFeedProps> = ({
 
       {/* Terminal Footer */}
       <div className="px-3 py-1.5 bg-[#06070a] border-t border-zinc-800/80 text-[9px] text-zinc-500 flex items-center justify-between">
-        <span>TODO(IBM Bob: SSE GET /api/v1/stream)</span>
-        <span className="text-emerald-500 font-semibold">ONLINE</span>
+        <span>SSE GET /api/v1/stream · {events.length} events</span>
+        <span className={`font-semibold ${streamStatus === 'live' ? 'text-emerald-500' : streamStatus === 'offline' ? 'text-rose-400' : 'text-amber-400'}`}>
+          {streamStatus === 'live' ? 'ONLINE' : streamStatus === 'offline' ? 'OFFLINE' : streamStatus === 'reconnecting' ? 'RECONNECTING' : 'CONNECTING'}
+        </span>
       </div>
     </div>
   );
