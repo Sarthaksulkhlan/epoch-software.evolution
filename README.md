@@ -26,7 +26,7 @@
 
 <p align="center">
   <b>Live demo: <a href="https://epoch-wj5b.onrender.com/">epoch-wj5b.onrender.com</a></b><br>
-  The landing page tells the story in two minutes. The <a href="https://epoch-wj5b.onrender.com/console/trajectory">live console</a> runs the real engine in a guarded public mode.<br>
+  The landing page tells the story in two minutes. The <a href="https://epoch-wj5b.onrender.com/console">live console</a> runs the real engine in a guarded public mode.<br>
   It opens at the moment a reviewer chooses a future: INC-3312 open, drift raised, futures A and B measured.<br>
   In Futures, adopt B, run EPOCH's specialists to the gate and approve it to record M-1085.<br>
   <sub>Hosted on Render's free plan. If it has gone to sleep, the first visit takes about a minute to wake it.</sub>
