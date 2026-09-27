@@ -50,31 +50,55 @@ function scheduleReconnect(): void {
   }, delay);
 }
 
+/**
+ * The API sends the stream's headers with its first event (or the 25 s
+ * keep-alive), so 'open' can be late. A stream that is still connecting after
+ * a moment, without an error, is up: a down API fails fast through the proxy.
+ */
+const ASSUME_LIVE_MS = 2_500;
+
 function connect(): void {
   if (source || typeof EventSource === 'undefined') return;
   const es = new EventSource(STREAM_PATH);
   source = es;
+  let assume: ReturnType<typeof setTimeout> | undefined;
 
-  es.onopen = () => {
+  /** Up (again): after a drop, every subscriber refetches what it may have missed. */
+  const markLive = (): void => {
+    clearTimeout(assume);
+    if (source !== es || status === 'live') return;
     const recovered = status === 'reconnecting' || status === 'offline';
     failures = 0;
     setStatus('live');
     if (recovered) publish('reset', null);
   };
+  const assumeLiveSoon = (): void => {
+    clearTimeout(assume);
+    assume = setTimeout(() => {
+      if (es.readyState === EventSource.CONNECTING) markLive();
+    }, ASSUME_LIVE_MS);
+  };
+  assumeLiveSoon();
+
+  es.onopen = markLive;
 
   es.onerror = () => {
+    clearTimeout(assume);
     if (es.readyState === EventSource.CLOSED) {
       es.close();
       if (source === es) source = null;
       setStatus('offline');
       scheduleReconnect();
     } else {
+      // The browser reconnects by itself (with Last-Event-ID).
       setStatus('reconnecting');
+      assumeLiveSoon();
     }
   };
 
   for (const [name, topic] of Object.entries(EVENT_TOPICS)) {
     es.addEventListener(name, event => {
+      markLive();
       let data: unknown;
       try {
         data = JSON.parse((event as MessageEvent<string>).data);
