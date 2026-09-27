@@ -79,7 +79,7 @@ export const MutationCard: React.FC<MutationCardProps> = ({
           <div className="flex items-center gap-1.5 truncate">
             {isCausalOrigin && (
               <span className="text-amber-400 font-bold flex items-center gap-1">
-                <CornerDownRight className="w-3 h-3" /> PRECURSOR → INC-3312
+                <CornerDownRight className="w-3 h-3" /> EARLIEST PLAUSIBLE CAUSE
               </span>
             )}
             {!isCausalOrigin && isMutation && (
@@ -89,8 +89,8 @@ export const MutationCard: React.FC<MutationCardProps> = ({
               </span>
             )}
             {!isMutation && (
-              <span className="text-rose-400 truncate font-semibold">
-                $420k FROZEN SETTLEMENTS
+              <span className={`truncate font-semibold ${incident?.status === 'RESOLVED' ? 'text-emerald-400' : 'text-rose-400'}`}>
+                {incident?.status} · {incident?.affectedComponents.join(' · ')}
               </span>
             )}
           </div>

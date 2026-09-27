@@ -88,7 +88,7 @@ export const TopBar: React.FC<TopBarProps> = ({
             <span className="text-zinc-400">WEAVE</span>
           </div>
 
-          <div className="hidden md:flex items-center gap-1.5" title="IBM Bob 2.0 AI execution fabric">
+          <div className="hidden md:flex items-center gap-1.5" title="IBM Bob, the implementer">
             <span className="w-1.5 h-1.5 rounded-full bg-cyan-400" />
             <span className="text-zinc-400">BOB</span>
           </div>
