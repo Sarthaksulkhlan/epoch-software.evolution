@@ -48,6 +48,8 @@ import type {
 
 const iso = (ms: number): string => new Date(ms).toISOString();
 const pct = (value: number): number => Math.round(value * 100);
+const incidentStatus = (i: Incident): 'ACTIVE' | 'MITIGATED' | 'RESOLVED' =>
+  i.status === 'resolved' ? 'RESOLVED' : i.status === 'wont_fix' ? 'MITIGATED' : 'ACTIVE';
 const SCORE: Record<InvariantStatus, number> = { HOLDING: 100, WEAKENED: 50, VIOLATED: 0 };
 
 export function epochIndex(epochId: string | undefined): number {
@@ -263,7 +265,7 @@ export function consoleIncident(i: Incident): ConsoleIncident {
     blastRadiusSummary: scan?.probes?.find(p => p.id === probeId)?.detail ?? i.signal,
     earliestPlausibleContributingMutationId: chain.earliestPlausible?.mutationId ?? '',
     candidateCausalChain: chain.chain,
-    status: i.status === 'resolved' ? 'RESOLVED' : i.status === 'wont_fix' ? 'MITIGATED' : 'ACTIVE',
+    status: incidentStatus(i),
     invariantsViolated: (scan?.invariants ?? []).filter(r => r.status === 'VIOLATED').map(r => r.invariantId)
   };
 }
@@ -388,7 +390,7 @@ export function consoleGraph(recent = 6): { nodes: GraphNodeData[]; edges: Graph
   }
   incidents.listIncidents().forEach((i, index) => {
     const at = /@(M-\d+)$/.exec(i.reproduction_ref ?? '')?.[1];
-    nodes.push({ id: i.incident_id, type: 'IncidentNode', label: i.incident_id, sublabel: shortTitle(i.signal, 40), epoch: epochIndex(at ? mutations.getMutation(at)?.epoch_id : undefined), status: i.status.toUpperCase(), severity: i.severity.toUpperCase(), x: (at ? x.get(at) : undefined) ?? 80 + index * 150, y: 300, isCausalChain: i.status !== 'resolved' });
+    nodes.push({ id: i.incident_id, type: 'IncidentNode', label: i.incident_id, sublabel: shortTitle(i.signal, 40), epoch: epochIndex(at ? mutations.getMutation(at)?.epoch_id : undefined), status: incidentStatus(i), severity: i.severity.toUpperCase(), x: (at ? x.get(at) : undefined) ?? 80 + index * 150, y: 300, isCausalChain: i.status !== 'resolved' });
   });
   invariants.listInvariants().forEach((inv, index) => {
     nodes.push({ id: inv.invariant_id, type: 'InvariantNode', label: inv.invariant_id, sublabel: getInvariantSpec(inv.invariant_id)?.name ?? '', epoch: 0, status: inv.status, x: 80 + index * 220, y: 420 });
@@ -459,7 +461,10 @@ export function consoleScenario(simulation: Simulation, scenario: Scenario): Cou
     measured: scenario.status === 'COMPLETED',
     recommended,
     changedFiles: scenario.changes,
-    selected: simulation.selected_scenario_id === scenario.scenario_id
+    selected: simulation.selected_scenario_id === scenario.scenario_id,
+    ...(simulation.selected_scenario_id === scenario.scenario_id && simulation.outcome_ref
+      ? { remediationWorkflowId: simulation.outcome_ref }
+      : {})
   };
 }
 

@@ -209,6 +209,8 @@ export interface CounterfactualScenario {
   recommended?: boolean;
   changedFiles?: string[];
   selected?: boolean;
+  /** Present on the adopted scenario: the remediation workflow opened by futuresSimulator.select. */
+  remediationWorkflowId?: string;
 }
 
 export interface GraphNodeData {

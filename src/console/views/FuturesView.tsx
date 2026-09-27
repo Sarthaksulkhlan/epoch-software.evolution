@@ -156,7 +156,7 @@ export const FuturesView: React.FC = () => {
               </div>
               <button
                 type="button"
-                onClick={() => navigate('/')}
+                onClick={() => navigate(adoptedScenario.remediationWorkflowId ? `/?workflowId=${encodeURIComponent(adoptedScenario.remediationWorkflowId)}` : '/')}
                 className="btn-control flex items-center gap-1.5 px-3 py-1 text-xs text-zinc-300 hover:text-white bg-zinc-900 border border-zinc-700 rounded-sm hover:bg-zinc-800 uppercase tracking-wider self-start sm:self-auto"
               >
                 <span>Open in Current</span>

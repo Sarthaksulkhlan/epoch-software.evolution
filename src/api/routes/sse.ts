@@ -28,6 +28,9 @@ export function streamEvents(transform: (event: PlatformEvent) => SseMessage[]) 
     eventBus.onAny(handler);
     const keepAlive = setInterval(() => { void stream.writeSSE({ event: 'ping', data: '{}' }); }, KEEP_ALIVE_MS);
 
+    // Signal that the stream is open immediately so clients don't wait up to 25 s.
+    await stream.writeSSE({ event: 'ready', data: '{}' });
+
     stream.onAbort(() => {
       open = false;
       eventBus.offAny(handler);

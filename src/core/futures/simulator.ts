@@ -170,7 +170,7 @@ export class FuturesSimulator {
       incidents.updateIncidentStatus(incident.incident_id, 'remediation_in_progress');
     }
 
-    const next: Simulation = { ...simulation, selected_scenario_id: scenarioId };
+    const next: Simulation = { ...simulation, selected_scenario_id: scenarioId, outcome_ref: workflow.workflow_id };
     simulations.updateSimulation(next);
     eventBus.emit('simulation.updated', { simulationId, selectedScenarioId: scenarioId, workflowId: workflow.workflow_id, actor });
     return { simulation: next, workflowId: workflow.workflow_id };

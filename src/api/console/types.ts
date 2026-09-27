@@ -161,6 +161,8 @@ export interface CounterfactualScenario {
   invariantOutcomes: { invariantId: string; invariantName: string; projectedStatus: ConsoleInvariantStatus; rationale: string }[];
   tradeoffs: { pros: string[]; cons: string[] };
   projectedEvidence: { title: string; type: string; finding: string }[];
+  /** Present on the adopted scenario: the remediation workflow opened by futuresSimulator.select. */
+  remediationWorkflowId?: string;
 }
 
 export interface ActivityEvent {
