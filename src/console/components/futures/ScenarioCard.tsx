@@ -1,44 +1,79 @@
 import React from 'react';
 import type { CounterfactualScenario } from '../../types';
 import { StatusBadge } from '../shared/StatusBadge';
-import { Check, X, ArrowRight, ShieldCheck, AlertTriangle, Layers, Cpu } from 'lucide-react';
+import { Check, X, Cpu } from 'lucide-react';
 
 interface ScenarioCardProps {
   scenario: CounterfactualScenario;
   isSelected: boolean;
+  /** This future has been adopted. */
   isApplied: boolean;
+  /** An adoption request is in flight. */
+  isAdopting?: boolean;
+  /** A different future from this branch point is already adopted. */
+  otherAdopted?: boolean;
   onSelect: () => void;
   onInitiateRemediation: () => void;
 }
 
+/** "A" for "A · Keep the current path". */
+const futureLetter = (s: CounterfactualScenario) => s.scenarioId ?? s.title.split(' · ')[0];
+/** "Keep the current path" for "A · Keep the current path". */
+const futureName = (s: CounterfactualScenario) => {
+  const prefix = `${futureLetter(s)} · `;
+  return s.strategyName.startsWith(prefix) ? s.strategyName.slice(prefix.length) : s.strategyName;
+};
+
 export const ScenarioCard: React.FC<ScenarioCardProps> = ({
   scenario,
   isApplied,
+  isAdopting = false,
+  otherAdopted = false,
   onInitiateRemediation
 }) => {
+  const notMeasured = scenario.measured === false;
+  const label = isApplied
+    ? 'Adopted'
+    : otherAdopted
+    ? 'Another future adopted'
+    : notMeasured
+    ? 'Not measured yet'
+    : isAdopting
+    ? 'Adopting…'
+    : 'Adopt this future';
+  const disabled = isApplied || otherAdopted || notMeasured || isAdopting;
+  const measuredWord = notMeasured ? 'Projected' : 'Measured';
+
   return (
     <div className="rounded-sm border border-zinc-800/80 bg-[#08090d] p-5 font-mono select-none space-y-4">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-zinc-800">
         <div>
           <div className="flex items-center gap-2 mb-1 text-xs">
-            <span className="font-bold text-zinc-100">{scenario.title.split(':')[0]}</span>
+            <span className="font-bold text-zinc-100 uppercase">Future {futureLetter(scenario)}</span>
             <span className="text-zinc-600">·</span>
-            <span className="text-zinc-400">{scenario.strategyName}</span>
+            <span className="text-zinc-400">
+              {notMeasured ? 'Not measured yet' : 'Measured in its own worktree'}
+              {scenario.recommended ? ' · recommended' : ''}
+            </span>
           </div>
-          <h2 className="font-sans text-sm font-bold text-zinc-100">{scenario.title}</h2>
+          <h2 className="font-sans text-sm font-bold text-zinc-100">{futureName(scenario)}</h2>
         </div>
 
         <button
+          type="button"
           onClick={onInitiateRemediation}
+          disabled={disabled}
           className={`px-4 py-1.5 rounded-sm text-xs font-semibold transition-colors flex items-center gap-1.5 uppercase tracking-wider ${
             isApplied
-              ? 'bg-emerald-900/60 text-emerald-300 border border-emerald-500/50'
+              ? 'bg-emerald-900/60 text-emerald-300 border border-emerald-500/50 cursor-default'
+              : disabled
+              ? 'bg-zinc-900 text-zinc-500 border border-zinc-800 cursor-not-allowed'
               : 'bg-zinc-800 hover:bg-zinc-700 text-white border border-zinc-600'
           }`}
         >
           <Cpu className="w-3.5 h-3.5" />
-          <span>{isApplied ? 'Selected Path Active' : 'Initiate Human Remediation'}</span>
+          <span>{label}</span>
         </button>
       </div>
 
@@ -47,7 +82,7 @@ export const ScenarioCard: React.FC<ScenarioCardProps> = ({
         <div className="md:col-span-8 space-y-3">
           <div>
             <div className="text-[10px] uppercase tracking-widest text-zinc-500 mb-1">
-              Architectural Trajectory Hypothesis
+              What this future changes
             </div>
             <p className="font-sans text-xs text-zinc-300 leading-relaxed bg-[#06070a] p-3 rounded-sm border border-zinc-800">
               {scenario.description}
@@ -88,15 +123,15 @@ export const ScenarioCard: React.FC<ScenarioCardProps> = ({
           </div>
         </div>
 
-        {/* Right side: Invariants & Evidence Projection */}
+        {/* Right side: Invariants & Evidence */}
         <div className="md:col-span-4 space-y-3">
           <div className="p-3 rounded-sm bg-[#06070a] border border-zinc-800 space-y-2">
             <div className="text-[10px] uppercase tracking-widest text-zinc-500">
-              Projected Invariant Health
+              {measuredWord} Invariant Health
             </div>
             <div className="space-y-1.5">
               {scenario.invariantOutcomes.map(inv => (
-                <div key={inv.invariantId} className="flex items-center justify-between text-xs">
+                <div key={inv.invariantId} className="flex items-center justify-between text-xs" title={inv.invariantName}>
                   <span className="text-zinc-300 text-[11px] truncate max-w-[140px]">{inv.invariantId}</span>
                   <StatusBadge status={inv.projectedStatus} size="sm" showDot={false} />
                 </div>
@@ -106,7 +141,7 @@ export const ScenarioCard: React.FC<ScenarioCardProps> = ({
 
           <div className="p-3 rounded-sm bg-[#06070a] border border-zinc-800 space-y-1.5">
             <div className="text-[10px] uppercase tracking-widest text-zinc-500">
-              Projected Evidence Findings
+              {measuredWord} Evidence Findings
             </div>
             <div className="space-y-1 text-xs">
               {scenario.projectedEvidence.map((ev, idx) => (

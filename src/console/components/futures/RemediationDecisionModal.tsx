@@ -1,21 +1,44 @@
 import React from 'react';
 import type { CounterfactualScenario } from '../../types';
-import { ArrowRight, X, AlertTriangle, Cpu, ShieldCheck } from 'lucide-react';
+import { ArrowRight, X, AlertTriangle, Cpu } from 'lucide-react';
 
 interface RemediationDecisionModalProps {
   scenario: CounterfactualScenario;
   isOpen: boolean;
   onClose: () => void;
   onConfirm: () => void;
+  /** The adoption request is in flight. */
+  isSubmitting?: boolean;
+  /** Human-readable reason the last adoption failed. */
+  error?: string | null;
 }
+
+/** "A" for "A · Keep the current path". */
+const futureLetter = (s: CounterfactualScenario) => s.scenarioId ?? s.title.split(' · ')[0];
+/** "Keep the current path" for "A · Keep the current path". */
+const futureName = (s: CounterfactualScenario) => {
+  const prefix = `${futureLetter(s)} · `;
+  return s.strategyName.startsWith(prefix) ? s.strategyName.slice(prefix.length) : s.strategyName;
+};
+/** EPOCH counts changed files; it does not estimate calendar time. */
+const filesChanged = (s: CounterfactualScenario) => s.changedFiles?.length || s.projectedTimeDays;
 
 export const RemediationDecisionModal: React.FC<RemediationDecisionModalProps> = ({
   scenario,
   isOpen,
   onClose,
-  onConfirm
+  onConfirm,
+  isSubmitting = false,
+  error = null
 }) => {
   if (!isOpen) return null;
+
+  const integrityTone =
+    scenario.projectedBoundaryIntegrity >= 80
+      ? 'text-emerald-400'
+      : scenario.projectedBoundaryIntegrity >= 60
+      ? 'text-amber-400'
+      : 'text-rose-400';
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-sm animate-in fade-in duration-150 font-mono select-none">
@@ -25,12 +48,14 @@ export const RemediationDecisionModal: React.FC<RemediationDecisionModalProps> =
           <div className="flex items-center gap-2">
             <Cpu className="w-4 h-4 text-zinc-300" />
             <h3 className="font-bold text-zinc-100 text-xs uppercase tracking-wider">
-              Confirm Architectural Remediation Dispatch
+              Adopt this future?
             </h3>
           </div>
           <button
+            type="button"
             onClick={onClose}
-            className="text-zinc-500 hover:text-zinc-300 p-1"
+            disabled={isSubmitting}
+            className="text-zinc-500 hover:text-zinc-300 p-1 disabled:opacity-40 disabled:cursor-not-allowed"
             aria-label="Close"
           >
             <X className="w-4 h-4" />
@@ -41,23 +66,23 @@ export const RemediationDecisionModal: React.FC<RemediationDecisionModalProps> =
         <div className="space-y-3 text-xs leading-relaxed text-zinc-300">
           <div className="p-3 rounded-sm bg-[#06070a] border border-zinc-800">
             <div className="text-[10px] text-zinc-500 uppercase tracking-widest mb-1">
-              Target Intervention Path
+              Future {futureLetter(scenario)}
             </div>
-            <div className="font-bold text-zinc-100 font-sans text-sm">{scenario.title}</div>
-            <div className="font-sans text-zinc-400 text-xs mt-0.5">{scenario.strategyName}</div>
+            <div className="font-bold text-zinc-100 font-sans text-sm">{futureName(scenario)}</div>
+            <div className="font-sans text-zinc-400 text-xs mt-0.5">{scenario.description}</div>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div className="p-2.5 rounded-sm bg-[#06070a] border border-zinc-800">
-              <span className="text-[10px] text-zinc-500 uppercase tracking-widest block">Projected Recovery</span>
-              <span className="text-emerald-400 font-bold text-sm tabular-nums">
+              <span className="text-[10px] text-zinc-500 uppercase tracking-widest block">Measured Integrity</span>
+              <span className={`${integrityTone} font-bold text-sm tabular-nums`}>
                 {scenario.projectedBoundaryIntegrity}% INTEGRITY
               </span>
             </div>
             <div className="p-2.5 rounded-sm bg-[#06070a] border border-zinc-800">
-              <span className="text-[10px] text-zinc-500 uppercase tracking-widest block">Synthesizer Effort</span>
+              <span className="text-[10px] text-zinc-500 uppercase tracking-widest block">Files changed</span>
               <span className="text-zinc-200 font-bold text-sm tabular-nums">
-                ~{scenario.projectedTimeDays} DAYS
+                {filesChanged(scenario)}
               </span>
             </div>
           </div>
@@ -66,29 +91,35 @@ export const RemediationDecisionModal: React.FC<RemediationDecisionModalProps> =
             <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
             <div>
               <strong className="font-mono text-[11px] uppercase block text-amber-300">Human Governance Sign-off:</strong>
-              Confirming this remediation path will queue task synthesis on the IBM Bob 2.0 AI execution fabric
-              and register proposed mutation M-1090 into the WEAVE lifecycle plane.
+              Adopting applies this future's measured diff to the sample repository and opens a remediation workflow.
+              EPOCH's specialists then check it, and nothing is recorded until a person approves it at the gate.
             </div>
           </div>
 
-          <div className="text-[10px] text-zinc-500">
-            TODO(IBM Bob: POST /api/v1/simulations/remediate)
-          </div>
+          {error && (
+            <div role="alert" className="p-2.5 rounded-sm bg-rose-950/30 border border-rose-500/40 text-rose-300 text-xs font-sans">
+              {error}
+            </div>
+          )}
         </div>
 
         {/* Footer */}
         <div className="pt-3 border-t border-zinc-800 flex items-center justify-between">
           <button
+            type="button"
             onClick={onClose}
-            className="px-3 py-1.5 text-xs text-zinc-500 hover:text-zinc-300 uppercase tracking-wider"
+            disabled={isSubmitting}
+            className="px-3 py-1.5 text-xs text-zinc-500 hover:text-zinc-300 uppercase tracking-wider disabled:opacity-40 disabled:cursor-not-allowed"
           >
             Cancel
           </button>
           <button
+            type="button"
             onClick={onConfirm}
-            className="flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-white bg-zinc-800 hover:bg-zinc-700 border border-zinc-600 rounded-sm transition-colors uppercase tracking-wider shadow-sm"
+            disabled={isSubmitting}
+            className="flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-white bg-zinc-800 hover:bg-zinc-700 border border-zinc-600 rounded-sm transition-colors uppercase tracking-wider shadow-sm disabled:opacity-60 disabled:cursor-wait"
           >
-            <span>Dispatch to IBM Bob 2.0</span>
+            <span>{isSubmitting ? 'Adopting…' : 'Adopt future'}</span>
             <ArrowRight className="w-3.5 h-3.5" />
           </button>
         </div>
