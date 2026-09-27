@@ -48,6 +48,11 @@ export const TrajectoryView: React.FC = () => {
     envelope
   } = useTrajectory();
 
+  const openFindingsText =
+    openDriftFindings.length === 0
+      ? 'no open drift findings'
+      : `${openDriftFindings.length} open drift finding${openDriftFindings.length === 1 ? '' : 's'}`;
+
   useEffect(() => {
     if (nodeIdParam) {
       setSelectedNodeId(nodeIdParam);
@@ -109,7 +114,7 @@ export const TrajectoryView: React.FC = () => {
       ) : (
         <>
           {/* Prominent Architectural Drift Banner with Inline Divergence Schematic (Stagger 1) */}
-          {activeDriftFinding ? (
+          {activeDriftFinding && (
             <div className="reveal-delay-1">
               <DriftAlertBanner
                 driftFinding={activeDriftFinding}
@@ -125,7 +130,10 @@ export const TrajectoryView: React.FC = () => {
                 onSelectFinding={handleSelectDrift}
               />
             </div>
-          ) : (
+          )}
+
+          {/* Envelope status: always shown once known, so a recovery is visible even while a warning stays open */}
+          {(envelope || !activeDriftFinding) && (
             <div className="reveal-delay-1">
               {envelope && !envelope.withinEnvelope ? (
                 <div className="rounded-sm border border-amber-500/45 bg-gradient-to-b from-[#120e09] via-[#0d0a07] to-[#080706] font-mono select-none overflow-hidden p-3 flex items-center gap-3 shadow-[0_4px_24px_rgba(0,0,0,0.5),inset_0_1px_0_0_rgba(245,158,11,0.1)]">
@@ -138,7 +146,7 @@ export const TrajectoryView: React.FC = () => {
                     </span>
                     <span className="text-zinc-600">·</span>
                     <span className="text-[10px] text-zinc-400">
-                      boundary integrity {pct(envelope.boundaryIntegrityScore)} · coupling {pct(envelope.couplingScore)} · no open drift findings
+                      boundary integrity {pct(envelope.boundaryIntegrityScore)} · coupling {pct(envelope.couplingScore)} · {openFindingsText}
                     </span>
                   </div>
                 </div>
@@ -154,8 +162,8 @@ export const TrajectoryView: React.FC = () => {
                     <span className="text-zinc-600">·</span>
                     <span className="text-[10px] text-zinc-400">
                       {envelope
-                        ? `boundary integrity ${pct(envelope.boundaryIntegrityScore)} · coupling ${pct(envelope.couplingScore)} · no open drift findings`
-                        : 'no open drift findings'}
+                        ? `boundary integrity ${pct(envelope.boundaryIntegrityScore)} · coupling ${pct(envelope.couplingScore)} · ${openFindingsText}`
+                        : openFindingsText}
                     </span>
                   </div>
                 </div>
