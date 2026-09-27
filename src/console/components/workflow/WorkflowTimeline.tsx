@@ -41,6 +41,22 @@ export const WorkflowTimeline: React.FC<WorkflowTimelineProps> = ({
 
   const activeIndex = getStageIndex(currentState);
 
+  // Stage details come from the live workflow.
+  const tasks = workflow?.tasks ?? [];
+  const evidence = workflow?.evidence ?? [];
+  const gate = workflow?.decisionGate;
+  const affectedInvariants = gate?.riskAssessment.affectedInvariants ?? [];
+  const diffEvidence = evidence.filter(e => e.type === 'CODE_DIFF');
+  const testEvidence = evidence.filter(e => e.type === 'TEST_RESULTS');
+  const metricOf = (label: string) => testEvidence.reduce((max, e) => {
+    const value = Number(e.metrics?.find(m => m.label === label)?.value ?? 0);
+    return Number.isFinite(value) && value > max ? value : max;
+  }, 0);
+  const testsPassed = metricOf('Passed');
+  const testsFailed = metricOf('Failed');
+  const failCount = evidence.filter(e => e.status === 'FAIL').length;
+  const warnCount = evidence.filter(e => e.status === 'WARN').length;
+
   const handleStageClick = (stageKey: string) => {
     if (!onSelectStage) return;
     if (selectedStageKey === stageKey) {
@@ -216,28 +232,28 @@ export const WorkflowTimeline: React.FC<WorkflowTimelineProps> = ({
           {/* INTAKE Detail */}
           {selectedStageKey === 'INTAKE' && (
             <div className="space-y-2 text-zinc-300 font-sans">
-              <div className="flex items-center gap-2 text-xs font-mono text-zinc-400">
+              <div className="flex flex-wrap items-center gap-2 text-xs font-mono text-zinc-400">
                 <span className="text-zinc-500">Project:</span>
-                <span className="text-zinc-200 font-bold">{workflow?.projectId || 'HYPERION-COMMERCE'}</span>
+                <span className="text-zinc-200 font-bold">{workflow ? `${workflow.projectName} (${workflow.repo})` : '—'}</span>
                 <span className="text-zinc-600">·</span>
-                <span className="text-zinc-500">Directive:</span>
-                <span className="text-amber-300 font-bold">EU-2026-PAY-882</span>
+                <span className="text-zinc-500">Workflow:</span>
+                <span className="text-amber-300 font-bold">{workflow?.id ?? '—'}</span>
               </div>
               <p className="text-xs text-zinc-300 leading-relaxed font-sans">
-                {workflow?.requirementDescription || 'In response to EU statutory compliance directive (EU-2026-PAY-882), merchant accounts must support 30-day chargeback claims without breaking settlement ledger reconciliations.'}
+                {workflow?.requirementDescription || 'No requirement recorded.'}
               </p>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-1 font-mono text-[10px]">
                 <div className="p-2 bg-[#090b10] border border-zinc-800 rounded">
-                  <span className="text-zinc-500 block uppercase">Baseline Window</span>
-                  <span className="text-zinc-200 font-bold text-xs mt-0.5 block">15 Calendar Days</span>
+                  <span className="text-zinc-500 block uppercase">Started</span>
+                  <span className="text-zinc-200 font-bold text-xs mt-0.5 block">{workflow ? new Date(workflow.initiatedAt).toLocaleString() : '—'}</span>
                 </div>
                 <div className="p-2 bg-[#090b10] border border-zinc-800 rounded">
-                  <span className="text-zinc-500 block uppercase">Target Requirement</span>
-                  <span className="text-cyan-300 font-bold text-xs mt-0.5 block">30 Calendar Days</span>
+                  <span className="text-zinc-500 block uppercase">Branch</span>
+                  <span className="text-cyan-300 font-bold text-xs mt-0.5 block">{workflow?.branch ?? '—'}</span>
                 </div>
                 <div className="p-2 bg-[#090b10] border border-zinc-800 rounded">
                   <span className="text-zinc-500 block uppercase">Lifecycle Status</span>
-                  <span className="text-emerald-400 font-bold text-xs mt-0.5 block">Synthesized & Parsed</span>
+                  <span className="text-emerald-400 font-bold text-xs mt-0.5 block">{currentState} · step {workflow?.completedSteps ?? 0}/{workflow?.totalSteps ?? 6}</span>
                 </div>
               </div>
             </div>
@@ -247,21 +263,24 @@ export const WorkflowTimeline: React.FC<WorkflowTimelineProps> = ({
           {selectedStageKey === 'PLANNING' && (
             <div className="space-y-2 text-zinc-300">
               <p className="text-xs text-zinc-300 leading-relaxed font-sans">
-                The WEAVE workflow planner decomposed the intake requirement into 4 specialist tasks, allocating IBM Bob 2.0 synthesizers and continuous boundary sentinels.
+                EPOCH loaded the context bundle and planned {tasks.length} specialist task(s) for this workflow.
               </p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1 font-mono text-[10px]">
                 <div className="p-2 bg-[#090b10] border border-zinc-800 rounded space-y-1">
                   <span className="text-zinc-500 block uppercase">Specialist Tasks Planned</span>
-                  <div className="text-zinc-200">TASK-201: Boundary Invariant Pre-check</div>
-                  <div className="text-zinc-200">TASK-202: Code Synthesis (Rule Engine)</div>
-                  <div className="text-zinc-200">TASK-203: Sentinel Static Coupling Audit</div>
-                  <div className="text-zinc-200">TASK-204: Evidence Dossier Compilation</div>
+                  {tasks.length === 0 && <div className="text-zinc-500">None yet</div>}
+                  {tasks.map(t => (
+                    <div key={t.id} className="text-zinc-200 truncate">
+                      {t.agentName}: {t.status}
+                    </div>
+                  ))}
                 </div>
                 <div className="p-2 bg-[#090b10] border border-zinc-800 rounded space-y-1">
                   <span className="text-zinc-500 block uppercase">Invariants Under Watch</span>
-                  <div className="text-amber-300">INV-BOUND-04: Cross-Service Ledger Isolation</div>
-                  <div className="text-zinc-300">INV-TIME-02: Temporal Archival Parity</div>
-                  <div className="text-zinc-300">INV-AUTH-01: Idempotent Dispute Token Validation</div>
+                  {affectedInvariants.length === 0 && <div className="text-zinc-400">No invariant transition predicted</div>}
+                  {affectedInvariants.map(id => (
+                    <div key={id} className="text-amber-300">{id}</div>
+                  ))}
                 </div>
               </div>
             </div>
@@ -271,19 +290,15 @@ export const WorkflowTimeline: React.FC<WorkflowTimelineProps> = ({
           {selectedStageKey === 'IMPLEMENTATION' && (
             <div className="space-y-2 text-zinc-300 font-sans">
               <p className="text-xs text-zinc-300 leading-relaxed">
-                IBM Bob 2.0 synthesized the window calculation updates across dispute rule engine modules, modifying eligibility thresholds from 15 to 30 days.
+                The change is made in the sample repository (by IBM Bob, or by applying an adopted future&apos;s diff); EPOCH records what changed.
               </p>
               <div className="p-2.5 bg-[#090b10] border border-zinc-800 rounded font-mono text-[10px] space-y-1">
-                <div className="flex items-center justify-between text-zinc-400">
-                  <span>File: <strong className="text-zinc-200">services/dispute/src/eligibility/ruleEngine.ts</strong></span>
-                  <span className="text-emerald-400">+14 additions / -3 deletions</span>
-                </div>
-                <div className="text-zinc-400">
-                  Generated Mutation ID: <strong className="text-amber-300">M-1042</strong> (Pull Request #892)
-                </div>
-                <div className="text-amber-400/90 text-[10px] pt-1 border-t border-zinc-800">
-                  ⚠ Synthesis Warning: Archival cron job assumes immutable settlements after 15 days.
-                </div>
+                {diffEvidence.length === 0 && <div className="text-zinc-400">No code-diff evidence recorded yet.</div>}
+                {diffEvidence.slice(0, 4).map(e => (
+                  <div key={e.id} className="text-zinc-300 leading-snug">
+                    <strong className="text-zinc-200">{e.title}:</strong> {e.summary}
+                  </div>
+                ))}
               </div>
             </div>
           )}
@@ -292,20 +307,22 @@ export const WorkflowTimeline: React.FC<WorkflowTimelineProps> = ({
           {selectedStageKey === 'VERIFICATION' && (
             <div className="space-y-2 text-zinc-300">
               <p className="text-xs text-zinc-300 leading-relaxed font-sans">
-                Regression oracles and static coupling audits evaluated the synthesized changes prior to human governance review.
+                The EPOCH scanner ran the service&apos;s tests, runtime probes and invariant checks against the working tree before the gate.
               </p>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 font-mono text-[10px]">
                 <div className="p-2 bg-[#090b10] border border-zinc-800 rounded">
-                  <span className="text-zinc-500 block uppercase">Regression Suites</span>
-                  <span className="text-emerald-400 font-bold text-xs mt-0.5 block">42/42 Passed</span>
+                  <span className="text-zinc-500 block uppercase">Tests</span>
+                  <span className={`font-bold text-xs mt-0.5 block ${testsFailed > 0 ? 'text-rose-400' : 'text-emerald-400'}`}>
+                    {testEvidence.length === 0 ? 'Not run yet' : `${testsPassed} passed / ${testsFailed} failed`}
+                  </span>
                 </div>
                 <div className="p-2 bg-[#090b10] border border-zinc-800 rounded">
-                  <span className="text-zinc-500 block uppercase">Boundary Sentinel</span>
-                  <span className="text-amber-400 font-bold text-xs mt-0.5 block">1 Invariant Weakened</span>
+                  <span className="text-zinc-500 block uppercase">Findings</span>
+                  <span className="text-amber-400 font-bold text-xs mt-0.5 block">{failCount} fail · {warnCount} warn</span>
                 </div>
                 <div className="p-2 bg-[#090b10] border border-zinc-800 rounded">
                   <span className="text-zinc-500 block uppercase">Evidence Items</span>
-                  <span className="text-cyan-300 font-bold text-xs mt-0.5 block">5 Findings Attached</span>
+                  <span className="text-cyan-300 font-bold text-xs mt-0.5 block">{evidence.length} Findings Attached</span>
                 </div>
               </div>
             </div>
@@ -315,15 +332,15 @@ export const WorkflowTimeline: React.FC<WorkflowTimelineProps> = ({
           {selectedStageKey === 'APPROVAL_GATE' && (
             <div className="space-y-2 text-zinc-300 font-sans">
               <p className="text-xs text-zinc-300 leading-relaxed">
-                Mandatory human-in-the-loop checkpoint GATE-774. Architectural governance gate blocks automatic promotion until human principal signs off with explicit commit confirmation.
+                Human-in-the-loop checkpoint {gate?.id ?? ''}. Nothing is recorded until a person approves; there is no automatic approval.
               </p>
               <div className="p-2.5 bg-[#090b10] border border-amber-500/30 rounded font-mono text-[10px] space-y-1 text-amber-200">
                 <div className="flex items-center justify-between">
-                  <span className="font-bold">Checkpoint: GATE-774</span>
-                  <span className="text-amber-400 uppercase font-bold">Pending Review</span>
+                  <span className="font-bold">Checkpoint: {gate?.id ?? '—'}</span>
+                  <span className="text-amber-400 uppercase font-bold">{gate?.status.replace('_', ' ') ?? '—'}</span>
                 </div>
                 <div className="text-zinc-300 text-[10px]">
-                  Risk: Modification introduces latency anomaly in settlement ledger partition archival.
+                  Risk {gate?.riskAssessment.level ?? '—'}: {gate?.riskAssessment.summary ?? 'No decision package yet.'}
                 </div>
               </div>
             </div>
@@ -333,11 +350,13 @@ export const WorkflowTimeline: React.FC<WorkflowTimelineProps> = ({
           {selectedStageKey === 'DEPLOYED' && (
             <div className="space-y-2 text-zinc-300 font-mono text-xs">
               <div className="flex items-center justify-between text-zinc-400">
-                <span>Target Subsystem: <strong className="text-zinc-200">Hyperion Commerce v3.4.1</strong></span>
-                <span>Branch: <strong className="text-cyan-300">feat/extend-chargeback-30d</strong></span>
+                <span>Target: <strong className="text-zinc-200">{workflow ? `${workflow.projectName} (${workflow.repo})` : '—'}</strong></span>
+                <span>Branch: <strong className="text-cyan-300">{workflow?.branch ?? '—'}</strong></span>
               </div>
               <p className="text-xs text-zinc-400 font-sans leading-relaxed">
-                Explicit confirmation required before commit promotion. Once confirmed by the user, changes transition to the committed state.
+                {currentState === 'DEPLOYED'
+                  ? `Approved by ${gate?.decidedBy ?? 'a reviewer'}: the change is committed to the sample repository and recorded as a mutation. EPOCH never deploys.`
+                  : 'After approval the change is committed to the sample repository and recorded as a mutation. EPOCH never deploys.'}
               </p>
             </div>
           )}

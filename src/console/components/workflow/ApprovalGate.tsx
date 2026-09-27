@@ -6,17 +6,28 @@ import { CheckCircle2, XCircle, AlertTriangle, ShieldCheck, RotateCcw, Info, Ter
 interface ApprovalGateProps {
   decisionGate: DecisionGate;
   evidenceList: EvidenceItem[];
-  isDemoActionApplied: boolean;
+  /** False until the workflow reaches AWAITING_APPROVAL: the API refuses a decision before that. */
+  canDecide?: boolean;
+  isSubmitting?: boolean;
+  /** Shown instead of the decision buttons while the gate is not open yet. */
+  waitingNote?: string;
+  /** The mutation the approval recorded, when known. */
+  recordedMutationId?: string;
+  repoLabel?: string;
   onApprove: (rationale?: string) => void;
   onReject: (rationale?: string) => void;
-  onReset: () => void;
+  onReset?: () => void;
   onSelectEvidence?: (evidenceId: string) => void;
 }
 
 export const ApprovalGate: React.FC<ApprovalGateProps> = ({
   decisionGate,
   evidenceList,
-  isDemoActionApplied,
+  canDecide = true,
+  isSubmitting = false,
+  waitingNote,
+  recordedMutationId,
+  repoLabel,
   onApprove,
   onReject,
   onReset,
@@ -28,7 +39,6 @@ export const ApprovalGate: React.FC<ApprovalGateProps> = ({
 
   const isPending = decisionGate.status === 'PENDING_REVIEW';
   const isApproved = decisionGate.status === 'APPROVED';
-  const isRejected = decisionGate.status === 'REJECTED';
 
   const handleInitialApproveClick = () => {
     // APPROVE != AUTOMATIC COMMIT: Open explicit confirmation dialog
@@ -56,13 +66,13 @@ export const ApprovalGate: React.FC<ApprovalGateProps> = ({
             {/* Operational notification badge with slow 6.0s restrained breathing pulse */}
             <span className="px-2 py-0.5 rounded-sm bg-amber-950/80 text-amber-300 border border-amber-500/60 uppercase font-bold text-[10px] flex items-center gap-1.5 shadow-sm">
               <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse-warn-slow" />
-              APPROVAL REQUIRED
+              {isPending ? (canDecide ? 'APPROVAL REQUIRED' : 'GATE NOT OPEN YET') : `DECIDED: ${decisionGate.status}`}
             </span>
             <span className="text-zinc-600">·</span>
             <span className="text-zinc-300 font-bold">{decisionGate.id}</span>
             <span className="text-zinc-600">·</span>
             <span className="text-zinc-400 text-[11px] font-sans">
-              {decisionGate.requiredEvidenceIds.length} evidence verified · {decisionGate.riskAssessment.affectedInvariants.length} invariant weakened
+              Risk {decisionGate.riskAssessment.level} · {decisionGate.requiredEvidenceIds.length} high-severity finding(s) · {decisionGate.riskAssessment.affectedInvariants.length} invariant transition(s)
             </span>
           </div>
 
@@ -87,43 +97,62 @@ export const ApprovalGate: React.FC<ApprovalGateProps> = ({
                 <span>{isReviewExpanded ? 'Hide Review' : 'Review Dossier'}</span>
                 {isReviewExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
               </button>
-              <button
-                type="button"
-                onClick={() => onReject(rationale)}
-                className="btn-control flex items-center gap-1 px-3 py-1.5 text-xs font-semibold text-rose-300 bg-rose-950/40 hover:bg-rose-900/60 border border-rose-500/50 rounded-sm uppercase tracking-wider"
-              >
-                <XCircle className="w-3.5 h-3.5 text-rose-400" />
-                <span>Reject</span>
-              </button>
-              <button
-                type="button"
-                onClick={handleInitialApproveClick}
-                className="btn-control flex items-center gap-1 px-3 py-1.5 text-xs font-semibold text-white bg-emerald-700 hover:bg-emerald-600 rounded-sm uppercase tracking-wider shadow-sm"
-              >
-                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-300" />
-                <span>Approve</span>
-              </button>
+              {canDecide ? (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => onReject(rationale)}
+                    disabled={isSubmitting}
+                    className="btn-control flex items-center gap-1 px-3 py-1.5 text-xs font-semibold text-rose-300 bg-rose-950/40 hover:bg-rose-900/60 disabled:opacity-50 disabled:cursor-wait border border-rose-500/50 rounded-sm uppercase tracking-wider"
+                  >
+                    <XCircle className="w-3.5 h-3.5 text-rose-400" />
+                    <span>Reject</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleInitialApproveClick}
+                    disabled={isSubmitting}
+                    className="btn-control flex items-center gap-1 px-3 py-1.5 text-xs font-semibold text-white bg-emerald-700 hover:bg-emerald-600 disabled:opacity-50 disabled:cursor-wait rounded-sm uppercase tracking-wider shadow-sm"
+                  >
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-300" />
+                    <span>{isSubmitting ? 'Recording…' : 'Approve'}</span>
+                  </button>
+                </>
+              ) : (
+                <span className="text-[11px] text-zinc-400 font-sans max-w-[260px] leading-snug">
+                  {waitingNote ?? 'The gate is not open yet.'}
+                </span>
+              )}
             </>
           ) : (
             <div className="flex items-center gap-3">
-              <div className="flex items-center gap-1.5 text-xs font-sans">
+              <div className="flex flex-col gap-0.5 text-xs font-sans">
                 {isApproved ? (
                   <span className="text-emerald-400 font-semibold flex items-center gap-1">
-                    <ShieldCheck className="w-4 h-4" /> COMMITTED IN DEMO
+                    <ShieldCheck className="w-4 h-4" /> APPROVED · CHANGE RECORDED{recordedMutationId ? ` AS ${recordedMutationId}` : ''}
                   </span>
                 ) : (
                   <span className="text-rose-400 font-semibold flex items-center gap-1">
-                    <ShieldAlert className="w-4 h-4" /> HALTED IN DEMO
+                    <ShieldAlert className="w-4 h-4" /> REJECTED · WORKFLOW HALTED
+                  </span>
+                )}
+                {(decisionGate.decidedBy || decisionGate.rationale) && (
+                  <span className="text-[11px] text-zinc-400">
+                    {decisionGate.decidedBy ? `by ${decisionGate.decidedBy}` : ''}
+                    {decisionGate.decidedAt ? ` · ${new Date(decisionGate.decidedAt).toLocaleTimeString()}` : ''}
+                    {decisionGate.rationale ? ` · “${decisionGate.rationale}”` : ''}
                   </span>
                 )}
               </div>
-              <button
-                onClick={onReset}
-                className="btn-control flex items-center gap-1 px-2.5 py-1 text-xs text-zinc-300 hover:text-white border border-zinc-800 rounded-sm hover:bg-zinc-900"
-              >
-                <RotateCcw className="w-3 h-3" />
-                <span>Reset</span>
-              </button>
+              {onReset && (
+                <button
+                  onClick={onReset}
+                  className="btn-control flex items-center gap-1 px-2.5 py-1 text-xs text-zinc-300 hover:text-white border border-zinc-800 rounded-sm hover:bg-zinc-900"
+                >
+                  <RotateCcw className="w-3 h-3" />
+                  <span>Reset</span>
+                </button>
+              )}
             </div>
           )}
         </div>
@@ -145,12 +174,20 @@ export const ApprovalGate: React.FC<ApprovalGateProps> = ({
           </div>
 
           <p className="text-xs text-zinc-300 font-sans leading-relaxed">
-            Human approval verified by Principal Engineer. You are about to promote synthesized changes from{' '}
-            <strong className="text-white font-mono">feat/extend-chargeback-30d</strong> to production commit.
+            Approving commits this change to{' '}
+            <strong className="text-white font-mono">{repoLabel ?? 'the sample repository'}</strong> and records it as a
+            mutation in EPOCH&apos;s history. EPOCH never deploys.
           </p>
 
           <div className="p-2 rounded bg-[#040c07] border border-emerald-500/30 text-[11px] text-emerald-200/90 font-mono">
-            Boundary Notice: Invariant <strong className="text-amber-300">INV-BOUND-04</strong> is weakened. Downstream archival partition sync scheduled.
+            {decisionGate.riskAssessment.affectedInvariants.length > 0 ? (
+              <>
+                Boundary Notice: invariant transition(s) predicted for{' '}
+                <strong className="text-amber-300">{decisionGate.riskAssessment.affectedInvariants.join(', ')}</strong>.
+              </>
+            ) : (
+              <>Boundary Notice: the verification preview predicts no invariant transitions.</>
+            )}
           </div>
 
           <div className="flex items-center justify-end gap-2 pt-1 border-t border-emerald-950">
@@ -199,8 +236,9 @@ export const ApprovalGate: React.FC<ApprovalGateProps> = ({
                       {decisionGate.riskAssessment.summary}
                     </span>
                   </div>
-                  <div className="flex items-center gap-2 pt-1 border-t border-amber-500/20 text-[11px]">
-                    <span className="text-amber-400 font-bold uppercase">Weakened Invariants:</span>
+                  <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-amber-500/20 text-[11px]">
+                    <span className="text-amber-400 font-bold uppercase">Invariant Transitions:</span>
+                    {decisionGate.riskAssessment.affectedInvariants.length === 0 && <span className="text-zinc-400">none predicted</span>}
                     {decisionGate.riskAssessment.affectedInvariants.map(invId => (
                       <span key={invId} className="px-1.5 py-0.2 rounded bg-amber-950 border border-amber-500/40 text-amber-300 font-bold">
                         {invId}
