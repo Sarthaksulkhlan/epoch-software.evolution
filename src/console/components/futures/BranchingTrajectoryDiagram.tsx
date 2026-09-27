@@ -100,13 +100,13 @@ export const BranchingTrajectoryDiagram: React.FC<BranchingTrajectoryDiagramProp
 
         {/* Tree Branch Lines with animated drawing down */}
         <div className="relative h-10 w-full flex items-center justify-center">
-          <svg className="w-full h-10 overflow-visible" viewBox="0 0 600 40">
+          <svg className="w-full h-10 overflow-visible" viewBox="0 0 600 40" preserveAspectRatio="none">
             {/* Center vertical stem down from origin */}
-            <line x1="300" y1="0" x2="300" y2="18" stroke="#52525b" strokeWidth="2" className="animate-branch-draw" />
+            <line x1="300" y1="0" x2="300" y2="18" stroke="#52525b" strokeWidth="2" vectorEffect="non-scaling-stroke" className="animate-branch-draw" />
 
             {/* Horizontal branch distributor across the futures */}
             {n > 1 && (
-              <line x1={minX} y1="18" x2={maxX} y2="18" stroke="#52525b" strokeWidth="2" className="animate-branch-draw" style={{ animationDelay: '150ms' }} />
+              <line x1={minX} y1="18" x2={maxX} y2="18" stroke="#52525b" strokeWidth="2" vectorEffect="non-scaling-stroke" className="animate-branch-draw" style={{ animationDelay: '150ms' }} />
             )}
 
             {/* Vertical drop to each future */}
@@ -116,6 +116,7 @@ export const BranchingTrajectoryDiagram: React.FC<BranchingTrajectoryDiagramProp
               return (
                 <line
                   key={scenario.id}
+                  vectorEffect="non-scaling-stroke"
                   x1={xs[sIdx]}
                   y1="18"
                   x2={xs[sIdx]}
