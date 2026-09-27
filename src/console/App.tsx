@@ -8,7 +8,7 @@ import { FuturesView } from './views/FuturesView';
 
 export const App: React.FC = () => {
   return (
-    <BrowserRouter>
+    <BrowserRouter basename="/console">
       <Routes>
         <Route path="/" element={<ConsoleLayout />}>
           <Route index element={<CurrentView />} />
