@@ -7,5 +7,6 @@ pnpm-lock.yaml
 .oxcode/
 .oxcode-memory/
 .veris/
+.claude/
 .env
 .env.*
