@@ -27,9 +27,11 @@ if (action === "file-changed") {
   };
 } else if (action === "stop") {
   url = `${API}/api/hooks/bob-activity`;
+  // The API accepts a detail of at most 2000 characters and rejects null.
+  const message = payload.last_assistant_message;
   body = {
     event: "stop",
-    detail: payload.last_assistant_message ?? null,
+    ...(typeof message === "string" && message ? { detail: message.slice(0, 2000) } : {}),
   };
 } else {
   process.exit(0);
