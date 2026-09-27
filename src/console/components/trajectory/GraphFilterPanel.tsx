@@ -1,7 +1,7 @@
 import React from 'react';
 import type { Invariant } from '../../types';
 import { StatusBadge } from '../shared/StatusBadge';
-import { Layers, ShieldCheck, Check, Radio } from 'lucide-react';
+import { Layers, ShieldCheck, Check } from 'lucide-react';
 
 interface GraphFilterPanelProps {
   components: string[];
@@ -12,32 +12,45 @@ interface GraphFilterPanelProps {
   onSelectInvariantFilter: (filter: string) => void;
   highlightCausalChain: boolean;
   onToggleCausalChain: () => void;
+  epochs: number[];
   selectedEpoch: number;
   onSelectEpoch: (epoch: number) => void;
+  originMutationId?: string;
+  openIncidentId?: string;
 }
+
+const pad2 = (n: number) => String(n).padStart(2, '0');
 
 export const GraphFilterPanel: React.FC<GraphFilterPanelProps> = ({
   components,
   activeComponent,
   onSelectComponent,
-  invariants,
   activeInvariantFilter,
   onSelectInvariantFilter,
   highlightCausalChain,
   onToggleCausalChain,
+  epochs,
   selectedEpoch,
-  onSelectEpoch
+  onSelectEpoch,
+  originMutationId,
+  openIncidentId
 }) => {
+  const causalLabel = originMutationId && openIncidentId
+    ? `${originMutationId} → ${openIncidentId}`
+    : originMutationId
+    ? `from ${originMutationId}`
+    : '';
+
   return (
     <div className="w-full lg:w-60 rounded-sm border border-zinc-800/80 bg-[#08090d] p-3 space-y-4 font-mono select-none text-xs">
       {/* Epoch Scrubber */}
       <div>
         <div className="flex items-center justify-between text-[10px] uppercase tracking-widest text-zinc-500 mb-2">
           <span>Epoch Scrubber</span>
-          <span className="text-zinc-200 font-bold">E0{selectedEpoch}</span>
+          <span className="text-zinc-200 font-bold">E{pad2(selectedEpoch)}</span>
         </div>
         <div className="grid grid-cols-5 gap-1">
-          {[0, 1, 2, 3, 4].map(ep => (
+          {epochs.map(ep => (
             <button
               key={ep}
               onClick={() => onSelectEpoch(ep)}
@@ -47,7 +60,7 @@ export const GraphFilterPanel: React.FC<GraphFilterPanelProps> = ({
                   : 'bg-[#06070a] text-zinc-400 border border-zinc-800 hover:text-zinc-200 hover:bg-zinc-900'
               }`}
             >
-              0{ep}
+              {pad2(ep)}
             </button>
           ))}
         </div>
@@ -60,9 +73,11 @@ export const GraphFilterPanel: React.FC<GraphFilterPanelProps> = ({
             <div className="text-[11px] font-semibold text-zinc-200 uppercase tracking-wide">
               Causal Chain
             </div>
-            <div className="text-[9px] text-amber-400 mt-0.5">
-              M-1042 → INC-3312
-            </div>
+            {causalLabel && (
+              <div className="text-[9px] text-amber-400 mt-0.5">
+                {causalLabel}
+              </div>
+            )}
           </div>
           <input
             type="checkbox"

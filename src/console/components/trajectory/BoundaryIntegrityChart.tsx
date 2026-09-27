@@ -17,6 +17,8 @@ interface BoundaryIntegrityChartProps {
 export const BoundaryIntegrityChart: React.FC<BoundaryIntegrityChartProps> = ({
   data
 }) => {
+  const threshold = data[0]?.threshold ?? 80;
+
   return (
     <div className="rounded-sm border border-zinc-800/80 bg-[#08090d] p-3 font-mono select-none">
       <div className="flex items-center justify-between mb-2">
@@ -28,7 +30,7 @@ export const BoundaryIntegrityChart: React.FC<BoundaryIntegrityChartProps> = ({
             <span className="inline-block w-2.5 h-0.5 bg-zinc-300" /> Integrity Score
           </span>
           <span className="flex items-center gap-1 text-rose-400">
-            <span className="inline-block w-2.5 h-0.5 bg-rose-400" /> Threshold (75)
+            <span className="inline-block w-2.5 h-0.5 bg-rose-400" /> Threshold ({threshold})
           </span>
         </div>
       </div>
@@ -69,7 +71,7 @@ export const BoundaryIntegrityChart: React.FC<BoundaryIntegrityChartProps> = ({
                 return null;
               }}
             />
-            <ReferenceLine y={75} stroke="#f43f5e" strokeDasharray="3 3" />
+            <ReferenceLine y={threshold} stroke="#f43f5e" strokeDasharray="3 3" />
             <Area
               type="monotone"
               dataKey="score"

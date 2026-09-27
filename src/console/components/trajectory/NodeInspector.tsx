@@ -1,9 +1,7 @@
 import React from 'react';
-import type { Mutation, Incident, Invariant } from '../../types';
-import type { GraphNodeData } from '../../data/mock/trajectory';
+import type { Mutation, Incident, Invariant, GraphNodeData } from '../../types';
 import { StatusBadge } from '../shared/StatusBadge';
 import { GitCommit, AlertOctagon, ShieldCheck, Clock, ArrowRight, GitBranch } from 'lucide-react';
-import { Link } from 'react-router-dom';
 
 interface NodeInspectorProps {
   selectedDetails:
@@ -14,12 +12,20 @@ interface NodeInspectorProps {
     | null;
   onSelectNodeId: (nodeId: string) => void;
   onOpenCounterfactual: (mutationId: string) => void;
+  /** Earliest plausible contributing mutation of the open incident or drift ('' when none). */
+  originMutationId?: string;
+  /** Id of the open incident, when there is one. */
+  openIncidentId?: string;
 }
+
+const pad2 = (n: number) => String(n).padStart(2, '0');
 
 export const NodeInspector: React.FC<NodeInspectorProps> = ({
   selectedDetails,
   onSelectNodeId,
-  onOpenCounterfactual
+  onOpenCounterfactual,
+  originMutationId = '',
+  openIncidentId
 }) => {
   if (!selectedDetails) {
     return (
@@ -57,20 +63,20 @@ export const NodeInspector: React.FC<NodeInspectorProps> = ({
         {/* Node Detail Content */}
         {type === 'MUTATION' && (() => {
           const m = data as Mutation;
-          const isOrigin = m.id === 'M-1042';
+          const isOrigin = originMutationId !== '' && m.id === originMutationId;
 
           return (
             <div className="space-y-2.5">
               <div>
                 <h4 className="font-sans font-bold text-zinc-100">{m.title}</h4>
                 <div className="text-[10px] text-zinc-500 mt-0.5">
-                  EPOCH 0{m.epoch} · COMMIT {m.commitHash}
+                  EPOCH {pad2(m.epoch)} · COMMIT {m.commitHash}
                 </div>
               </div>
 
               {isOrigin && (
                 <div className="p-2 rounded-sm bg-amber-950/40 border border-amber-500/30 text-amber-300 text-[10px] font-sans leading-relaxed">
-                  <strong>Earliest Plausible Contributor</strong> to incident INC-3312.
+                  <strong>Earliest plausible contributor</strong> to {openIncidentId ? `incident ${openIncidentId}` : 'the open drift'}.
                 </div>
               )}
 
@@ -136,13 +142,15 @@ export const NodeInspector: React.FC<NodeInspectorProps> = ({
               <div>
                 <h4 className="font-sans font-bold text-zinc-100">{inc.title}</h4>
                 <div className="text-[10px] text-zinc-500 mt-0.5">
-                  EPOCH 0{inc.epoch} · BLAST RADIUS CRITICAL
+                  EPOCH {pad2(inc.epoch)} · SEVERITY {inc.severity} · {inc.status}
                 </div>
               </div>
 
-              <div className="p-2 rounded-sm bg-rose-950/40 border border-rose-500/40 text-rose-300 text-[10px] font-sans leading-relaxed">
-                {inc.blastRadiusSummary}
-              </div>
+              {inc.blastRadiusSummary && (
+                <div className="p-2 rounded-sm bg-rose-950/40 border border-rose-500/40 text-rose-300 text-[10px] font-sans leading-relaxed">
+                  {inc.blastRadiusSummary}
+                </div>
+              )}
 
               <div>
                 <span className="text-[10px] uppercase tracking-widest text-zinc-500 block mb-1">
@@ -151,12 +159,16 @@ export const NodeInspector: React.FC<NodeInspectorProps> = ({
                 <div className="text-[11px]">
                   <p className="text-zinc-300">
                     Contributing origin:{' '}
-                    <button
-                      onClick={() => onSelectNodeId(inc.earliestPlausibleContributingMutationId)}
-                      className="text-amber-400 font-bold underline"
-                    >
-                      {inc.earliestPlausibleContributingMutationId}
-                    </button>
+                    {inc.earliestPlausibleContributingMutationId ? (
+                      <button
+                        onClick={() => onSelectNodeId(inc.earliestPlausibleContributingMutationId)}
+                        className="text-amber-400 font-bold underline"
+                      >
+                        {inc.earliestPlausibleContributingMutationId}
+                      </button>
+                    ) : (
+                      <span className="text-zinc-500">not yet established</span>
+                    )}
                   </p>
                 </div>
               </div>
@@ -211,7 +223,7 @@ export const NodeInspector: React.FC<NodeInspectorProps> = ({
           </button>
         )}
 
-        {type === 'INCIDENT' && (
+        {type === 'INCIDENT' && (data as Incident).earliestPlausibleContributingMutationId && (
           <button
             onClick={() => onSelectNodeId((data as Incident).earliestPlausibleContributingMutationId)}
             className="w-full flex items-center justify-center gap-1.5 py-1.5 px-3 text-xs font-semibold text-zinc-200 bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 rounded-sm transition-colors uppercase tracking-wider"
