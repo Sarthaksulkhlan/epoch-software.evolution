@@ -314,3 +314,121 @@
     transform: none !important;
   }
 }
+
+/* =========================================================================
+   PROSE-REPORT: Markdown report rendered HTML styles
+   ========================================================================= */
+
+.prose-report {
+  font-family: var(--font-sans);
+  color: #d4d4d8;
+  font-size: 0.8125rem;
+  line-height: 1.7;
+}
+
+.prose-report h1 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #f4f4f5;
+  margin: 1.25rem 0 0.5rem;
+  padding-bottom: 0.35rem;
+  border-bottom: 1px solid #27272a;
+  letter-spacing: -0.01em;
+}
+
+.prose-report h2 {
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: #e4e4e7;
+  margin: 1.1rem 0 0.4rem;
+}
+
+.prose-report h3 {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: #d4d4d8;
+  margin: 0.9rem 0 0.3rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.prose-report h4 {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #a1a1aa;
+  margin: 0.75rem 0 0.25rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.prose-report p {
+  margin: 0 0 0.65rem;
+}
+
+.prose-report ul {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 0.65rem;
+}
+
+.prose-report ul li {
+  padding-left: 1.25rem;
+  position: relative;
+  margin-bottom: 0.2rem;
+}
+
+.prose-report ul li::before {
+  content: '—';
+  position: absolute;
+  left: 0;
+  color: #52525b;
+}
+
+.prose-report strong {
+  color: #f4f4f5;
+  font-weight: 600;
+}
+
+.prose-report code {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  background: #18181b;
+  border: 1px solid #27272a;
+  border-radius: 3px;
+  padding: 0.1em 0.35em;
+  color: #fb923c;
+}
+
+.prose-report table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.75rem;
+  font-family: var(--font-mono);
+  margin: 0 0 0.9rem;
+}
+
+.prose-report thead tr {
+  background: #18181b;
+  border-bottom: 1px solid #3f3f46;
+}
+
+.prose-report th {
+  text-align: left;
+  padding: 0.4rem 0.6rem;
+  color: #a1a1aa;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+}
+
+.prose-report td {
+  padding: 0.35rem 0.6rem;
+  border-bottom: 1px solid #27272a;
+  color: #d4d4d8;
+  vertical-align: top;
+}
+
+.prose-report tbody tr:hover td {
+  background: #18181b;
+}

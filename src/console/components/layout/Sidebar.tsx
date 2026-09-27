@@ -5,6 +5,7 @@ import {
   GitCommit,
   Compass,
   GitBranch,
+  FileText,
   Cpu
 } from 'lucide-react';
 import { shortSha, useHealth } from '../../hooks/useHealth';
@@ -54,6 +55,16 @@ const LENS_THEMES = [
     activeText: 'text-violet-300 font-bold',
     activeIcon: 'text-violet-400',
     activeSub: 'text-violet-400/80'
+  },
+  {
+    // REPORT (4): Orange
+    railBorder: 'border-orange-500/50',
+    railBg: 'bg-gradient-to-r from-orange-950/60 via-[#1c1208] to-[#130d05]',
+    edgeBg: 'bg-orange-400 shadow-[0_0_10px_rgba(251,146,60,0.7)]',
+    glow: 'shadow-[0_0_14px_rgba(251,146,60,0.15)]',
+    activeText: 'text-orange-300 font-bold',
+    activeIcon: 'text-orange-400',
+    activeSub: 'text-orange-400/80'
   }
 ];
 
@@ -92,6 +103,13 @@ export const Sidebar: React.FC<SidebarProps> = ({ driftFindingCount = 0 }) => {
       descriptor: 'Counterfactuals',
       icon: GitBranch,
       end: false
+    },
+    {
+      to: '/report',
+      label: 'REPORT',
+      descriptor: 'Evolution Report',
+      icon: FileText,
+      end: false
     }
   ];
 
@@ -101,6 +119,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ driftFindingCount = 0 }) => {
     if (path.startsWith('/history')) return 1;
     if (path.startsWith('/trajectory')) return 2;
     if (path.startsWith('/futures')) return 3;
+    if (path.startsWith('/report')) return 4;
     return 0; // default to CURRENT
   };
 
@@ -159,7 +178,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ driftFindingCount = 0 }) => {
         <nav className="p-2 space-y-1 relative">
           <div className="px-2 pt-2.5 pb-1.5 text-[9px] font-mono uppercase tracking-[0.18em] text-zinc-400 font-semibold flex items-center justify-between">
             <span>Operational Lenses</span>
-            <span className="text-[9px] text-zinc-500 font-mono tracking-wider">4 PLANES</span>
+            <span className="text-[9px] text-zinc-500 font-mono tracking-wider">5 PLANES</span>
           </div>
 
           {/* Gliding Rail: Uses GPU translate3d with ZERO layout reflow */}
