@@ -13,7 +13,7 @@ pnpm dev
 ```
 
 - API: <http://127.0.0.1:3000/api/health>
-- Console: <http://127.0.0.1:5173>
+- Console: <http://127.0.0.1:5173/console> (the landing page is at <http://127.0.0.1:5173>)
 - Live event stream: <http://127.0.0.1:3000/api/stream>
 
 `pnpm demo-reset` rebuilds the database and the sample repository (`.epoch/sample-repo`) and seeds epoch **E-0**: 22 mutations (M-1020 to M-1041), four invariants holding, boundary integrity 1.00, coupling 0.19. It is deterministic; run it any time to start over. With the API running, the scripts talk to it so the console updates live.
