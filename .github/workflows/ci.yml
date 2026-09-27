@@ -44,6 +44,8 @@ jobs:
           done
           curl -sf http://127.0.0.1:8080/api/health | jq -e '.demo.showcase == "ready" and .mutations == 26'
           curl -sf http://127.0.0.1:8080/futures | grep -q '<div id="root">'
+          curl -sf http://127.0.0.1:8080/console/futures | grep -q '<div id="root">'
+          test "$(curl -sf -o /dev/null -w '%{content_type}' http://127.0.0.1:8080/og-cover.png)" = image/png
           code=$(curl -s -o /dev/null -w '%{http_code}' -X POST http://127.0.0.1:8080/api/workflows -H 'Content-Type: application/json' -d '{"requirement":"x"}')
           test "$code" = 403
           b=$(curl -sf http://127.0.0.1:8080/api/v1/simulations | jq -r '.[] | select(.scenarioId == "B") | .id')
