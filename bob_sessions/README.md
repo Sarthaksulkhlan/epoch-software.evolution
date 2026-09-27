@@ -5,9 +5,9 @@ Screenshots of each Bob task's consumption summary, with the task history export
 ```text
 bob_sessions/
   <member>/
-    epoch_task<NN>_<task>_summary.png   consumption summary (required by the hackathon guide)
-    epoch_task<NN>_<task>.json          exported task history (Bob 2.2 exports JSON)
-    epoch_task<NN>_<task>_*.png|.md     extra evidence: plans, progress screenshots
+    fastandcurious_task<NN>_<task>_summary.png   consumption summary (required by the hackathon guide)
+    fastandcurious_task<NN>_<task>.json          exported task history (Bob 2.2 exports JSON)
+    fastandcurious_task<NN>_<task>_*.png|.md     extra evidence: plans, progress screenshots
 ```
 
 Each export also carries its own consumption figures under `tasks[0].task.costs`: Bobcoins spent, context tokens and the context breakdown.
