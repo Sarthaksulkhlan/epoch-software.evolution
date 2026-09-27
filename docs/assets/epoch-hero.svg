@@ -113,8 +113,8 @@
     <text x="840" y="228">0.75</text>
     <text x="954" y="328">0.50 <tspan fill="#ff6b6b">· INC-3312</tspan></text>
     <text x="1068" y="328">0.50</text>
-    <text x="1168" y="198" text-anchor="end" fill="#8b98a8">A · 0.75</text>
-    <text x="1190" y="100" text-anchor="start" fill="#57c690">1.00</text>
+    <text x="1190" y="226" text-anchor="start" fill="#8b98a8">A 0.75</text>
+    <text x="1192" y="116" text-anchor="start" fill="#57c690">1.00</text>
   </g>
 
   <!-- Mutations -->
