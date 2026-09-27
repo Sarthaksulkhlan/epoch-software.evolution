@@ -106,7 +106,7 @@ export const BranchingTrajectoryDiagram: React.FC<BranchingTrajectoryDiagramProp
 
             {/* Horizontal branch distributor across the futures */}
             {n > 1 && (
-              <line x1={minX} y1="18" x2={maxX} y2="18" stroke="#52525b" strokeWidth="2" vectorEffect="non-scaling-stroke" className="animate-branch-draw" style={{ animationDelay: '150ms' }} />
+              <line x1={minX} y1="18" x2={maxX} y2="18" stroke="#52525b" strokeWidth="2" vectorEffect="non-scaling-stroke" className="animate-branch-draw" style={{ animationDelay: '150ms', strokeDasharray: 2000 }} />
             )}
 
             {/* Vertical drop to each future */}
