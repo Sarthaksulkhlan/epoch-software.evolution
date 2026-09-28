@@ -21,15 +21,21 @@ export class ApiError extends Error {
 
 export const START_API_HINT = 'Start the API with pnpm dev';
 
-async function request<T>(method: 'GET' | 'POST', path: string, body?: unknown): Promise<T> {
+interface RequestOptions {
+  signal?: AbortSignal;
+}
+
+async function request<T>(method: 'GET' | 'POST', path: string, body?: unknown, options?: RequestOptions): Promise<T> {
   let res: Response;
   try {
     res = await fetch(path, {
       method,
       headers: body === undefined ? { Accept: 'application/json' } : { Accept: 'application/json', 'Content-Type': 'application/json' },
-      body: body === undefined ? undefined : JSON.stringify(body)
+      body: body === undefined ? undefined : JSON.stringify(body),
+      signal: options?.signal
     });
-  } catch {
+  } catch (error) {
+    if (error instanceof DOMException && error.name === 'AbortError') throw error;
     throw new ApiError(`Cannot reach the EPOCH API. ${START_API_HINT}.`, 0, path, true);
   }
 
@@ -53,8 +59,8 @@ async function request<T>(method: 'GET' | 'POST', path: string, body?: unknown):
   return payload as T;
 }
 
-export const apiGet = <T>(path: string): Promise<T> => request<T>('GET', path);
-export const apiPost = <T>(path: string, body: unknown = {}): Promise<T> => request<T>('POST', path, body);
+export const apiGet = <T>(path: string, options?: RequestOptions): Promise<T> => request<T>('GET', path, undefined, options);
+export const apiPost = <T>(path: string, body: unknown = {}, options?: RequestOptions): Promise<T> => request<T>('POST', path, body, options);
 
 /**
  * A short, human explanation of a failed call. Write-specific statuses follow

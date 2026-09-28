@@ -42,17 +42,22 @@ export function useApi<T>(path: string | null, topics: readonly LiveTopic[] = []
   const [error, setError] = useState<unknown>(null);
   const [isLoading, setIsLoading] = useState<boolean>(path !== null);
   const requestId = useRef(0);
+  const abortRef = useRef<AbortController | null>(null);
 
   const load = useCallback(async (background: boolean) => {
     if (path === null) return;
+    abortRef.current?.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
     const id = ++requestId.current;
     if (!background) setIsLoading(true);
     try {
-      const next = await apiGet<T>(path);
+      const next = await apiGet<T>(path, { signal: controller.signal });
       if (id !== requestId.current) return;
       setData(next);
       setError(null);
     } catch (err) {
+      if (controller.signal.aborted) return;
       if (id !== requestId.current) return;
       setError(err);
       if (!background || (err as { status?: number }).status === 404) setData(undefined);
@@ -67,6 +72,7 @@ export function useApi<T>(path: string | null, topics: readonly LiveTopic[] = []
       return;
     }
     void load(false);
+    return () => abortRef.current?.abort();
   }, [load, path]);
 
   const reload = useCallback(() => load(true), [load]);
