@@ -81,6 +81,15 @@ export const EventFeed: React.FC<EventFeedProps> = ({
               <div
                 key={event.id}
                 onClick={() => setSelectedEventId(isSelected ? null : event.id)}
+                onKeyDown={eventKey => {
+                  if (eventKey.key === 'Enter' || eventKey.key === ' ') {
+                    eventKey.preventDefault();
+                    setSelectedEventId(isSelected ? null : event.id);
+                  }
+                }}
+                role="button"
+                tabIndex={0}
+                aria-expanded={isSelected}
                 className={`p-2 rounded-sm border ${borderStyle} text-[11px] space-y-1 transition-all hover:bg-zinc-900/60 cursor-pointer ${
                   idx === 0 ? 'animate-event-in' : ''
                 }`}
