@@ -83,7 +83,7 @@ export const ReportView: React.FC = () => {
           <FileText className="w-4 h-4 text-orange-400 shrink-0" />
           <div>
             <div className="flex items-center gap-2 mb-0.5 text-xs">
-              <span className="text-zinc-200 font-bold uppercase tracking-wider">Evolution Report</span>
+              <h1 id="evolution-report-title" className="text-zinc-200 font-bold uppercase tracking-wider">Evolution Report</h1>
               <span className="text-zinc-600">·</span>
               <span className="text-zinc-500 text-[10px]">Full Service History</span>
             </div>
@@ -100,7 +100,7 @@ export const ReportView: React.FC = () => {
             className="btn-control flex items-center gap-1.5 px-3 py-1.5 text-xs text-zinc-200 bg-zinc-900 border border-zinc-700 hover:bg-zinc-800 rounded-sm uppercase tracking-wider transition-colors"
           >
             {copied ? <Check className="w-3.5 h-3.5 text-orange-400" /> : <Copy className="w-3.5 h-3.5" />}
-            <span>{copied ? 'Copied' : 'Copy MD'}</span>
+            <span aria-live="polite">{copied ? 'Copied' : 'Copy MD'}</span>
           </button>
           <button
             type="button"
@@ -115,6 +115,7 @@ export const ReportView: React.FC = () => {
 
       {/* Report body */}
       <div
+        aria-labelledby="evolution-report-title"
         className="reveal-delay-2 p-5 rounded-sm border border-zinc-800/80 bg-[#08090d]/90 backdrop-blur shadow-sm prose-report"
         /* dangerouslySetInnerHTML is safe: renderMarkdown escapes all user text */
         dangerouslySetInnerHTML={{ __html: html }}
