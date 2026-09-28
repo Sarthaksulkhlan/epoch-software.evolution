@@ -148,6 +148,7 @@ export const ApprovalGate: React.FC<ApprovalGateProps> = ({
               </div>
               {onReset && (
                 <button
+                  type="button"
                   onClick={onReset}
                   className="btn-control flex items-center gap-1 px-2.5 py-1 text-xs text-zinc-300 hover:text-white border border-zinc-800 rounded-sm hover:bg-zinc-900"
                 >
