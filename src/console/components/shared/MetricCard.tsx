@@ -37,7 +37,7 @@ export const MetricCard: React.FC<MetricCardProps> = ({
   };
 
   return (
-    <div className={`p-3.5 rounded-sm border ${getStatusBorder()} transition-colors`}>
+    <article aria-label={`${label}: ${value}`} className={`p-3.5 rounded-sm border ${getStatusBorder()} transition-colors`}>
       <div className="flex items-center justify-between text-[10px] uppercase font-mono tracking-wider text-zinc-500 mb-1">
         <span>{label}</span>
         {status === 'warning' && (
@@ -55,6 +55,6 @@ export const MetricCard: React.FC<MetricCardProps> = ({
           {subtext}
         </div>
       )}
-    </div>
+    </article>
   );
 };
