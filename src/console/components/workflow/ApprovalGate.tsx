@@ -160,11 +160,16 @@ export const ApprovalGate: React.FC<ApprovalGateProps> = ({
 
       {/* Explicit Commit Confirmation Dialog (APPROVE != AUTOMATIC COMMIT) */}
       {isConfirmCommitOpen && (
-        <div className="mt-4 p-4 rounded-sm border border-emerald-500/50 bg-[#07130c] text-xs space-y-3 animate-in fade-in duration-200">
+        <div
+          role="dialog"
+          aria-modal="false"
+          aria-labelledby="approval-confirm-title"
+          className="mt-4 p-4 rounded-sm border border-emerald-500/50 bg-[#07130c] text-xs space-y-3 animate-in fade-in duration-200"
+        >
           <div className="flex items-start justify-between gap-3">
             <div className="flex items-center gap-2">
               <GitCommit className="w-4 h-4 text-emerald-400 shrink-0" />
-              <div className="font-bold text-emerald-300 uppercase tracking-wider text-[11px]">
+              <div id="approval-confirm-title" className="font-bold text-emerald-300 uppercase tracking-wider text-[11px]">
                 Commit this change? — Explicit Confirmation Required
               </div>
             </div>
