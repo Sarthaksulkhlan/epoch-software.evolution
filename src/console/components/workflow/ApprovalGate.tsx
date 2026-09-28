@@ -92,6 +92,8 @@ export const ApprovalGate: React.FC<ApprovalGateProps> = ({
               <button
                 type="button"
                 onClick={() => setIsReviewExpanded(!isReviewExpanded)}
+                aria-expanded={isReviewExpanded}
+                aria-controls="approval-review-dossier"
                 className="btn-control flex items-center gap-1.5 px-3 py-1.5 text-xs text-zinc-300 hover:text-white bg-zinc-900 border border-zinc-700 rounded-sm hover:bg-zinc-800 uppercase tracking-wider"
               >
                 <span>{isReviewExpanded ? 'Hide Review' : 'Review Dossier'}</span>
@@ -217,7 +219,7 @@ export const ApprovalGate: React.FC<ApprovalGateProps> = ({
 
       {/* Level 3: Progressive Disclosure Review Panel (Opened on "Review Dossier") */}
       {isReviewExpanded && isPending && !isConfirmCommitOpen && (
-        <div className="mt-4 pt-4 border-t border-zinc-800 space-y-4 animate-in fade-in duration-200">
+        <div id="approval-review-dossier" className="mt-4 pt-4 border-t border-zinc-800 space-y-4 animate-in fade-in duration-200">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
             {/* Left: Risk & Invariants */}
             <div className="lg:col-span-8 space-y-3">
