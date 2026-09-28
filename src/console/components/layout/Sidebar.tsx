@@ -127,7 +127,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ driftFindingCount = 0 }) => {
   const currentTheme = LENS_THEMES[activeIndex] || LENS_THEMES[0];
 
   return (
-    <aside className="w-64 bg-gradient-to-b from-[#0c1017] via-[#090d14] to-[#0c1017] border-r border-[#1a2333] shadow-[4px_0_24px_rgba(0,0,0,0.6)] flex flex-col justify-between shrink-0 select-none z-30 relative">
+    <aside
+      aria-label="EPOCH console navigation"
+      className="w-64 bg-gradient-to-b from-[#0c1017] via-[#090d14] to-[#0c1017] border-r border-[#1a2333] shadow-[4px_0_24px_rgba(0,0,0,0.6)] flex flex-col justify-between shrink-0 select-none z-30 relative"
+    >
       <div>
         {/* Distinct Header Surface */}
         <div className="h-14 px-4 flex items-center justify-between border-b border-[#1a2333] bg-[#0e1420]/90 backdrop-blur">
@@ -175,7 +178,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ driftFindingCount = 0 }) => {
         </div>
 
         {/* Operational Lenses Rail with 100% GPU-Accelerated Hardware Rail & Opacity Cross-Fading */}
-        <nav className="p-2 space-y-1 relative">
+        <nav aria-label="Operational lenses" className="p-2 space-y-1 relative">
           <div className="px-2 pt-2.5 pb-1.5 text-[9px] font-mono uppercase tracking-[0.18em] text-zinc-400 font-semibold flex items-center justify-between">
             <span>Operational Lenses</span>
             <span className="text-[9px] text-zinc-500 font-mono tracking-wider">5 PLANES</span>
