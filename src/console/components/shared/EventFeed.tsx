@@ -43,6 +43,7 @@ export const EventFeed: React.FC<EventFeedProps> = ({
         </div>
         <div className="flex items-center gap-1">
           <button
+            type="button"
             onClick={onTogglePause}
             className="p-1 rounded text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 transition-colors"
             title={isPaused ? 'Resume stream' : 'Pause stream'}
@@ -51,6 +52,7 @@ export const EventFeed: React.FC<EventFeedProps> = ({
             {isPaused ? <Play className="w-3 h-3" /> : <Pause className="w-3 h-3" />}
           </button>
           <button
+            type="button"
             onClick={onClear}
             className="p-1 rounded text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 transition-colors"
             title="Clear event feed"
