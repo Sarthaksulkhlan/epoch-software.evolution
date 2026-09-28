@@ -255,10 +255,11 @@ export const ApprovalGate: React.FC<ApprovalGateProps> = ({
 
               {/* Rationale Input */}
               <div>
-                <label className="block text-[11px] text-zinc-400 mb-1">
+                <label htmlFor="approval-rationale" className="block text-[11px] text-zinc-400 mb-1">
                   Optional Condition Note / Directives:
                 </label>
                 <input
+                  id="approval-rationale"
                   type="text"
                   value={rationale}
                   onChange={e => setRationale(e.target.value)}
