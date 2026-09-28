@@ -6,11 +6,12 @@ import { renderMarkdown } from '../lib/markdown';
 
 const REPORT_PATH = '/api/v1/report';
 
-async function fetchReport(): Promise<string> {
+async function fetchReport(signal?: AbortSignal): Promise<string> {
   let res: Response;
   try {
-    res = await fetch(REPORT_PATH, { headers: { Accept: 'text/markdown, text/plain, */*' } });
-  } catch {
+    res = await fetch(REPORT_PATH, { headers: { Accept: 'text/markdown, text/plain, */*' }, signal });
+  } catch (error) {
+    if (error instanceof DOMException && error.name === 'AbortError') throw error;
     throw new Error('Cannot reach the EPOCH API. Start the API with pnpm dev.');
   }
   if (!res.ok) {
@@ -25,23 +26,29 @@ export const ReportView: React.FC = () => {
   const [error, setError] = useState<unknown>(null);
   const [copied, setCopied] = useState(false);
   const copyTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const reportAbortRef = useRef<AbortController | null>(null);
 
   const load = useCallback(async () => {
+    reportAbortRef.current?.abort();
+    const controller = new AbortController();
+    reportAbortRef.current = controller;
     setIsLoading(true);
     setError(null);
     try {
-      const text = await fetchReport();
+      const text = await fetchReport(controller.signal);
       setMarkdown(text);
     } catch (err) {
+      if (controller.signal.aborted) return;
       setError(err);
     } finally {
-      setIsLoading(false);
+      if (!controller.signal.aborted) setIsLoading(false);
     }
   }, []);
 
   useEffect(() => {
     void load();
     return () => {
+      reportAbortRef.current?.abort();
       if (copyTimerRef.current !== undefined) clearTimeout(copyTimerRef.current);
     };
   }, [load]);
