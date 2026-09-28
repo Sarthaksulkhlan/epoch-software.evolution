@@ -30,6 +30,7 @@
     "demo:futures": "tsx scripts/demo-futures.ts",
     "report": "tsx scripts/report.ts",
     "showcase:snapshot": "tsx scripts/showcase-snapshot.ts",
+    "verify:clone": "node scripts/verify-clone.mjs",
     "format": "prettier --write src docs scripts"
   },
   "dependencies": {
