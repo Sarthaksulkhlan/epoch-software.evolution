@@ -282,6 +282,15 @@ export const ApprovalGate: React.FC<ApprovalGateProps> = ({
                     <div
                       key={evId}
                       onClick={() => onSelectEvidence?.(evId)}
+                      onKeyDown={event => {
+                        if (event.key === 'Enter' || event.key === ' ') {
+                          event.preventDefault();
+                          onSelectEvidence?.(evId);
+                        }
+                      }}
+                      role="button"
+                      tabIndex={0}
+                      aria-label={`Open evidence ${evId}`}
                       className="p-2 rounded-sm bg-[#06070a] hover:bg-[#0f1118] border border-zinc-800/80 cursor-pointer transition-colors flex items-center justify-between text-xs"
                     >
                       <div className="truncate mr-2 font-mono">
