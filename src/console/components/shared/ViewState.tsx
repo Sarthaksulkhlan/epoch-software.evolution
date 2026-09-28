@@ -20,7 +20,12 @@ export const ViewState: React.FC<ViewStateProps> = ({ kind, title, message, erro
       : 'border-zinc-800/80 bg-[#08090d]/90 text-zinc-300';
 
   return (
-    <div className={`reveal-delay-1 rounded-sm border ${tone} p-6 font-mono select-none flex flex-col items-center text-center gap-2.5`}>
+    <div
+      role={kind === 'error' ? 'alert' : 'status'}
+      aria-live={kind === 'error' ? 'assertive' : 'polite'}
+      aria-busy={kind === 'loading'}
+      className={`reveal-delay-1 rounded-sm border ${tone} p-6 font-mono select-none flex flex-col items-center text-center gap-2.5`}
+    >
       {kind === 'loading' && <Loader2 className="w-5 h-5 text-cyan-400 animate-spin" />}
       {kind === 'empty' && <Inbox className="w-5 h-5 text-zinc-500" />}
       {kind === 'error' && <AlertTriangle className="w-5 h-5 text-rose-400" />}
