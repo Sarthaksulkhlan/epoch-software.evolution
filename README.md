@@ -344,6 +344,9 @@ Causal chains are ranked candidates, never proof ([ADR-018](DECISIONS.md#adr-018
 
 ## Documentation
 
+Start with the [fresh-clone checklist](docs/CLONE_CHECKLIST.md) and consult the
+[troubleshooting guide](docs/TROUBLESHOOTING.md) when local setup differs from CI.
+
 | Document | Contents |
 | --- | --- |
 | [docs/DEMO_GUIDE.md](docs/DEMO_GUIDE.md) | Run the demo yourself, step by step |
