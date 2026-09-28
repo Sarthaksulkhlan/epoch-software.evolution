@@ -103,6 +103,7 @@ export const TopBar: React.FC<TopBarProps> = ({
         {activeDriftCount > 0 && (
           <NavLink
             to="/trajectory"
+            aria-label={`${activeDriftCount} open drift finding${activeDriftCount === 1 ? '' : 's'}; open trajectory`}
             className="btn-control flex items-center gap-1 px-2.5 py-1 rounded bg-amber-950/40 hover:bg-amber-950/70 border border-amber-500/40 text-amber-300 text-[10px]"
           >
             <AlertTriangle className="w-3.5 h-3.5 text-amber-400" />
