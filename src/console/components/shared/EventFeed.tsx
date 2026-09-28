@@ -66,7 +66,7 @@ export const EventFeed: React.FC<EventFeedProps> = ({
       {/* Stream List: Compact Level 2 default with smooth entry transition */}
       <div className="p-2 space-y-1.5 overflow-y-auto flex-1 max-h-[380px]">
         {events.length === 0 ? (
-          <div className="text-center py-8 text-[11px] text-zinc-500">
+          <div role="status" className="text-center py-8 text-[11px] text-zinc-500">
             No activity yet. New events appear here as EPOCH records them.
           </div>
         ) : (
