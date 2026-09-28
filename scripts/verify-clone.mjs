@@ -1,8 +1,9 @@
 #!/usr/bin/env node
 import { access, readFile } from 'node:fs/promises';
-import { resolve } from 'node:path';
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-const root = resolve(new URL('..', import.meta.url).pathname);
+const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const requiredFiles = ['package.json', 'pnpm-lock.yaml', 'vite.config.ts', 'src/main.tsx', 'docs/CLONE_CHECKLIST.md'];
 
 const packageJson = JSON.parse(await readFile(resolve(root, 'package.json'), 'utf8'));
